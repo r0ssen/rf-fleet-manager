@@ -45,8 +45,7 @@ jobs:
           RAILWAY_SERVICE: ${{ secrets.RAILWAY_SERVICE_NAME }}
     
       - name: Deploy to Railway
-        run: railway up --service rf-fleet-manager-api
+        run: railway up
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           RAILWAY_PROJECT: ${{ secrets.RAILWAY_PROJECT_ID }}
-          RAILWAY_SERVICE: ${{ secrets.RAILWAY_SERVICE_NAME }}
