@@ -36,6 +36,14 @@ jobs:
       - name: Install Railway CLI
         run: npm i -g @railway/cli
 
+      - name: Debug Railway ENV
+        run: |
+          echo "Project: $RAILWAY_PROJECT"
+          echo "Service: $RAILWAY_SERVICE"
+        env:
+          RAILWAY_PROJECT: ${{ secrets.RAILWAY_PROJECT_ID }}
+          RAILWAY_SERVICE: ${{ secrets.RAILWAY_SERVICE_NAME }}
+    
       - name: Deploy to Railway
         run: railway up --service rf-fleet-manager-api
         env:
