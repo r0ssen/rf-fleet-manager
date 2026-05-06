@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${vehicle.vehicleId == 0} ? 'Ny bil' : 'Rediger bil')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="form-main">
+    <div class="form-header">
+        <a th:href="@{/vehicles}" class="back-link">← Tilbage til biler</a>
+        <h1 th:text="${vehicle.vehicleId == 0} ? 'Tilføj bil' : 'Rediger bil'">Bil</h1>
+    </div>
+    <form th:action="${vehicle.vehicleId == 0} ? @{/vehicles} : @{/vehicles/{id}(id=${vehicle.vehicleId})}"
+          th:object="${vehicle}" method="post">
+        <input type="hidden" th:field="*{version}"/>
+        <div class="form-grid">
+            <fieldset>
+                <legend>Generel information</legend>
+                <label>Bil nr. * <input type="text" th:field="*{vehicleNo}" required placeholder="F.eks. T01"/></label>
+                <label>Nummerplade <input type="text" th:field="*{registration}" placeholder="F.eks. AB 12 345"/></label>
+                <label>Model <input type="text" th:field="*{model}" placeholder="F.eks. Ford Transit"/></label>
+                <label>Totalvægt (kg) <input type="number" th:field="*{totalWeightKg}" step="1"/></label>
+                <label>Lasteevne (kg) <input type="number" th:field="*{payloadKg}" step="1"/></label>
+            </fieldset>
+            <fieldset>
+                <legend>Udstyr</legend>
+                <label class="checkbox-label"><input type="checkbox" th:field="*{hasPalletLifter}"/> Pallelejer</label>
+                <label class="checkbox-label"><input type="checkbox" th:field="*{hasSackTruck}"/> Sækkevogn</label>
+                <label class="checkbox-label"><input type="checkbox" th:field="*{canFetch}"/> Kan hente</label>
+            </fieldset>
+            <fieldset>
+                <legend>Udvendige mål (mm)</legend>
+                <label>Længde <input type="number" th:field="*{vehicleLengthMm}"/></label>
+                <label>Bredde <input type="number" th:field="*{vehicleWidthMm}"/></label>
+                <label>Højde  <input type="number" th:field="*{vehicleHeightMm}"/></label>
+            </fieldset>
+            <fieldset>
+                <legend>Indvendige mål (mm)</legend>
+                <label>Længde <input type="number" th:field="*{cargoLengthMm}"/></label>
+                <label>Bredde <input type="number" th:field="*{cargoWidthMm}"/></label>
+                <label>Højde  <input type="number" th:field="*{cargoHeightMm}"/></label>
+            </fieldset>
+            <fieldset class="fs-full">
+                <legend>Beskrivelse / noter</legend>
+                <textarea th:field="*{description}" rows="3"></textarea>
+            </fieldset>
+            <fieldset class="fs-full" th:if="${not #lists.isEmpty(allDays)}">
+                <legend>Tilgængelighed (åbningsdage)</legend>
+                <p class="hint">Afkryds de dage bilen er tilgængelig. Lad alle stå tomme for at bilen altid er tilgængelig.</p>
+                <div class="availability-grid">
+                    <label class="checkbox-label" th:each="h : ${allDays}">
+                        <input type="checkbox"
+                               name="availableDates"
+                               th:value="${#temporals.format(h.festivalDate, 'yyyy-MM-dd')}"
+                               th:checked="${checkedDates.contains(h.festivalDate)}"/>
+                        <span th:text="${#temporals.format(h.festivalDate, 'EEE d. MMM', new java.util.Locale('da'))}">dag</span>
+                    </label>
+                </div>
+            </fieldset>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn-primary">Gem</button>
+            <a th:href="@{/vehicles}" class="btn-secondary">Annuller</a>
+        </div>
+    </form>
+</main>
+</body>
+</html>
