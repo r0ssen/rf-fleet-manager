@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Biler')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main>
+    <div class="toolbar">
+        <h1>Biler</h1>
+        <a th:href="@{/vehicles/new}" class="btn-primary">+ Tilføj bil</a>
+    </div>
+    <div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Bil nr.</th><th>Nummerplade</th><th>Model</th><th>Lastevægt (kg)</th>
+                <th>Udvendige mål (L×B×H mm)</th><th>Indvendige mål (L×B×H mm)</th>
+                <th>Udstyr</th><th>Handlinger</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="v : ${vehicles}">
+                <td th:text="${v.vehicleNo}"></td>
+                <td th:text="${v.registration}"></td>
+                <td th:text="${v.model}"></td>
+                <td th:text="${v.payloadKg}"></td>
+                <td th:text="${v.vehicleLengthMm != null ? v.vehicleLengthMm + ' × ' + v.vehicleWidthMm + ' × ' + v.vehicleHeightMm : ''}"></td>
+                <td th:text="${v.cargoLengthMm  != null ? v.cargoLengthMm  + ' × ' + v.cargoWidthMm  + ' × ' + v.cargoHeightMm  : ''}"></td>
+                <td>
+                    <span th:if="${v.hasPalletLifter}" class="tag">Pallelejer</span>
+                    <span th:if="${v.hasSackTruck}"    class="tag">Sækkevogn</span>
+                    <span th:if="${v.canFetch}"        class="tag">Kan hente</span>
+                </td>
+                <td>
+                    <a th:href="@{/vehicles/{id}/edit(id=${v.vehicleId})}" class="btn-small">Rediger</a>
+                    <form th:action="@{/vehicles/{id}/delete(id=${v.vehicleId})}" method="post"
+                          style="display:inline" onsubmit="return confirm('Slet denne bil?')">
+                        <button type="submit" class="btn-small btn-danger">Slet</button>
+                    </form>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(vehicles)}"><td colspan="8" class="empty">Ingen biler registreret.</td></tr>
+        </tbody>
+    </table>
+    </div>
+</main>
+</body>
+</html>

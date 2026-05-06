@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="da">
+<head th:replace="~{fragments/layout :: head('Flådeoversigt')}"><title>Oversigt</title></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+
+<main class="fleet-main">
+    <div class="toolbar">
+        <h1>Flådeoversigt</h1>
+
+        <div class="date-nav">
+            <a th:href="@{/fleet(date=${prevDay},showCancelled=${showCancelled})}" class="btn-secondary">&#8249;</a>
+            <input type="date" name="date" id="fleetDatePicker"
+                   th:value="${#temporals.format(date, 'yyyy-MM-dd')}"
+                   onchange="goFleetDate(this.value)"/>
+            <a th:href="@{/fleet(date=${nextDay},showCancelled=${showCancelled})}" class="btn-secondary">&#8250;</a>
+            <span class="date-label"
+                  th:text="${#temporals.format(date, 'EEEE d. MMMM yyyy', danishLocale)}">
+            </span>
+            <span th:if="${hoursFromDb}" class="hours-label"
+                  th:text="${#temporals.format(openFrom,'HH:mm') + ' – ' + #temporals.format(openUntil,'HH:mm')}">
+            </span>
+            <span th:if="${!hoursFromDb}" class="hours-warning"
+                  title="Ingen åbningstider fundet for denne dato — oversigten kan ikke placere kørsler på tidslinjen">
+                ⚠ ingen åbningstider
+            </span>
+        </div>
+
+        <a th:href="@{/tasks/new(date=${date},returnTo='fleet')}" class="btn-primary">+ Opret kørsel</a>
+        <label class="filter-toggle">
+            <input type="checkbox" id="showCancelledToggle"
+                   th:checked="${showCancelled}"
+                   onchange="goFleetDate(document.getElementById('fleetDatePicker').value)"/>
+            <span>Vis annullerede kørsler</span>
+        </label>
+    </div>
+
+    <div class="fleet-legend">
+        <span class="legend-item"><span class="swatch ordered"></span> Bestilt</span>
+        <span class="legend-item"><span class="swatch started"></span> Startet</span>
+        <span class="legend-item"><span class="swatch done"></span> Udført</span>
+        <span class="legend-item"><span class="swatch cancelled"></span> Annulleret</span>
+        <span class="legend-item"><span class="swatch overlap"></span> Overlap / konflikt</span>
+        <span class="legend-note">Kørsler uden valgt bil vises nederst som <strong>Ikke tildelt</strong>.</span>
+    </div>
+    <div id="fleetDragFeedback" class="drag-feedback" style="display:none"></div>
+    <div id="fleetTaskMenu" class="task-context-menu" style="display:none">
+        <button type="button" id="statusStartButton" class="task-context-menu-item" style="display:none">Start</button>
+        <button type="button" id="statusToOrderedButton" class="task-context-menu-item" style="display:none">Til Bestilt</button>
+        <button type="button" id="statusDoneButton" class="task-context-menu-item" style="display:none">Udført</button>
+        <div id="statusMenuHint" class="task-context-menu-hint" style="display:none">Vælg en bil for at ændre status.</div>
+        <div class="task-context-separator"></div>
+        <button type="button" id="duplicateTaskButton" class="task-context-menu-item">Kopiér</button>
+        <button type="button" id="cancelTaskButton" class="task-context-menu-item task-context-menu-item-danger" style="display:none">Annuller kørsel</button>
+        <button type="button" id="reopenTaskButton" class="task-context-menu-item" style="display:none">Genåbn kørsel</button>
+    </div>
+
+    <div th:if="${#lists.isEmpty(rows)}" class="empty">
+        Ingen biler registreret for dette år.
+        <a th:href="@{/vehicles/new}">Tilføj en bil</a>.
+    </div>
+
+    <div th:if="${!hoursFromDb}" class="empty">
+        Ingen åbningstider registreret for denne dato.
+        <a th:href="@{/opening-hours}">Tilføj åbningstider</a> for at vise tidslinjen.
+    </div>
+
+    <div th:if="${hoursFromDb and !#lists.isEmpty(rows)}" class="grid-scroll">
+        <div class="fleet-board"
+             th:data-open-from="${#temporals.format(openFrom,'HH:mm')}"
+             th:data-open-until="${#temporals.format(openUntil,'HH:mm')}">
+            <div class="fleet-header">
+                <div class="fleet-label-cell">Bil / status</div>
+                <div class="fleet-timeline-header">
+                    <div th:each="marker : ${timeMarkers}"
+                         class="time-marker"
+                         th:classappend="${marker.hourBoundary} ? ' hour' : ' quarter'"
+                         th:style="${marker.style}">
+                        <span th:if="${marker.labelVisible}" th:text="${marker.label}"></span>
+                    </div>
+                    <!-- current-time needle in header (shows time label) -->
+                    <div class="current-time-line" style="display:none">
+                        <span class="ct-label"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div th:each="row : ${rows}" class="fleet-row" th:classappend="${row.unassigned} ? ' fleet-row-unassigned' : ''">
+                <div class="fleet-row-label" th:classappend="${row.unassigned} ? ' unassigned' : ''">
+                    <a th:if="${row.editUrl != null}" th:href="${row.editUrl}" class="row-link">
+                        <span class="row-title" th:text="${row.label}"></span>
+                        <span th:if="${row.unassigned}" class="row-alert-badge">Ingen bil valgt</span>
+                        <span th:if="${row.subLabel != null and !#strings.isEmpty(row.subLabel)}"
+                              class="row-subtitle"
+                              th:text="${row.subLabel}"></span>
+                    </a>
+                    <div th:if="${row.editUrl == null}" class="row-link row-link-static">
+                        <span class="row-title" th:text="${row.label}"></span>
+                        <span th:if="${row.unassigned}" class="row-alert-badge">Ingen bil valgt</span>
+                        <span th:if="${row.subLabel != null and !#strings.isEmpty(row.subLabel)}"
+                              class="row-subtitle"
+                              th:text="${row.subLabel}"></span>
+                    </div>
+                </div>
+
+                <div class="fleet-row-track"
+                     th:classappend="${row.unassigned} ? ' unassigned-track' : ''"
+                     th:style="|height:${row.rowHeightPx}px;|"
+                     th:attr="data-vehicle-id=${row.vehicleId},data-date=${#temporals.format(date,'yyyy-MM-dd')}">
+                    <div th:each="marker : ${timeMarkers}"
+                         class="track-line"
+                         th:classappend="${marker.hourBoundary} ? ' hour' : ' quarter'"
+                         th:style="${marker.style}"></div>
+
+                    <!-- current-time needle in each row (no label) -->
+                    <div class="current-time-line" style="display:none"></div>
+
+                    <div th:if="${#lists.isEmpty(row.taskBlocks)}" class="row-empty">Ledig hele dagen</div>
+
+                    <a th:each="task : ${row.taskBlocks}"
+                       th:href="@{/tasks/{id}/edit(id=${task.taskId},returnTo='fleet')}"
+                       class="task-block"
+                       th:classappend="' status-' + ${task.statusClass} + (${task.darkText} ? ' dark-text' : '') + (${task.overlapping} ? ' overlap' : '')"
+                       draggable="true"
+                       th:attr="data-task-id=${task.taskId},data-start=${task.startTime},data-end=${task.endTime},data-vehicle-id=${task.vehicleId},data-status=${task.statusClass}"
+                       th:style="${task.style}"
+                       th:title="${task.title}">
+                        <span class="task-time" th:text="${task.timeLabel}"></span>
+                        <span th:if="${task.overlapping}" class="task-overlap-flag">OVERLAP</span>
+                        <span class="task-booker" th:text="${task.bookerName}"></span>
+                        <span th:if="${!task.compactText and task.routeLabel != null and !#strings.isEmpty(task.routeLabel)}"
+                              class="task-route"
+                              th:text="${task.routeLabel}"></span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<style>
+.fleet-main { max-width: 100%; padding: 0 1rem; margin: 1.5rem auto; }
+.fleet-main .date-label,
+.fleet-main .hours-label,
+.fleet-main .hours-warning {
+    white-space: nowrap;
+}
+.hours-label {
+    font-size: 12px; color: #888; background: #f0f0f0;
+    padding: 2px 8px; border-radius: 10px; margin-left: 0.5rem;
+}
+.hours-warning {
+    font-size: 11px; color: #b45309; background: #fef3c7;
+    padding: 2px 8px; border-radius: 10px; margin-left: 4px;
+}
+.fleet-legend {
+    display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;
+    margin-bottom: 0.75rem; font-size: 12px; color: #555;
+}
+.legend-item { display: flex; align-items: center; gap: 0.4rem; }
+.legend-note { color: #666; }
+.swatch {
+    width: 14px; height: 14px; border-radius: 3px; display: inline-block;
+    border: 1px solid rgba(0,0,0,.15);
+}
+.swatch.ordered { background: #e53935; }
+.swatch.started { background: #fdd835; }
+.swatch.done { background: #43a047; }
+.swatch.cancelled { background: #fce4ec; border-color: #f9a8c0; }
+.swatch.overlap {
+    background: repeating-linear-gradient(135deg, #111 0 3px, #f59e0b 3px 6px);
+}
+.filter-toggle {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.35rem;
+    margin-left: 0.5rem;
+    margin-bottom: 0;
+    font-size: 12px;
+    color: #4b5563;
+    user-select: none;
+    white-space: nowrap;
+}
+.filter-toggle input {
+    margin: 0;
+}
+.grid-scroll { overflow: auto; padding-bottom: 0.5rem; }
+.fleet-board {
+    min-width: 1180px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+.fleet-header,
+.fleet-row {
+    display: grid;
+    grid-template-columns: 220px minmax(900px, 1fr);
+    gap: 0.75rem;
+    align-items: stretch;
+}
+.fleet-label-cell,
+.fleet-row-label {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    border-radius: 8px;
+    background: #f0f2f5;
+}
+.fleet-label-cell {
+    padding: 0.8rem 1rem;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: #555;
+}
+.fleet-timeline-header,
+.fleet-row-track {
+    position: relative;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #fff;
+    overflow: hidden;
+}
+.fleet-timeline-header {
+    height: 58px;
+    background: linear-gradient(to bottom, #fafafa, #fff);
+}
+.time-marker,
+.track-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 0;
+    border-left: 1px solid #eceff3;
+}
+.time-marker.hour,
+.track-line.hour {
+    border-left-color: #d1d5db;
+}
+.time-marker span {
+    position: absolute;
+    left: 0;
+    top: 0.65rem;
+    transform: translateX(-50%);
+    font-size: 11px;
+    font-weight: 600;
+    color: #666;
+    white-space: nowrap;
+}
+.row-link,
+.row-link-static {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.2rem;
+    padding: 0.9rem 1rem;
+    text-decoration: none;
+    color: #111827;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #fff;
+}
+.row-link:hover { border-color: #c8102e; }
+.fleet-row-label.unassigned .row-link-static {
+    background: linear-gradient(180deg, #f5f5f5 0%, #e5e7eb 100%);
+    border: 2px solid #374151;
+    box-shadow: inset 0 0 0 1px rgba(17, 24, 39, 0.18);
+}
+.fleet-row-unassigned .fleet-row-label {
+    background: #f3f4f6;
+}
+.row-title { font-weight: 700; }
+.row-subtitle { font-size: 12px; color: #6b7280; }
+.row-alert-badge {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    background: #fff;
+    border: 1px solid #374151;
+    color: #111827;
+    background: #e5e7eb;
+    font-size: 11px;
+    font-weight: 700;
+}
+.fleet-row-track {
+    min-height: 56px;
+    background-image: linear-gradient(to bottom, rgba(248,250,252,0.9), rgba(255,255,255,0.9));
+    cursor: crosshair;
+}
+.fleet-row-track.unassigned-track {
+    border: 2px solid #374151;
+    background-color: #f3f4f6;
+    background-image: repeating-linear-gradient(
+        135deg,
+        rgba(31, 41, 55, 0.08) 0 8px,
+        rgba(243, 244, 246, 0.95) 8px 16px
+    );
+    box-shadow: inset 0 0 0 1px rgba(17, 24, 39, 0.12);
+}
+.fleet-row-track.drop-allowed {
+    background-image: linear-gradient(to bottom, rgba(220,252,231,0.95), rgba(255,255,255,0.95));
+    border-color: #16a34a;
+}
+.row-empty {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9ca3af;
+    font-size: 12px;
+    pointer-events: none;
+}
+.task-block {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 0.4rem 0.55rem;
+    border-radius: 8px;
+    color: #fff;
+    text-decoration: none;
+    box-shadow: 0 1px 4px rgba(0,0,0,.18);
+    overflow: visible;
+    min-width: 72px;
+}
+.task-block:hover { filter: brightness(1.06); }
+.task-block { cursor: pointer; }
+.task-block.dragging {
+    opacity: 0.5;
+}
+.task-block.dark-text { color: #222; }
+.fleet-row-track.unassigned-track .task-block {
+    background: #4b5563;
+    color: #fff;
+    border: 2px solid #111827;
+    box-shadow: 0 2px 8px rgba(17, 24, 39, 0.3);
+}
+.fleet-row-track.unassigned-track .task-block::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 6px;
+    background-image:
+        repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.14) 0 4px, rgba(255, 255, 255, 0) 4px 8px),
+        repeating-linear-gradient(45deg, rgba(17, 24, 39, 0.16) 0 4px, rgba(17, 24, 39, 0) 4px 8px);
+    pointer-events: none;
+}
+.fleet-row-track.unassigned-track .task-block .task-time,
+.fleet-row-track.unassigned-track .task-block .task-route {
+    opacity: 0.95;
+}
+.task-block.status-cancelled {
+    background: #fce4ec;
+    color: #9f1239;
+    border: 1px solid #f9a8c0;
+}
+.task-block.status-cancelled .task-time,
+.task-block.status-cancelled .task-booker,
+.task-block.status-cancelled .task-route {
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
+}
+.fleet-row-track.unassigned-track .task-block.status-cancelled {
+    background: #fce4ec;
+    color: #9f1239;
+    border: 1px solid #f9a8c0;
+    box-shadow: 0 2px 8px rgba(159, 18, 57, 0.2);
+}
+.task-time { font-size: 11px; opacity: 0.88; font-weight: 500; }
+.task-booker {
+    font-weight: 700;
+    font-size: 13px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    line-height: 1.3;
+}
+.task-route {
+    font-size: 11px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    opacity: 0.95;
+    line-height: 1.3;
+}
+.task-overlap-flag {
+    align-self: flex-start;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    background: rgba(17, 24, 39, 0.95);
+    color: #fbbf24;
+    border: 1px solid #fbbf24;
+    border-radius: 999px;
+    padding: 1px 6px;
+}
+.task-block.overlap {
+    outline: 3px solid #111827;
+    outline-offset: -2px;
+    box-shadow: 0 0 0 2px #f59e0b, 0 4px 10px rgba(0,0,0,.28);
+}
+.task-block.overlap::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 8px;
+    background: repeating-linear-gradient(
+        135deg,
+        rgba(17, 24, 39, 0.18) 0 4px,
+        rgba(245, 158, 11, 0.06) 4px 8px
+    );
+    pointer-events: none;
+}
+/* ── Current time vertical needle ─────────────────── */
+.current-time-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #ef4444;
+    z-index: 20;
+    pointer-events: none;
+    transform: translateX(-50%);
+}
+.fleet-timeline-header .current-time-line {
+    background: rgba(239,68,68,0.85);
+}
+.ct-label {
+    position: absolute;
+    top: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #ef4444;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+.status-ordered { background: #e53935; }
+.status-started { background: #fdd835; }
+.status-done { background: #43a047; }
+.status-cancelled { background: #fce4ec; color: #9f1239; border: 1px solid #f9a8c0; }
+.drag-feedback {
+    margin: 0 0 0.75rem;
+    font-size: 12px;
+    font-weight: 600;
+    color: #065f46;
+    background: #d1fae5;
+    border: 1px solid #6ee7b7;
+    border-radius: 8px;
+    padding: 6px 10px;
+}
+.drag-feedback.error {
+    color: #991b1b;
+    background: #fef2f2;
+    border-color: #fca5a5;
+}
+.task-context-menu {
+    position: fixed;
+    z-index: 80;
+    min-width: 170px;
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    box-shadow: 0 12px 28px rgba(17, 24, 39, 0.18);
+    padding: 0.35rem;
+}
+.task-context-menu-item {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: #111827;
+    font: inherit;
+    text-align: left;
+    padding: 0.55rem 0.7rem;
+    border-radius: 8px;
+    cursor: pointer;
+}
+.task-context-menu-item:hover {
+    background: #f3f4f6;
+}
+.task-context-menu-item-danger {
+    color: #b91c1c;
+}
+.task-context-menu-item-danger:hover {
+    background: #fef2f2;
+}
+.task-context-separator {
+    margin: 0.35rem 0;
+    border-top: 1px solid #e5e7eb;
+}
+.task-context-menu-hint {
+    padding: 0.45rem 0.7rem;
+    color: #6b7280;
+    font-size: 12px;
+}
+@media (max-width: 1100px) {
+    .fleet-header,
+    .fleet-row {
+        grid-template-columns: 180px minmax(900px, 1fr);
+    }
+}
+</style>
+
+<script>
+function goFleetDate(value) {
+    var params = new URLSearchParams();
+    if (value) {
+        params.set('date', value);
+    }
+    var showCancelled = document.getElementById('showCancelledToggle');
+    if (showCancelled && showCancelled.checked) {
+        params.set('showCancelled', 'true');
+    }
+    window.location = '/fleet' + (params.toString() ? ('?' + params.toString()) : '');
+}
+
+(function () {
+    var board = document.querySelector('.fleet-board');
+    if (!board) return;
+    var dragState = null;
+    var contextMenu = document.getElementById('fleetTaskMenu');
+    var duplicateTaskButton = document.getElementById('duplicateTaskButton');
+    var statusStartButton = document.getElementById('statusStartButton');
+    var statusToOrderedButton = document.getElementById('statusToOrderedButton');
+    var statusDoneButton = document.getElementById('statusDoneButton');
+    var statusMenuHint = document.getElementById('statusMenuHint');
+    var cancelTaskButton = document.getElementById('cancelTaskButton');
+    var reopenTaskButton = document.getElementById('reopenTaskButton');
+    var contextTaskId = null;
+
+    function hideStatusActions() {
+        if (statusStartButton) statusStartButton.style.display = 'none';
+        if (statusToOrderedButton) statusToOrderedButton.style.display = 'none';
+        if (statusDoneButton) statusDoneButton.style.display = 'none';
+        if (statusMenuHint) statusMenuHint.style.display = 'none';
+        if (cancelTaskButton) cancelTaskButton.style.display = 'none';
+        if (reopenTaskButton) reopenTaskButton.style.display = 'none';
+    }
+
+    function configureStatusActions(taskEl) {
+        hideStatusActions();
+        if (!taskEl) return;
+
+        var hasVehicle = !!(taskEl.dataset.vehicleId && taskEl.dataset.vehicleId.trim() !== '');
+        var status = (taskEl.dataset.status || '').toLowerCase();
+
+        // Cancel / reopen always visible
+        if (status === 'cancelled') {
+            if (reopenTaskButton) reopenTaskButton.style.display = 'block';
+        } else {
+            if (cancelTaskButton) cancelTaskButton.style.display = 'block';
+        }
+
+        if (!hasVehicle || status === 'cancelled') {
+            if (!hasVehicle && status !== 'cancelled') {
+                if (statusMenuHint) statusMenuHint.style.display = 'block';
+            }
+            return;
+        }
+
+        if (status === 'ordered') {
+            if (statusStartButton) statusStartButton.style.display = 'block';
+        } else if (status === 'started') {
+            if (statusToOrderedButton) statusToOrderedButton.style.display = 'block';
+            if (statusDoneButton) statusDoneButton.style.display = 'block';
+        } else if (status === 'done') {
+            if (statusToOrderedButton) statusToOrderedButton.style.display = 'block';
+        }
+    }
+
+    function toMins(hhmm) {
+        var parts = hhmm.split(':');
+        return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+    }
+
+    function updateNeedle() {
+        var openFrom  = board.dataset.openFrom;
+        var openUntil = board.dataset.openUntil;
+        if (!openFrom || !openUntil) return;
+
+        var fromMins  = toMins(openFrom);
+        var untilMins = toMins(openUntil);
+        var now       = new Date();
+        var nowMins   = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
+
+        var lines = board.querySelectorAll('.current-time-line');
+        if (nowMins < fromMins || nowMins > untilMins) {
+            lines.forEach(function (l) { l.style.display = 'none'; });
+            return;
+        }
+
+        var pct = ((nowMins - fromMins) / (untilMins - fromMins)) * 100;
+        var timeStr = now.getHours().toString().padStart(2,'0') + ':'
+                    + now.getMinutes().toString().padStart(2,'0');
+
+        lines.forEach(function (l) {
+            l.style.display = '';
+            l.style.left = pct + '%';
+            var lbl = l.querySelector('.ct-label');
+            if (lbl) lbl.textContent = timeStr;
+        });
+    }
+
+    function toHHmm(totalMinutes) {
+        var h = Math.floor(totalMinutes / 60);
+        var m = totalMinutes % 60;
+        return h.toString().padStart(2, '0') + ':' + m.toString().padStart(2, '0');
+    }
+
+    function bindCreateClick(track) {
+        track.addEventListener('click', function (event) {
+            if (event.target.closest('.task-block')) return;
+            if (board.dataset.dragging === '1') return;
+
+            var openFrom = board.dataset.openFrom;
+            var openUntil = board.dataset.openUntil;
+            var date = track.dataset.date;
+            if (!openFrom || !openUntil || !date) return;
+
+            var fromMins = toMins(openFrom);
+            var untilMins = toMins(openUntil);
+            var span = Math.max(5, untilMins - fromMins);
+
+            var rect = track.getBoundingClientRect();
+            var x = event.clientX - rect.left;
+            var ratio = Math.max(0, Math.min(1, x / rect.width));
+            var clickedMins = fromMins + ratio * span;
+
+            var startMins = Math.round(clickedMins / 5) * 5;
+            startMins = Math.max(fromMins, Math.min(untilMins - 5, startMins));
+
+            var params = new URLSearchParams();
+            params.set('date', date);
+            params.set('start', toHHmm(startMins));
+            params.set('returnTo', 'fleet');
+
+            var vehicleId = track.dataset.vehicleId;
+            if (vehicleId) {
+                params.set('vehicleId', vehicleId);
+            }
+
+            window.location.href = '/tasks/new?' + params.toString();
+        });
+    }
+
+    function durationMins(taskEl) {
+        var start = toMins(taskEl.dataset.start);
+        var end = toMins(taskEl.dataset.end);
+        if (isNaN(start) || isNaN(end)) return 15;
+        return Math.max(5, end - start);
+    }
+
+    function showFeedback(message, isError) {
+        var el = document.getElementById('fleetDragFeedback');
+        if (!el) return;
+        el.textContent = message;
+        el.classList.toggle('error', !!isError);
+        el.style.display = '';
+        window.clearTimeout(showFeedback._timer);
+        showFeedback._timer = window.setTimeout(function () {
+            el.style.display = 'none';
+        }, 2800);
+    }
+
+    function hideContextMenu() {
+        if (!contextMenu) return;
+        contextMenu.style.display = 'none';
+        contextTaskId = null;
+    }
+
+    function showContextMenu(taskId, clientX, clientY) {
+        if (!contextMenu) return;
+        contextTaskId = taskId;
+        contextMenu.style.display = 'block';
+        contextMenu.style.left = clientX + 'px';
+        contextMenu.style.top = clientY + 'px';
+
+        var rect = contextMenu.getBoundingClientRect();
+        var left = clientX;
+        var top = clientY;
+        if (rect.right > window.innerWidth - 8) {
+            left = Math.max(8, window.innerWidth - rect.width - 8);
+        }
+        if (rect.bottom > window.innerHeight - 8) {
+            top = Math.max(8, window.innerHeight - rect.height - 8);
+        }
+        contextMenu.style.left = left + 'px';
+        contextMenu.style.top = top + 'px';
+    }
+
+    function updateTaskStatus(taskId, status) {
+        var body = new URLSearchParams();
+        body.set('status', status);
+        fetch('/tasks/api/' + taskId + '/status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+            body: body.toString()
+        }).then(function (resp) {
+            if (!resp.ok) {
+                return resp.json().then(function (x) { throw new Error(x.error || 'Statusskift fejlede'); });
+            }
+            return resp.json();
+        }).then(function () {
+            window.location.reload();
+        }).catch(function (err) {
+            showFeedback(err.message || 'Kunne ikke opdatere status.', true);
+        });
+    }
+
+    function toggleCancelTask(taskId) {
+        fetch('/tasks/api/' + taskId + '/cancel', {
+            method: 'POST'
+        }).then(function (resp) {
+            if (!resp.ok) {
+                return resp.json().then(function (x) { throw new Error(x.error || 'Handling fejlede'); });
+            }
+            return resp.json();
+        }).then(function () {
+            window.location.reload();
+        }).catch(function (err) {
+            showFeedback(err.message || 'Kunne ikke opdatere status.', true);
+        });
+    }
+
+    function duplicateTask(taskId) {
+        fetch('/tasks/api/' + taskId + '/duplicate', {
+            method: 'POST'
+        }).then(function (resp) {
+            if (!resp.ok) {
+                return resp.json().then(function (x) { throw new Error(x.error || 'Kopiering fejlede'); });
+            }
+            return resp.json();
+        }).then(function () {
+            window.location.reload();
+        }).catch(function (err) {
+            showFeedback(err.message || 'Kunne ikke kopiere kørslen.', true);
+        });
+    }
+
+    function bindDragDrop(track) {
+        track.addEventListener('dragover', function (event) {
+            event.preventDefault();
+            track.classList.add('drop-allowed');
+        });
+        track.addEventListener('dragleave', function () {
+            track.classList.remove('drop-allowed');
+        });
+        track.addEventListener('drop', function (event) {
+            event.preventDefault();
+            track.classList.remove('drop-allowed');
+
+            var taskId = event.dataTransfer.getData('text/task-id');
+            if (!taskId) return;
+
+            var taskEl = board.querySelector('.task-block[data-task-id="' + taskId + '"]');
+            if (!taskEl) return;
+
+            var openFrom = board.dataset.openFrom;
+            var openUntil = board.dataset.openUntil;
+            var date = track.dataset.date;
+            if (!openFrom || !openUntil || !date) return;
+
+            var fromMins = toMins(openFrom);
+            var untilMins = toMins(openUntil);
+            var span = Math.max(5, untilMins - fromMins);
+            var dur = Math.max(5, Math.min(durationMins(taskEl), span));
+
+            var rect = track.getBoundingClientRect();
+            var x = event.clientX - rect.left;
+            var grabOffset = dragState && dragState.taskId === taskId ? dragState.grabOffsetPx : 0;
+            var leftPx = x - grabOffset;
+            var ratio = Math.max(0, Math.min(1, leftPx / rect.width));
+            var clickedMins = fromMins + ratio * span;
+
+            var maxStart = Math.max(fromMins, untilMins - dur);
+            var startMins = Math.round(clickedMins / 5) * 5;
+            startMins = Math.max(fromMins, Math.min(maxStart, startMins));
+            var endMins = startMins + dur;
+
+            var vehicleId = track.dataset.vehicleId || '';
+            var body = new URLSearchParams();
+            body.set('date', date);
+            body.set('start', toHHmm(startMins));
+            body.set('end', toHHmm(endMins));
+            if (vehicleId) body.set('vehicleId', vehicleId);
+
+            fetch('/tasks/api/' + taskId + '/move', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+                body: body.toString()
+            }).then(function (resp) {
+                if (!resp.ok) {
+                    return resp.json().then(function (x) { throw new Error(x.error || 'Flytning fejlede'); });
+                }
+                return resp.json();
+            }).then(function () {
+                window.location.reload();
+            }).catch(function (err) {
+                showFeedback(err.message || 'Kunne ikke flytte kørslen.', true);
+            });
+        });
+    }
+
+    board.querySelectorAll('.task-block').forEach(function (taskEl) {
+        taskEl.addEventListener('contextmenu', function (event) {
+            event.preventDefault();
+            hideContextMenu();
+            configureStatusActions(taskEl);
+            showContextMenu(taskEl.dataset.taskId, event.clientX, event.clientY);
+        });
+        taskEl.addEventListener('dragstart', function (event) {
+            hideContextMenu();
+            board.dataset.dragging = '1';
+            taskEl.classList.add('dragging');
+            var taskRect = taskEl.getBoundingClientRect();
+            var grabOffsetPx = Math.max(0, Math.min(taskRect.width, event.clientX - taskRect.left));
+            dragState = { taskId: taskEl.dataset.taskId, grabOffsetPx: grabOffsetPx };
+            event.dataTransfer.setData('text/task-id', taskEl.dataset.taskId);
+            event.dataTransfer.effectAllowed = 'move';
+        });
+        taskEl.addEventListener('dragend', function () {
+            taskEl.classList.remove('dragging');
+            board.dataset.dragging = '0';
+            dragState = null;
+            board.querySelectorAll('.fleet-row-track.drop-allowed').forEach(function (el) {
+                el.classList.remove('drop-allowed');
+            });
+        });
+    });
+
+    updateNeedle();
+    board.querySelectorAll('.fleet-row-track').forEach(function (track) {
+        bindCreateClick(track);
+        bindDragDrop(track);
+    });
+    if (duplicateTaskButton) {
+        duplicateTaskButton.addEventListener('click', function () {
+            if (!contextTaskId) return;
+            var taskId = contextTaskId;
+            hideContextMenu();
+            duplicateTask(taskId);
+        });
+    }
+    if (statusStartButton) {
+        statusStartButton.addEventListener('click', function () {
+            if (!contextTaskId) return;
+            var taskId = contextTaskId;
+            hideContextMenu();
+            updateTaskStatus(taskId, 'STARTED');
+        });
+    }
+    if (statusToOrderedButton) {
+        statusToOrderedButton.addEventListener('click', function () {
+            if (!contextTaskId) return;
+            var taskId = contextTaskId;
+            hideContextMenu();
+            updateTaskStatus(taskId, 'ORDERED');
+        });
+    }
+    if (statusDoneButton) {
+        statusDoneButton.addEventListener('click', function () {
+            if (!contextTaskId) return;
+            var taskId = contextTaskId;
+            hideContextMenu();
+            updateTaskStatus(taskId, 'DONE');
+        });
+    }
+    if (cancelTaskButton) {
+        cancelTaskButton.addEventListener('click', function () {
+            if (!contextTaskId) return;
+            if (!confirm('Annuller denne kørsel?')) return;
+            var taskId = contextTaskId;
+            hideContextMenu();
+            toggleCancelTask(taskId);
+        });
+    }
+    if (reopenTaskButton) {
+        reopenTaskButton.addEventListener('click', function () {
+            if (!contextTaskId) return;
+            if (!confirm('Genåbn denne kørsel?')) return;
+            var taskId = contextTaskId;
+            hideContextMenu();
+            toggleCancelTask(taskId);
+        });
+    }
+    document.addEventListener('click', function (event) {
+        if (contextMenu && !contextMenu.contains(event.target)) {
+            hideContextMenu();
+        }
+    });
+    window.addEventListener('scroll', hideContextMenu, true);
+    window.addEventListener('resize', hideContextMenu);
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+            hideContextMenu();
+        }
+    });
+    setInterval(updateNeedle, 30000);
+})();
+</script>
+
+</body>
+</html>

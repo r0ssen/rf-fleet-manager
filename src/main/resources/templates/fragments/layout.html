@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:fragment="head(title)">
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title th:text="${title} + ' — Fleet Manager'">Fleet Manager</title>
+    <link rel="stylesheet" th:href="@{/css/main.css}"/>
+</head>
+<body>
+<nav th:fragment="nav">
+    <div class="nav-brand">🚚 Fleet Manager</div>
+    <div class="nav-links">
+        <a th:href="@{/tasks}">Kørsler</a>
+        <a th:href="@{/fleet}">Flådeoversigt</a>
+        <a th:href="@{/vehicles}">Biler</a>
+        <a th:href="@{/opening-hours}">Åbningstider</a>
+    </div>
+    <div class="nav-logout"></div>
+</nav>
+</body>
+</html>

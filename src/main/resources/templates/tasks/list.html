@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head('Kørsler')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main>
+    <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
+
+    <div class="toolbar">
+        <h1>Kørselsadministration</h1>
+        <div class="date-nav">
+            <a th:href="@{/tasks(date=${prevDay},showCancelled=${showCancelled})}" class="btn-secondary">&#8249;</a>
+            <input type="date" name="date" id="taskDatePicker"
+                   th:value="${#temporals.format(date, 'yyyy-MM-dd')}"
+                   onchange="goTaskDate(this.value)"/>
+            <a th:href="@{/tasks(date=${nextDay},showCancelled=${showCancelled})}" class="btn-secondary">&#8250;</a>
+            <span class="date-label"
+                  th:text="${#temporals.format(date, 'EEEE d. MMMM yyyy', danishLocale)}"></span>
+        </div>
+        <a th:href="@{/tasks/new(date=${date},returnTo='tasks')}" class="btn-primary">+ Opret kørsel</a>
+        <label style="display:inline-flex;flex-direction:row;align-items:center;gap:0.35rem;margin-left:0.25rem;margin-bottom:0;white-space:nowrap;font-size:12px;color:#4b5563;">
+            <input type="checkbox" id="showCancelledToggle" th:checked="${showCancelled}" onchange="goTaskDate(document.getElementById('taskDatePicker').value)"/>
+            <span>Vis annullerede</span>
+        </label>
+    </div>
+
+    <div class="table-wrap">
+    <table class="task-table">
+        <thead>
+            <tr>
+                <th>Tidspunkt</th>
+                <th>Bestiller</th>
+                <th>Steder</th>
+                <th>Afdeling</th>
+                <th>Bil</th>
+                <th>Chauffør</th>
+                <th>Beskrivelse</th>
+                <th>Status</th>
+                <th>Handlinger</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="t : ${tasks}" th:classappend="'row-' + ${t.status.name().toLowerCase()} + (${t.vehicleId == null} ? ' row-no-vehicle' : '')">
+                <td class="col-time">
+                    <span th:text="${#temporals.format(t.startTs, 'HH:mm')}"></span>
+                    <span th:if="${t.endTs != null}"> – <span th:text="${#temporals.format(t.endTs, 'HH:mm')}"></span></span>
+                </td>
+                <td class="col-booker">
+                    <strong th:text="${t.bookerName}"></strong>
+                    <span th:if="${t.bookerPhone != null}" class="phone" th:text="${'📞 ' + t.bookerPhone}"></span>
+                    <span th:if="${t.contactName != null}" class="contact" th:text="${'Kontakt: ' + t.contactName}"></span>
+                </td>
+                <td class="col-route">
+                    <span th:text="${t.startPoint}"></span>
+                    <span th:if="${t.viaPoint != null}" class="via"> via <em th:text="${t.viaPoint}"></em></span>
+                    <span class="arrow"> → </span>
+                    <span th:text="${t.endPoint}"></span>
+                    <a th:if="${t.directionsUrl() != null}" th:href="${t.directionsUrl()}" target="_blank" class="map-link" title="Hent rutevejledning">🗺</a>
+                </td>
+                <td class="col-affiliation">
+                    <span th:text="${t.division}"></span>
+                    <span th:if="${t.team != null}" class="team">/ <span th:text="${t.team}"></span></span>
+                </td>
+                <td class="col-vehicle">
+                    <span th:if="${t.vehicle != null}" th:text="${'Bil ' + t.vehicle.vehicleNo + (t.vehicle.model != null ? ' – ' + t.vehicle.model : '')}"></span>
+                    <span th:if="${t.vehicleId == null}" class="vehicle-missing-badge">Ikke tildelt bil</span>
+                </td>
+                <td class="col-driver" th:text="${t.driverName}"></td>
+                <td class="col-desc"><span class="desc-text" th:text="${t.description}"></span></td>
+                <td class="col-status">
+                    <div><strong th:text="${t.status.danishLabel()}">Bestilt</strong></div>
+                    <form th:if="${t.vehicleId != null and t.status.name() == 'ORDERED'}"
+                          th:action="@{/tasks/{id}/status(id=${t.taskId})}" method="post" style="margin-top:4px;">
+                        <input type="hidden" name="date" th:value="${#temporals.format(date,'yyyy-MM-dd')}"/>
+                        <input type="hidden" name="returnTo" value="tasks"/>
+                        <input type="hidden" name="showCancelled" th:value="${showCancelled}"/>
+                        <button type="submit" class="btn-small" name="status" value="STARTED">Start</button>
+                    </form>
+                    <form th:if="${t.vehicleId != null and t.status.name() == 'STARTED'}"
+                          th:action="@{/tasks/{id}/status(id=${t.taskId})}" method="post" style="margin-top:4px; display:flex; gap:6px;">
+                        <input type="hidden" name="date" th:value="${#temporals.format(date,'yyyy-MM-dd')}"/>
+                        <input type="hidden" name="returnTo" value="tasks"/>
+                        <input type="hidden" name="showCancelled" th:value="${showCancelled}"/>
+                        <button type="submit" class="btn-small" name="status" value="ORDERED">Til Bestilt</button>
+                        <button type="submit" class="btn-small" name="status" value="DONE">Udført</button>
+                    </form>
+                    <form th:if="${t.vehicleId != null and t.status.name() == 'DONE'}"
+                          th:action="@{/tasks/{id}/status(id=${t.taskId})}" method="post" style="margin-top:4px;">
+                        <input type="hidden" name="date" th:value="${#temporals.format(date,'yyyy-MM-dd')}"/>
+                        <input type="hidden" name="returnTo" value="tasks"/>
+                        <input type="hidden" name="showCancelled" th:value="${showCancelled}"/>
+                        <button type="submit" class="btn-small" name="status" value="ORDERED">Til Bestilt</button>
+                    </form>
+                </td>
+                <td class="col-actions">
+                    <a th:href="@{/tasks/{id}/edit(id=${t.taskId},returnTo='tasks')}" class="btn-small">Rediger</a>
+                    <form th:action="@{/tasks/{id}/duplicate(id=${t.taskId})}" method="post" style="display:inline"
+                          onsubmit="return confirm('Kopier denne kørsel?')">
+                        <input type="hidden" name="date" th:value="${#temporals.format(date,'yyyy-MM-dd')}"/>
+                        <input type="hidden" name="showCancelled" th:value="${showCancelled}"/>
+                        <button type="submit" class="btn-small btn-secondary">Kopiér</button>
+                    </form>
+                    <form th:if="${t.status.name() != 'CANCELLED'}"
+                          th:action="@{/tasks/{id}/delete(id=${t.taskId})}" method="post" style="display:inline"
+                          onsubmit="return confirm('Annuller denne kørsel?')">
+                        <input type="hidden" name="date" th:value="${#temporals.format(date,'yyyy-MM-dd')}"/>
+                        <input type="hidden" name="returnTo" value="tasks"/>
+                        <input type="hidden" name="showCancelled" th:value="${showCancelled}"/>
+                        <button type="submit" class="btn-small btn-danger">Annuller</button>
+                    </form>
+                    <form th:if="${t.status.name() == 'CANCELLED'}"
+                          th:action="@{/tasks/{id}/delete(id=${t.taskId})}" method="post" style="display:inline"
+                          onsubmit="return confirm('Genåbn denne kørsel?')">
+                        <input type="hidden" name="date" th:value="${#temporals.format(date,'yyyy-MM-dd')}"/>
+                        <input type="hidden" name="returnTo" value="tasks"/>
+                        <input type="hidden" name="showCancelled" th:value="${showCancelled}"/>
+                        <button type="submit" class="btn-small btn-secondary">Genåbn</button>
+                    </form>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(tasks)}">
+                <td colspan="9" class="empty">Ingen kørsler registreret for denne dag.</td>
+            </tr>
+        </tbody>
+    </table>
+    </div>
+
+    <div class="summary-bar" th:if="${not #lists.isEmpty(tasks)}">
+        <span th:text="${#lists.size(tasks)} + ' kørsel(er) i alt'"></span>
+        <span class="dot ordered"></span>
+        <span th:text="${#lists.size(tasks.?[status.name() == 'ORDERED'])} + ' bestilt'"></span>
+        <span class="dot started"></span>
+        <span th:text="${#lists.size(tasks.?[status.name() == 'STARTED'])} + ' startet'"></span>
+        <span class="dot done"></span>
+        <span th:text="${#lists.size(tasks.?[status.name() == 'DONE'])} + ' udført'"></span>
+    </div>
+</main>
+<script>
+function goTaskDate(value) {
+    var params = new URLSearchParams();
+    if (value) {
+        params.set('date', value);
+    }
+    var showCancelled = document.getElementById('showCancelledToggle');
+    if (showCancelled && showCancelled.checked) {
+        params.set('showCancelled', 'true');
+    }
+    window.location = '/tasks' + (params.toString() ? ('?' + params.toString()) : '');
+}
+</script>
+</body>
+</html>

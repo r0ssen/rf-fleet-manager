@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="db-forest-configuration">
+    <data version="2">.
+	1:0:d640f2ab-5206-43f4-aa89-5806f00f111b:Oracle
+	11:0:260b5d43-6f77-421d-ad18-0c7f398aee89:DB2
+	----------------------------------------
+	2:1:9d41f7ee-b923-4a41-aab6-28e1cc24845b
+	3:1:1645bb30-3e46-4a5e-a8be-5583bbd570aa
+	4:1:b3b90a3a-69fa-4c0a-a86b-65dde5f4902b
+	5:1:b262e83a-ec01-483c-be37-216d5d0c89a7
+	6:1:b5849713-4bd0-40b4-8189-5987177704e4
+	7:1:faffb8cd-7cb5-4b10-aa9a-37fa90bd7dbb
+	8:1:0c0d8fae-52ae-4184-b443-780cb983a294
+	9:1:d8fe6643-30ba-40c3-87cf-0370ab739e94
+	10:1:d72a8cd7-bb09-45af-a009-add365727513
+	12:11:e2b1c55b-1540-47f0-9d33-0c1aa1e3312d
+	13:11:82c04e38-9f77-4c73-a13f-b925871d17c0
+	14:11:90554460-c0bc-4c86-8cd7-85260b74b68c
+	15:11:eb4eb954-7fdf-4e08-9a1a-2d051f329ce4
+	16:11:d57ab0a4-f7e0-4539-ba00-c3a9e16887cd
+	17:11:0ec050a0-fd37-46f8-b6c7-b45d00e98d45
+	18:0:49a75370-3c10-4f21-8c39-96eebaffd32e
+		.</data>
+  </component>
+</project>

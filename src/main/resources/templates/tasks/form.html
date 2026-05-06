@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${task.taskId == 0} ? 'Ny kørsel' : 'Rediger kørsel')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="form-main">
+    <div class="form-header">
+        <a th:href="${returnTo == 'tasks'} ? @{/tasks(date=${task.startTs != null} ? ${#temporals.format(task.startTs,'yyyy-MM-dd')} : ${#dates.format(#dates.createNow(),'yyyy-MM-dd')})} : @{/fleet(date=${task.startTs != null} ? ${#temporals.format(task.startTs,'yyyy-MM-dd')} : ${#dates.format(#dates.createNow(),'yyyy-MM-dd')})}"
+           class="back-link">← Tilbage til [[${returnTo == 'tasks'} ? 'kørsler' : 'flådeoversigt']]</a>
+        <h1 th:text="${task.taskId == 0} ? 'Administrer kørsel – Ny' : 'Administrer kørsel – Rediger'">Administrer kørsel</h1>
+    </div>
+
+    <form th:action="${task.taskId == 0} ? @{/tasks} : @{/tasks/{id}(id=${task.taskId})}"
+          th:object="${task}" method="post" id="taskForm">
+        <input type="hidden" th:field="*{version}"/>
+        <input type="hidden" name="returnTo" th:value="${returnTo}"/>
+        <div class="form-error" th:if="${#fields.hasAnyErrors()}">
+            <p>Kunne ikke gemme. Ret felterne med fejl og prøv igen.</p>
+        </div>
+        <div class="form-grid">
+
+            <fieldset class="fs-time" th:disabled="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}">
+                <legend>Tidspunkt</legend>
+                <div class="time-order-error"
+                     th:if="${#strings.contains(#strings.listJoin(#fields.errors('endTs'), ' '), 'efter starttid')}">
+                    <strong>Tidsfejl:</strong> Sluttid skal ligge efter starttid.
+                </div>
+                                        <div id="noHoursWarning" class="time-order-error" style="display:none;">
+                                            <strong>Advarsel:</strong> Ingen åbningstider registreret for denne dato. Kontakt administrator.
+                                        </div>
+                <div class="field-row">
+                    <label>Dato / Start
+                        <input type="date" id="startDate" required/>
+                    </label>
+                </div>
+                <div class="field-row">
+                    <label>Tid (fra)
+                        <select id="startTime" required>
+                            <option th:if="${#lists.isEmpty(timeOptions)}" value="08:00">08:00</option>
+                            <option th:each="time : ${timeOptions}" th:value="${time}" th:text="${time}"></option>
+                        </select>
+                    </label>
+                    <p class="field-error" th:if="${#fields.hasErrors('startTs')}" th:errors="*{startTs}"></p>
+                </div>
+                <input type="hidden" th:field="*{startTs}" id="startTsHidden"/>
+                <div class="field-row">
+                    <label>Tid (til)
+                        <select id="endTime" required th:classappend="${#fields.hasErrors('endTs')} ? ' input-error' : ''">
+                            <option value="">(vælg)</option>
+                            <option th:if="${#lists.isEmpty(timeOptions)}" value="08:15">08:15</option>
+                            <option th:each="time : ${timeOptions}" th:value="${time}" th:text="${time}"></option>
+                        </select>
+                    </label>
+                    <p class="field-error" th:if="${#fields.hasErrors('endTs')}" th:errors="*{endTs}"></p>
+                </div>
+                <input type="hidden" th:field="*{endTs}" id="endTsHidden"/>
+            </fieldset>
+
+            <fieldset class="fs-booker" th:disabled="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}">
+                <legend>Bestiller</legend>
+                <div class="field-row">
+                    <label>Division
+                        <input type="text" th:field="*{division}" placeholder="Division" required maxlength="80" th:errorclass="input-error"/>
+                    </label>
+                    <p class="field-error" th:if="${#fields.hasErrors('division')}" th:errors="*{division}"></p>
+                    <label>Team
+                        <input type="text" th:field="*{team}" placeholder="Team" required maxlength="80" th:errorclass="input-error"/>
+                    </label>
+                    <p class="field-error" th:if="${#fields.hasErrors('team')}" th:errors="*{team}"></p>
+                </div>
+                <div class="field-row">
+                    <label>Navn <input type="text" th:field="*{bookerName}" placeholder="Bestillerens navn" maxlength="27" required th:errorclass="input-error"/></label>
+                    <p class="field-error" th:if="${#fields.hasErrors('bookerName')}" th:errors="*{bookerName}"></p>
+                    <label>Telefon <input type="tel" th:field="*{bookerPhone}" placeholder="Telefon" maxlength="9" required th:errorclass="input-error"/></label>
+                    <p class="field-error" th:if="${#fields.hasErrors('bookerPhone')}" th:errors="*{bookerPhone}"></p>
+                </div>
+                <div class="field-row">
+                    <label>Kontaktperson <input type="text" th:field="*{contactName}" placeholder="Kontaktpersons navn" maxlength="27"/></label>
+                    <label>Telefon <input type="tel" th:field="*{contactPhone}" placeholder="Telefon" maxlength="9"/></label>
+                </div>
+            </fieldset>
+
+            <fieldset class="fs-places" th:disabled="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}">
+                <legend>Steder</legend>
+                <label>Fra
+                    <div class="input-with-btn">
+                        <input type="text" th:field="*{startPoint}" placeholder="Afhentningssted" id="startPoint" required th:errorclass="input-error"/>
+                        <a id="mapFrom" href="#" target="_blank" class="map-btn" title="Vis på Google Maps">🗺</a>
+                    </div>
+                </label>
+                <p class="field-error" th:if="${#fields.hasErrors('startPoint')}" th:errors="*{startPoint}"></p>
+                <label>Til
+                    <div class="input-with-btn">
+                        <input type="text" th:field="*{endPoint}" placeholder="Afleveringssted" id="endPoint" required th:errorclass="input-error"/>
+                        <a id="mapTo" href="#" target="_blank" class="map-btn" title="Vis på Google Maps">🗺</a>
+                    </div>
+                </label>
+                <p class="field-error" th:if="${#fields.hasErrors('endPoint')}" th:errors="*{endPoint}"></p>
+                <label>Via (valgfrit) <input type="text" th:field="*{viaPoint}" placeholder="Evt. via-punkt"/></label>
+                <a id="directionsBtn" href="#" target="_blank" class="btn-secondary directions-btn">Hent rutevejledning</a>
+            </fieldset>
+
+            <fieldset class="fs-personnel" th:disabled="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}">
+                <legend>Personel</legend>
+                <label>Bil
+                    <div class="input-with-btn">
+                        <select th:field="*{vehicleId}" id="vehicleSelect">
+                            <option value="">(vælg)</option>
+                            <option th:each="v : ${vehicles}" th:value="${v.vehicleId}"
+                                    th:text="${'Bil ' + v.vehicleNo + (v.model != null ? ': ' + v.model : '')}"></option>
+                        </select>
+                        <span class="map-btn" title="Bilinformation">?</span>
+                    </div>
+                </label>
+                <label>Chauffør <input type="text" th:field="*{driverName}" placeholder="Chaufførens navn"/></label>
+            </fieldset>
+
+            <fieldset class="fs-status fs-full"
+                      th:disabled="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}"
+                      th:classappend="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).ORDERED} ? ' status-card-ordered' :
+                                     (${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).STARTED} ? ' status-card-started' :
+                                     (${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).DONE} ? ' status-card-done' : ' status-card-cancelled')) +
+                                     (${task.vehicleId == null} ? ' status-card-unassigned' : '')">
+                <legend>Status</legend>
+                <p class="status-title"><strong th:text="'Nuværende status: ' + ${task.status.danishLabel()}">Nuværende status</strong></p>
+                <p class="status-note" th:if="${task.vehicleId == null}">Vælg en bil for at ændre status.</p>
+                <div class="field-row" th:if="${task.taskId != 0 and task.vehicleId != null and task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).ORDERED}">
+                    <button type="submit" class="btn-small"
+                            th:formaction="@{/tasks/{id}/status(id=${task.taskId})}" formmethod="post" formnovalidate
+                            name="status" value="STARTED">Start</button>
+                </div>
+                <div class="field-row" th:if="${task.taskId != 0 and task.vehicleId != null and task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).STARTED}">
+                    <button type="submit" class="btn-small"
+                            th:formaction="@{/tasks/{id}/status(id=${task.taskId})}" formmethod="post" formnovalidate
+                            name="status" value="ORDERED">Til Bestilt</button>
+                    <button type="submit" class="btn-small"
+                            th:formaction="@{/tasks/{id}/status(id=${task.taskId})}" formmethod="post" formnovalidate
+                            name="status" value="DONE">Udført</button>
+                </div>
+                <div class="field-row" th:if="${task.taskId != 0 and task.vehicleId != null and task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).DONE}">
+                    <button type="submit" class="btn-small"
+                            th:formaction="@{/tasks/{id}/status(id=${task.taskId})}" formmethod="post" formnovalidate
+                            name="status" value="ORDERED">Til Bestilt</button>
+                </div>
+            </fieldset>
+
+            <fieldset class="fs-description" th:disabled="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}">
+                <legend>Beskrivelse</legend>
+                <textarea th:field="*{description}" rows="5" placeholder="Hvad skal transporteres? Varer, udstyr, antal paller…"></textarea>
+                <label>Modtaget af <input type="text" th:field="*{receivedBy}" placeholder="Dispatcherens navn"/></label>
+            </fieldset>
+
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn-primary" th:if="${task.status != T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}">Gem</button>
+            <button type="button" class="btn-secondary" onclick="window.print()">Udskriv</button>
+            <a th:href="${returnTo == 'tasks'} ? @{/tasks(date=${task.startTs != null} ? ${#temporals.format(task.startTs,'yyyy-MM-dd')} : ${#dates.format(#dates.createNow(),'yyyy-MM-dd')})} : @{/fleet(date=${task.startTs != null} ? ${#temporals.format(task.startTs,'yyyy-MM-dd')} : ${#dates.format(#dates.createNow(),'yyyy-MM-dd')})}"
+               class="btn-secondary">Annuller</a>
+            <button type="submit" class="btn-danger" style="margin-left:auto" th:if="${task.taskId != 0 and task.status != T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}"
+                    th:formaction="@{/tasks/{id}/delete(id=${task.taskId})}" formmethod="post" formnovalidate
+                    onclick="return confirm('Er du sikker på at du vil annullere kørslen?')">
+                Annuller kørsel
+            </button>
+            <button type="submit" class="btn-secondary" style="margin-left:auto" th:if="${task.taskId != 0 and task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}"
+                    th:formaction="@{/tasks/{id}/delete(id=${task.taskId})}" formmethod="post" formnovalidate
+                    onclick="return confirm('Er du sikker på at du vil genåbne kørslen?')">
+                Genåbn kørsel
+            </button>
+        </div>
+    </form>
+</main>
+<script th:inline="javascript">
+(function() {
+    const startDateInput = document.getElementById('startDate');
+    const startTimeInput = document.getElementById('startTime');
+    const startTsHidden  = document.getElementById('startTsHidden');
+    const endTimeInput   = document.getElementById('endTime');
+    const endTsHidden    = document.getElementById('endTsHidden');
+
+    function ensureSelectHasValue(select, value) {
+        if (!select || !value) return;
+        const hasOption = Array.from(select.options).some(o => o.value === value);
+        if (!hasOption) {
+            const opt = document.createElement('option');
+            opt.value = value;
+            opt.textContent = value;
+            select.appendChild(opt);
+        }
+    }
+
+    /**
+     * Parse an OffsetDateTime string (e.g. "2026-05-04T14:30:00+02:00") into date/time components.
+     * Returns { date: "2026-05-04", time: "14:30" } or null if unparseable.
+     */
+    function parseOffsetDateTime(value) {
+        if (!value) return null;
+        try {
+            const match = value.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})(?::\d{2})?/);
+            if (!match) return null;
+            return { date: match[1], time: match[2] };
+        } catch (e) {
+            return null;
+        }
+    }
+
+    /**
+     * Create an OffsetDateTime string from a date and time in HH:mm format.
+     */
+    function createOffsetDateTime(date, time) {
+        if (!date || !time) return '';
+        // Format: YYYY-MM-DDTHH:mm (output format expected by Spring binding converter)
+        return date + 'T' + time;
+    }
+
+    /**
+     * Initialize form with existing values (if editing).
+     */
+    function initializeForm() {
+        const startTsValue = startTsHidden.value;
+        if (startTsValue) {
+            const parsed = parseOffsetDateTime(startTsValue);
+            if (parsed) {
+                ensureSelectHasValue(startTimeInput, parsed.time);
+                startDateInput.value = parsed.date;
+                startTimeInput.value = parsed.time;
+            }
+        } else {
+            // Default to today at 08:00 if new task
+            startDateInput.value = new Date().toISOString().split('T')[0];
+            ensureSelectHasValue(startTimeInput, '08:00');
+            startTimeInput.value = '08:00';
+        }
+
+        const endTsValue = endTsHidden.value;
+        if (endTsValue) {
+            const parsed = parseOffsetDateTime(endTsValue);
+            if (parsed) {
+                ensureSelectHasValue(endTimeInput, parsed.time);
+                endTimeInput.value = parsed.time;
+            }
+        } else {
+        }
+    }
+
+    /**
+     * Sync start date/time inputs to the hidden OffsetDateTime field.
+     */
+    function updateStartTs() {
+        const date = startDateInput.value;
+        const time = startTimeInput.value;
+        startTsHidden.value = createOffsetDateTime(date, time);
+    }
+
+    /**
+     * Sync end date/time inputs to the hidden OffsetDateTime field.
+     */
+    function updateEndTs() {
+        const date = startDateInput.value;
+        const time = endTimeInput.value;
+        endTsHidden.value = createOffsetDateTime(date, time);
+    }
+
+    // Event listeners
+    startDateInput.addEventListener('change', updateStartTs);
+    startTimeInput.addEventListener('change', updateStartTs);
+    endTimeInput.addEventListener('change', updateEndTs);
+
+    // Initialize on page load
+    initializeForm();
+    updateStartTs();
+    updateEndTs();
+})();
+</script>
+<script th:inline="javascript">
+/*<![CDATA[*/
+const taskForm = document.getElementById('taskForm');
+const startPointInput = document.getElementById('startPoint');
+const endPointInput   = document.getElementById('endPoint');
+const directionsBtn   = document.getElementById('directionsBtn');
+const mapFromBtn      = document.getElementById('mapFrom');
+const mapToBtn        = document.getElementById('mapTo');
+
+function updateMapLinks() {
+    const from = encodeURIComponent((startPointInput.value || '').trim());
+    const to   = encodeURIComponent((endPointInput.value || '').trim());
+    if (from && to) directionsBtn.href = 'https://maps.google.dk/maps?daddr=' + from + '+to:' + to;
+    if (from) mapFromBtn.href = 'https://maps.google.dk/maps?q=' + from;
+    if (to)   mapToBtn.href   = 'https://maps.google.dk/maps?q=' + to;
+}
+startPointInput.addEventListener('input', updateMapLinks);
+endPointInput.addEventListener('input',   updateMapLinks);
+updateMapLinks();
+/*]]>*/
+</script>
+<script th:inline="javascript">
+(function() {
+    const startDateInput = document.getElementById('startDate');
+    const startTimeInput = document.getElementById('startTime');
+    const endTimeInput = document.getElementById('endTime');
+    const noHoursWarning = document.getElementById('noHoursWarning');
+    const vehicleSelect  = document.getElementById('vehicleSelect');
+    let allTimeOptions = Array.from(startTimeInput.options || [])
+        .map(opt => opt.value)
+        .filter(v => !!v);
+
+    function toMinutes(hhmm) {
+        if (!hhmm || hhmm.indexOf(':') < 0) return null;
+        const parts = hhmm.split(':');
+        return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+    }
+
+    function rebuildEndOptions(preferredEndValue) {
+        const selectedStart = startTimeInput.value;
+        const selectedStartMins = toMinutes(selectedStart);
+        const minEndMins = selectedStartMins == null ? null : selectedStartMins + 5;
+        const previousEnd = preferredEndValue != null ? preferredEndValue : endTimeInput.value;
+
+        endTimeInput.innerHTML = '<option value="">(vælg)</option>';
+        allTimeOptions
+            .filter(time => {
+                if (minEndMins == null) return true;
+                const mins = toMinutes(time);
+                return mins != null && mins >= minEndMins;
+            })
+            .forEach(time => {
+                const opt = document.createElement('option');
+                opt.value = time;
+                opt.textContent = time;
+                endTimeInput.appendChild(opt);
+            });
+
+        if (previousEnd && Array.from(endTimeInput.options).some(opt => opt.value === previousEnd)) {
+            endTimeInput.value = previousEnd;
+        } else {
+            endTimeInput.value = '';
+        }
+
+        // Trigger existing endTs sync handler in the other script block.
+        endTimeInput.dispatchEvent(new Event('change'));
+    }
+
+    function updateVehiclesForDate(date, currentVehicleId) {
+        if (!date || !vehicleSelect) return;
+        fetch('/tasks/api/available-vehicles?date=' + date)
+            .then(r => r.json())
+            .then(vehicles => {
+                const prev = currentVehicleId != null ? currentVehicleId : vehicleSelect.value;
+                vehicleSelect.innerHTML = '<option value="">(vælg)</option>';
+                vehicles.forEach(v => {
+                    const opt = document.createElement('option');
+                    opt.value = v.vehicleId;
+                    opt.textContent = v.label;
+                    if (String(v.vehicleId) === String(prev)) opt.selected = true;
+                    vehicleSelect.appendChild(opt);
+                });
+            })
+            .catch(err => console.error('Error fetching vehicles:', err));
+    }
+
+    function updateTimeOptionsForDate(date) {
+        if (!date) return;
+        fetch('/tasks/api/opening-hours?date=' + date)
+            .then(response => response.json())
+            .then(data => {
+                if (!data.exists) {
+                    noHoursWarning.style.display = '';
+                    allTimeOptions = [];
+                    startTimeInput.innerHTML = '<option value="">(vælg)</option>';
+                    rebuildEndOptions(null);
+                    return;
+                }
+                noHoursWarning.style.display = 'none';
+                const options = data.timeOptions;
+                allTimeOptions = options;
+
+                const currentStartTime = startTimeInput.value;
+                const currentEndTime = endTimeInput.value;
+
+                startTimeInput.innerHTML = '';
+                options.forEach(time => {
+                    const opt = document.createElement('option');
+                    opt.value = time;
+                    opt.textContent = time;
+                    if (time === currentStartTime) opt.selected = true;
+                    startTimeInput.appendChild(opt);
+                });
+
+                rebuildEndOptions(currentEndTime);
+            })
+            .catch(err => console.error('Error fetching opening hours:', err));
+    }
+
+    startDateInput.addEventListener('change', function() {
+        updateTimeOptionsForDate(this.value);
+        updateVehiclesForDate(this.value, null);
+    });
+
+    startTimeInput.addEventListener('change', function() {
+        rebuildEndOptions(null);
+    });
+
+    // Initial load on form render
+    if (startDateInput.value) {
+        updateTimeOptionsForDate(startDateInput.value);
+        updateVehiclesForDate(startDateInput.value, vehicleSelect ? vehicleSelect.value : null);
+    }
+})();
+</script>
+<style>
+.time-order-error {
+    margin: 0.25rem 0 0.75rem;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid #ef4444;
+    background: #fef2f2;
+    color: #991b1b;
+    border-radius: 6px;
+    font-weight: 600;
+}
+.status-title { margin-bottom: 0.6rem; }
+.status-card-ordered {
+    border-color: #fecaca;
+    background: #fef2f2;
+}
+.status-card-started {
+    border-color: #fde68a;
+    background: #fffbeb;
+}
+.status-card-done {
+    border-color: #bbf7d0;
+    background: #f0fdf4;
+}
+.status-card-cancelled {
+    border-color: #d1d5db;
+    background: #f9fafb;
+}
+.status-card-unassigned {
+    border: 2px solid #374151;
+    background-color: #f3f4f6;
+    background-image: repeating-linear-gradient(
+        135deg,
+        rgba(31, 41, 55, 0.08) 0 8px,
+        rgba(243, 244, 246, 0.95) 8px 16px
+    );
+    box-shadow: inset 0 0 0 1px rgba(17, 24, 39, 0.12);
+}
+.status-note {
+    margin: 0.2rem 0 0.7rem;
+    color: #374151;
+    font-weight: 600;
+}
+</style>
+</body>
+</html>

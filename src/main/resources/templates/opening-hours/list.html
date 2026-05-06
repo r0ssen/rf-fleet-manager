@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Åbningstider')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main>
+    <div class="toolbar">
+        <h1>Åbningstider <span th:text="${year}"></span></h1>
+        <a th:href="@{/fleet}" class="btn-secondary">← Flådeoversigt</a>
+    </div>
+
+    <div class="two-col">
+
+        <!-- ── Existing rows ──────────────────────────────────────────── -->
+        <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Dato</th>
+                    <th>Åbner</th>
+                    <th>Lukker</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="h : ${hoursList}">
+                    <td th:text="${#temporals.format(h.festivalDate, 'EEEE d. MMM', new java.util.Locale('da'))}"></td>
+                    <td th:text="${#temporals.format(h.openFrom,  'HH:mm')}"></td>
+                    <td th:text="${#temporals.format(h.openUntil, 'HH:mm')}"></td>
+                    <td>
+                        <form th:action="@{/opening-hours/delete}" method="post" style="display:inline"
+                              onsubmit="return confirm('Slet åbningstider for denne dag?')">
+                            <input type="hidden" name="festivalDate" th:value="${h.festivalDate}"/>
+                            <button type="submit" class="btn-small btn-danger">Slet</button>
+                        </form>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(hoursList)}">
+                    <td colspan="4" class="empty">Ingen åbningstider registreret.</td>
+                </tr>
+            </tbody>
+        </table>
+        </div>
+
+        <!-- ── Add / update a day ─────────────────────────────────────── -->
+        <div>
+            <h2>Tilføj / opdater dag</h2>
+            <form th:action="@{/opening-hours/save}" method="post">
+                <fieldset>
+                    <legend>Dag</legend>
+                    <label>Dato
+                        <input type="date" name="festivalDate" required/>
+                    </label>
+                    <label>Åbner
+                        <select name="openFrom" id="openFrom" required></select>
+                    </label>
+                    <label>Lukker
+                        <select name="openUntil" id="openUntil" required></select>
+                    </label>
+                </fieldset>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Gem</button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+</main>
+<style>
+.two-col { display: grid; grid-template-columns: 1fr 380px; gap: 1.5rem; align-items: start; }
+</style>
+<script>
+(function() {
+    function buildHourOptions(selectEl, defaultValue) {
+        for (var h = 0; h <= 23; h++) {
+            var val = (h < 10 ? '0' : '') + h + ':00';
+            var opt = document.createElement('option');
+            opt.value = val;
+            opt.textContent = val;
+            if (val === defaultValue) opt.selected = true;
+            selectEl.appendChild(opt);
+        }
+    }
+    buildHourOptions(document.getElementById('openFrom'),  '08:00');
+    buildHourOptions(document.getElementById('openUntil'), '22:00');
+})();
+</script>
+</body>
+</html>
