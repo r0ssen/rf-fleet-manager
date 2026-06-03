@@ -114,7 +114,10 @@
                         <span class="map-btn" title="Bilinformation">?</span>
                     </div>
                 </label>
-                <label>Chauffør <input type="text" th:field="*{driverName}" id="driverNameInput" placeholder="Chaufførens navn"/></label>
+                <label>Chauffør <input type="text" th:field="*{driverName}" id="driverNameInput" placeholder="Chaufførens navn"
+                                      th:classappend="${driverPrefilled} ? ' input-prefilled' : ''"/></label>
+                <p id="driverPrefillHint" class="prefill-hint" th:if="${task.taskId == 0}"
+                   th:classappend="${driverPrefilled} ? ' visible' : ''">Chauffør er foreslået fra forrige kørsel samme dag.</p>
             </fieldset>
 
             <fieldset class="fs-status fs-full"
@@ -125,8 +128,10 @@
                                      (${task.vehicleId == null} ? ' status-card-unassigned' : '')">
                 <legend>Status</legend>
                 <p class="status-title"><strong th:text="'Nuværende status: ' + ${task.status.danishLabel()}">Nuværende status</strong></p>
-                <p class="status-note" th:if="${task.vehicleId == null}">Vælg en bil for at ændre status.</p>
-                <div class="field-row" th:if="${task.taskId != 0 and task.vehicleId != null and task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).ORDERED}">
+                <p class="status-note" th:if="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).ORDERED and (task.vehicleId == null or #strings.isEmpty(task.driverName))}">
+                    Vælg både bil og chauffør for at kunne starte kørslen.
+                </p>
+                <div class="field-row" th:if="${task.taskId != 0 and task.vehicleId != null and not #strings.isEmpty(task.driverName) and task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).ORDERED}">
                     <button type="submit" class="btn-small"
                             th:formaction="@{/tasks/{id}/status(id=${task.taskId})}" formmethod="post" formnovalidate
                             name="status" value="STARTED">Start</button>
@@ -303,14 +308,32 @@ updateMapLinks();
     const noHoursWarning = document.getElementById('noHoursWarning');
     const vehicleSelect  = document.getElementById('vehicleSelect');
     const driverNameInput = document.getElementById('driverNameInput');
+    const driverPrefillHint = document.getElementById('driverPrefillHint');
     let allTimeOptions = Array.from(startTimeInput.options || [])
         .map(opt => opt.value)
         .filter(v => !!v);
 
+    function markDriverPrefilled(isPrefilled) {
+        if (!driverNameInput) return;
+        if (isPrefilled) {
+            driverNameInput.classList.add('input-prefilled');
+            if (driverPrefillHint) driverPrefillHint.classList.add('visible');
+        } else {
+            driverNameInput.classList.remove('input-prefilled');
+            if (driverPrefillHint) driverPrefillHint.classList.remove('visible');
+        }
+    }
+
     function suggestDriverForVehicle() {
         if (!vehicleSelect || !driverNameInput) return;
-        if (!vehicleSelect.value) return;
-        if ((driverNameInput.value || '').trim()) return;
+        if (!vehicleSelect.value) {
+            markDriverPrefilled(false);
+            return;
+        }
+        if ((driverNameInput.value || '').trim()) {
+            markDriverPrefilled(false);
+            return;
+        }
 
         const params = new URLSearchParams();
         if (startDateInput && startDateInput.value) params.set('date', startDateInput.value);
@@ -324,6 +347,7 @@ updateMapLinks();
             .then(data => {
                 if (data && data.driverName && !(driverNameInput.value || '').trim()) {
                     driverNameInput.value = data.driverName;
+                    markDriverPrefilled(true);
                 }
             })
             .catch(err => console.error('Error fetching suggested driver:', err));
@@ -437,6 +461,11 @@ updateMapLinks();
     if (vehicleSelect) {
         vehicleSelect.addEventListener('change', suggestDriverForVehicle);
     }
+    if (driverNameInput) {
+        driverNameInput.addEventListener('input', function() {
+            markDriverPrefilled(false);
+        });
+    }
 
     // Initial load on form render
     if (startDateInput.value) {
@@ -487,6 +516,21 @@ updateMapLinks();
     margin: 0.2rem 0 0.7rem;
     color: #374151;
     font-weight: 600;
+}
+.input-prefilled {
+    border-color: #0ea5e9;
+    box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.15);
+    background: #f0f9ff;
+}
+.prefill-hint {
+    display: none;
+    margin: 0.25rem 0 0;
+    color: #0369a1;
+    font-size: 12px;
+    font-weight: 600;
+}
+.prefill-hint.visible {
+    display: block;
 }
 </style>
 </body>

@@ -70,7 +70,11 @@
                 <td class="col-desc"><span class="desc-text" th:text="${t.description}"></span></td>
                 <td class="col-status">
                     <div><strong th:text="${t.status.danishLabel()}">Bestilt</strong></div>
-                    <form th:if="${t.vehicleId != null and t.status.name() == 'ORDERED'}"
+                    <div th:if="${t.status.name() == 'ORDERED' and (t.vehicleId == null or #strings.isEmpty(t.driverName))}"
+                         class="status-note" style="margin-top:4px;">
+                        Kan ikke startes uden bil og chauffør.
+                    </div>
+                    <form th:if="${t.vehicleId != null and not #strings.isEmpty(t.driverName) and t.status.name() == 'ORDERED'}"
                           th:action="@{/tasks/{id}/status(id=${t.taskId})}" method="post" style="margin-top:4px;">
                         <input type="hidden" name="date" th:value="${#temporals.format(date,'yyyy-MM-dd')}"/>
                         <input type="hidden" name="returnTo" value="tasks"/>

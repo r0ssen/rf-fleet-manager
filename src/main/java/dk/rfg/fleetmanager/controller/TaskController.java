@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.bind.annotation.*;
 import java.time.DateTimeException;
 import java.time.LocalDate;
@@ -71,8 +72,9 @@ public class TaskController {
                           Model model) throws Exception {
         Task task = new Task();
         applyNewTaskPrefill(task, date, start, vehicleId);
-        applySuggestedDriverName(task);
+        boolean driverPrefilled = applySuggestedDriverName(task);
         populateForm(task, date, returnTo, model);
+        model.addAttribute("driverPrefilled", driverPrefilled);
         return "tasks/form";
     }
 
@@ -128,10 +130,17 @@ public class TaskController {
     public String updateStatus(@PathVariable int id, @RequestParam TaskStatus status,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestParam(required = false, defaultValue = "fleet") String returnTo,
-            @RequestParam(required = false, defaultValue = "false") boolean showCancelled) {
+            @RequestParam(required = false, defaultValue = "false") boolean showCancelled,
+            RedirectAttributes attrs) {
         LocalDate redirectDate = resolveRedirectDate(id, date);
         Task task = taskService.getById(appConfig.getFestivalYear(), id).orElse(null);
-        if (task == null || task.getVehicleId() == null || !isAllowedStatusTransition(task.getStatus(), status)) {
+        if (task == null || !isAllowedStatusTransition(task.getStatus(), status)) {
+            return "tasks".equals(returnTo)
+                ? redirectToTaskDate(redirectDate, showCancelled)
+                : redirectToFleetDate(redirectDate);
+        }
+        if (status == TaskStatus.STARTED && !hasStartRequirements(task)) {
+            attrs.addFlashAttribute("errorMessage", "Du skal vælge både bil og chauffør før en kørsel kan startes.");
             return "tasks".equals(returnTo)
                 ? redirectToTaskDate(redirectDate, showCancelled)
                 : redirectToFleetDate(redirectDate);
@@ -148,9 +157,9 @@ public class TaskController {
         try {
             Task task = taskService.getById(appConfig.getFestivalYear(), id)
                 .orElseThrow(() -> new IllegalArgumentException("Task not found: " + id));
-            if (task.getVehicleId() == null) {
+            if (status == TaskStatus.STARTED && !hasStartRequirements(task)) {
                 return ResponseEntity.badRequest().body(new java.util.HashMap<String, Object>() {{
-                    put("error", "Kørsler uden bil kan ikke få ændret status.");
+                    put("error", "Du skal vælge både bil og chauffør før en kørsel kan startes.");
                 }});
             }
             if (!isAllowedStatusTransition(task.getStatus(), status)) {
@@ -445,15 +454,22 @@ public class TaskController {
         task.setStartTs(toOffsetDateTime(date, start));
     }
 
-    private void applySuggestedDriverName(Task task) {
+    private boolean applySuggestedDriverName(Task task) {
         if (task.getVehicleId() == null) {
-            return;
+            return false;
         }
         if (task.getDriverName() != null && !task.getDriverName().trim().isEmpty()) {
-            return;
+            return false;
         }
-        taskService.findSuggestedDriverName(appConfig.getFestivalYear(), task.getVehicleId(), task.getStartTs())
-            .ifPresent(task::setDriverName);
+        var suggested = taskService.findSuggestedDriverName(appConfig.getFestivalYear(), task.getVehicleId(), task.getStartTs());
+        suggested.ifPresent(task::setDriverName);
+        return suggested.isPresent();
+    }
+
+    private boolean hasStartRequirements(Task task) {
+        return task.getVehicleId() != null
+            && task.getDriverName() != null
+            && !task.getDriverName().trim().isEmpty();
     }
 
     private java.time.OffsetDateTime toOffsetDateTime(LocalDate date, LocalTime time) {
