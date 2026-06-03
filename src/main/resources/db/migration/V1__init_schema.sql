@@ -52,7 +52,7 @@ CREATE TABLE tasks (
     CONSTRAINT fk_tasks_vehicle FOREIGN KEY (festival_year, vehicle_id) REFERENCES vehicles (festival_year, vehicle_id)
 );
 
-CREATE INDEX idx_tasks_day     ON tasks (festival_year, DATE(start_ts));
+CREATE INDEX idx_tasks_day ON tasks (festival_year, ((start_ts AT TIME ZONE 'Europe/Copenhagen')::date));
 CREATE INDEX idx_tasks_status  ON tasks (festival_year, status);
 CREATE INDEX idx_tasks_vehicle ON tasks (festival_year, vehicle_id);
 CREATE INDEX idx_vehicles_no   ON vehicles (festival_year, vehicle_no);
