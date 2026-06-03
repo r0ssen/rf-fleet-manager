@@ -114,7 +114,7 @@
                         <span class="map-btn" title="Bilinformation">?</span>
                     </div>
                 </label>
-                <label>Chauffør <input type="text" th:field="*{driverName}" placeholder="Chaufførens navn"/></label>
+                <label>Chauffør <input type="text" th:field="*{driverName}" id="driverNameInput" placeholder="Chaufførens navn"/></label>
             </fieldset>
 
             <fieldset class="fs-status fs-full"
@@ -302,9 +302,32 @@ updateMapLinks();
     const endTimeInput = document.getElementById('endTime');
     const noHoursWarning = document.getElementById('noHoursWarning');
     const vehicleSelect  = document.getElementById('vehicleSelect');
+    const driverNameInput = document.getElementById('driverNameInput');
     let allTimeOptions = Array.from(startTimeInput.options || [])
         .map(opt => opt.value)
         .filter(v => !!v);
+
+    function suggestDriverForVehicle() {
+        if (!vehicleSelect || !driverNameInput) return;
+        if (!vehicleSelect.value) return;
+        if ((driverNameInput.value || '').trim()) return;
+
+        const params = new URLSearchParams();
+        if (startDateInput && startDateInput.value) params.set('date', startDateInput.value);
+        if (startTimeInput && startTimeInput.value) params.set('start', startTimeInput.value);
+        const qs = params.toString();
+        const url = '/tasks/api/vehicles/' + encodeURIComponent(vehicleSelect.value) + '/last-driver'
+            + (qs ? ('?' + qs) : '');
+
+        fetch(url)
+            .then(r => r.json())
+            .then(data => {
+                if (data && data.driverName && !(driverNameInput.value || '').trim()) {
+                    driverNameInput.value = data.driverName;
+                }
+            })
+            .catch(err => console.error('Error fetching suggested driver:', err));
+    }
 
     function toMinutes(hhmm) {
         if (!hhmm || hhmm.indexOf(':') < 0) return null;
@@ -356,6 +379,7 @@ updateMapLinks();
                     if (String(v.vehicleId) === String(prev)) opt.selected = true;
                     vehicleSelect.appendChild(opt);
                 });
+                suggestDriverForVehicle();
             })
             .catch(err => console.error('Error fetching vehicles:', err));
     }
@@ -402,17 +426,24 @@ updateMapLinks();
     startDateInput.addEventListener('change', function() {
         updateTimeOptionsForDate(this.value);
         updateVehiclesForDate(this.value, null);
+        suggestDriverForVehicle();
     });
 
     startTimeInput.addEventListener('change', function() {
         rebuildEndOptions(null);
+        suggestDriverForVehicle();
     });
+
+    if (vehicleSelect) {
+        vehicleSelect.addEventListener('change', suggestDriverForVehicle);
+    }
 
     // Initial load on form render
     if (startDateInput.value) {
         updateTimeOptionsForDate(startDateInput.value);
         updateVehiclesForDate(startDateInput.value, vehicleSelect ? vehicleSelect.value : null);
     }
+    suggestDriverForVehicle();
 })();
 </script>
 <style>

@@ -2,6 +2,7 @@ package dk.rfg.fleetmanager.repository;
 import dk.rfg.fleetmanager.entity.Task;
 import dk.rfg.fleetmanager.entity.TaskId;
 import dk.rfg.fleetmanager.entity.TaskStatus;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -27,6 +28,23 @@ public interface TaskRepository extends JpaRepository<Task, TaskId> {
     List<Task> findOverlappingDay(@Param("year") int year,
                                   @Param("dayStart") OffsetDateTime dayStart,
                                   @Param("dayEnd") OffsetDateTime dayEnd);
+
+    @Query("""
+           SELECT t.driverName FROM Task t
+           WHERE t.festivalYear = :year
+             AND t.vehicleId = :vehicleId
+             AND t.status <> dk.rfg.fleetmanager.entity.TaskStatus.CANCELLED
+             AND t.driverName IS NOT NULL
+             AND TRIM(t.driverName) <> ''
+             AND CAST(t.startTs AS localdate) = :date
+             AND t.startTs < :beforeTs
+           ORDER BY t.startTs DESC, t.taskId DESC
+           """)
+    List<String> findRecentDriverNamesForDay(@Param("year") int year,
+                                             @Param("vehicleId") int vehicleId,
+                                             @Param("date") LocalDate date,
+                                             @Param("beforeTs") OffsetDateTime beforeTs,
+                                             Pageable pageable);
 
     List<Task> findByFestivalYearAndStatusOrderByStartTsAsc(int year, TaskStatus status);
 }

@@ -5,15 +5,19 @@ import dk.rfg.fleetmanager.entity.TaskId;
 import dk.rfg.fleetmanager.entity.TaskStatus;
 import dk.rfg.fleetmanager.repository.TaskRepository;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.domain.PageRequest;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -61,6 +65,34 @@ class TaskServiceTest {
         assertThatThrownBy(() -> service.duplicateWithoutVehicle(2026, 404))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("Task not found: 404");
+    }
+
+    @Test
+    void findSuggestedDriverNameReturnsEmptyWhenVehicleMissing() {
+        Optional<String> suggested = service.findSuggestedDriverName(2026, null, OffsetDateTime.now());
+
+        assertThat(suggested).isEmpty();
+    }
+
+    @Test
+    void findSuggestedDriverNameReturnsMostRecentDriver() {
+        OffsetDateTime beforeTs = LocalDate.of(2026, 6, 5)
+            .atTime(LocalTime.of(10, 0))
+            .atZone(ZoneId.systemDefault())
+            .toOffsetDateTime();
+        when(taskRepository.findRecentDriverNamesForDay(eq(2026), eq(3), eq(LocalDate.of(2026, 6, 5)), eq(beforeTs), eq(PageRequest.of(0, 1))))
+            .thenReturn(List.of("Niels"));
+
+        Optional<String> suggested = service.findSuggestedDriverName(2026, 3, beforeTs);
+
+        assertThat(suggested).contains("Niels");
+    }
+
+    @Test
+    void findSuggestedDriverNameReturnsEmptyWhenStartMissing() {
+        Optional<String> suggested = service.findSuggestedDriverName(2026, 3, null);
+
+        assertThat(suggested).isEmpty();
     }
 
     private Task sourceTask() {

@@ -3,10 +3,12 @@ import dk.rfg.fleetmanager.entity.Task;
 import dk.rfg.fleetmanager.entity.TaskId;
 import dk.rfg.fleetmanager.entity.TaskStatus;
 import dk.rfg.fleetmanager.repository.TaskRepository;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
@@ -19,6 +21,14 @@ public class TaskService {
 
     public List<Task> getTasksForDay(int year, LocalDate date) { return repo.findByDay(year, date); }
     public Optional<Task> getById(int year, int id) { return repo.findById(new TaskId(year, id)); }
+    public Optional<String> findSuggestedDriverName(int year, Integer vehicleId, OffsetDateTime beforeTs) {
+        if (vehicleId == null || beforeTs == null) {
+            return Optional.empty();
+        }
+        return repo.findRecentDriverNamesForDay(year, vehicleId, beforeTs.toLocalDate(), beforeTs, PageRequest.of(0, 1))
+            .stream()
+            .findFirst();
+    }
 
     @Transactional public Task save(Task task) { return repo.save(task); }
 

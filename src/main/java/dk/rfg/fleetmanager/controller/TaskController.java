@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
@@ -70,6 +71,7 @@ public class TaskController {
                           Model model) throws Exception {
         Task task = new Task();
         applyNewTaskPrefill(task, date, start, vehicleId);
+        applySuggestedDriverName(task);
         populateForm(task, date, returnTo, model);
         return "tasks/form";
     }
@@ -239,6 +241,19 @@ public class TaskController {
             put("label", "Bil " + v.getVehicleNo() + (v.getModel() != null ? ": " + v.getModel() : ""));
         }}).toList();
         return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/api/vehicles/{vehicleId}/last-driver")
+    @ResponseBody
+    public ResponseEntity<?> getLastDriverForVehicle(@PathVariable int vehicleId,
+                                                     @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+                                                     @RequestParam(required = false) @DateTimeFormat(pattern = "HH:mm") LocalTime start) {
+        OffsetDateTime beforeTs = (date != null && start != null) ? toOffsetDateTime(date, start) : null;
+        String suggested = taskService.findSuggestedDriverName(appConfig.getFestivalYear(), vehicleId, beforeTs)
+            .orElse("");
+        return ResponseEntity.ok(new java.util.HashMap<String, Object>() {{
+            put("driverName", suggested);
+        }});
     }
 
     @PostMapping("/api/{id}/move")
@@ -428,6 +443,17 @@ public class TaskController {
             return;
         }
         task.setStartTs(toOffsetDateTime(date, start));
+    }
+
+    private void applySuggestedDriverName(Task task) {
+        if (task.getVehicleId() == null) {
+            return;
+        }
+        if (task.getDriverName() != null && !task.getDriverName().trim().isEmpty()) {
+            return;
+        }
+        taskService.findSuggestedDriverName(appConfig.getFestivalYear(), task.getVehicleId(), task.getStartTs())
+            .ifPresent(task::setDriverName);
     }
 
     private java.time.OffsetDateTime toOffsetDateTime(LocalDate date, LocalTime time) {
