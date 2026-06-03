@@ -67,7 +67,7 @@ public class Task {
     private String description;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
+    @Column(name = "status", nullable = false, columnDefinition = "task_status")
     private TaskStatus status = TaskStatus.ORDERED;
     @Column(name = "received_by")
     private String receivedBy;
