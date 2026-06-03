@@ -41,15 +41,31 @@ public class OpeningHoursController {
     public String save(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate festivalDate,
             @RequestParam String openFrom,
-            @RequestParam String openUntil) {
+            @RequestParam String openUntil,
+            Model model) {
+
+        LocalTime openFromTime = LocalTime.parse(openFrom);
+        LocalTime openUntilTime = LocalTime.parse(openUntil);
+
+        // Validate that closing time is after opening time
+        if (!openUntilTime.isAfter(openFromTime)) {
+            List<OpeningHours> hours = repo.findAll().stream()
+                .filter(h -> h.getFestivalYear() == appConfig.getFestivalYear())
+                .sorted((a, b) -> a.getFestivalDate().compareTo(b.getFestivalDate()))
+                .toList();
+            model.addAttribute("hoursList", hours);
+            model.addAttribute("year", appConfig.getFestivalYear());
+            model.addAttribute("errorMessage", "Lukketid skal være efter åbningstid.");
+            return "opening-hours/list";
+        }
 
         int year = appConfig.getFestivalYear();
         OpeningHours oh = repo.findById(new OpeningHoursId(year, festivalDate))
             .orElse(new OpeningHours());
         oh.setFestivalYear(year);
         oh.setFestivalDate(festivalDate);
-        oh.setOpenFrom(LocalTime.parse(openFrom));
-        oh.setOpenUntil(LocalTime.parse(openUntil));
+        oh.setOpenFrom(openFromTime);
+        oh.setOpenUntil(openUntilTime);
         repo.save(oh);
         return "redirect:/opening-hours";
     }

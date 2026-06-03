@@ -13,7 +13,7 @@ public interface VehicleRepository extends JpaRepository<Vehicle, VehicleId> {
            WHERE v.festivalYear = :year
            ORDER BY CAST(v.vehicleNo AS INTEGER)
            """)
-    List<Vehicle> findByFestivalYearOrderByVehicleNoAsc(int festivalYear);
+    List<Vehicle> findByFestivalYearOrderByVehicleNoAsc(@Param("year") int festivalYear);
 
     /** Vehicles available for a date: no rows = all days, any rows = only matching dates. */
     @Query("""

@@ -9,6 +9,8 @@
         <a th:href="@{/fleet}" class="btn-secondary">← Flådeoversigt</a>
     </div>
 
+    <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
+
     <div class="two-col">
 
         <!-- ── Existing rows ──────────────────────────────────────────── -->
@@ -45,9 +47,12 @@
         <!-- ── Add / update a day ─────────────────────────────────────── -->
         <div>
             <h2>Tilføj / opdater dag</h2>
-            <form th:action="@{/opening-hours/save}" method="post">
+            <form th:action="@{/opening-hours/save}" method="post" id="openingHoursForm">
                 <fieldset>
                     <legend>Dag</legend>
+                    <div id="timeError" class="form-error" style="display:none; margin-bottom: 1rem;">
+                        <strong>Fejl:</strong> Lukketid skal være efter åbningstid.
+                    </div>
                     <label>Dato
                         <input type="date" name="festivalDate" required/>
                     </label>
@@ -83,6 +88,40 @@
     }
     buildHourOptions(document.getElementById('openFrom'),  '08:00');
     buildHourOptions(document.getElementById('openUntil'), '22:00');
+
+    // Validation: ensure closingTime > openingTime
+    const form = document.getElementById('openingHoursForm');
+    const openFromSelect = document.getElementById('openFrom');
+    const openUntilSelect = document.getElementById('openUntil');
+    const timeError = document.getElementById('timeError');
+    const submitBtn = form.querySelector('button[type="submit"]');
+
+    function validateTimes() {
+        const openFrom = openFromSelect.value;
+        const openUntil = openUntilSelect.value;
+
+        if (!openFrom || !openUntil) {
+            timeError.style.display = 'none';
+            return true;
+        }
+
+        if (openUntil > openFrom) {
+            timeError.style.display = 'none';
+            return true;
+        } else {
+            timeError.style.display = '';
+            return false;
+        }
+    }
+
+    openFromSelect.addEventListener('change', validateTimes);
+    openUntilSelect.addEventListener('change', validateTimes);
+
+    form.addEventListener('submit', function(e) {
+        if (!validateTimes()) {
+            e.preventDefault();
+        }
+    });
 })();
 </script>
 </body>
