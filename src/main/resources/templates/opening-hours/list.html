@@ -53,8 +53,11 @@
                     <div id="timeError" class="form-error" style="display:none; margin-bottom: 1rem;">
                         <strong>Fejl:</strong> Lukketid skal være efter åbningstid.
                     </div>
+                    <div id="duplicateError" class="form-error" style="display:none; margin-bottom: 1rem;">
+                        <strong>Fejl:</strong> Der er allerede registreret åbningstider for denne dato. Slet den eksisterende post først.
+                    </div>
                     <label>Dato
-                        <input type="date" name="festivalDate" required/>
+                        <input type="date" name="festivalDate" id="festivalDate" required/>
                     </label>
                     <label>Åbner
                         <select name="openFrom" id="openFrom" required></select>
@@ -74,8 +77,12 @@
 <style>
 .two-col { display: grid; grid-template-columns: 1fr 380px; gap: 1.5rem; align-items: start; }
 </style>
-<script>
+<script th:inline="javascript">
+/*<![CDATA[*/
 (function() {
+    // Dates that already have opening hours (from server)
+    const existingDates = new Set(/*[[${hoursList.![festivalDate.toString()]}]]*/ []);
+
     function buildHourOptions(selectEl, defaultValue) {
         for (var h = 0; h <= 23; h++) {
             var val = (h < 10 ? '0' : '') + h + ':00';
@@ -89,40 +96,45 @@
     buildHourOptions(document.getElementById('openFrom'),  '08:00');
     buildHourOptions(document.getElementById('openUntil'), '22:00');
 
-    // Validation: ensure closingTime > openingTime
     const form = document.getElementById('openingHoursForm');
     const openFromSelect = document.getElementById('openFrom');
     const openUntilSelect = document.getElementById('openUntil');
+    const festivalDateInput = document.getElementById('festivalDate');
     const timeError = document.getElementById('timeError');
-    const submitBtn = form.querySelector('button[type="submit"]');
+    const duplicateError = document.getElementById('duplicateError');
 
     function validateTimes() {
         const openFrom = openFromSelect.value;
         const openUntil = openUntilSelect.value;
+        if (!openFrom || !openUntil) { timeError.style.display = 'none'; return true; }
+        if (openUntil > openFrom) { timeError.style.display = 'none'; return true; }
+        timeError.style.display = '';
+        return false;
+    }
 
-        if (!openFrom || !openUntil) {
-            timeError.style.display = 'none';
-            return true;
-        }
-
-        if (openUntil > openFrom) {
-            timeError.style.display = 'none';
-            return true;
-        } else {
-            timeError.style.display = '';
+    function validateDuplicate() {
+        const date = festivalDateInput.value;
+        if (date && existingDates.has(date)) {
+            duplicateError.style.display = '';
             return false;
         }
+        duplicateError.style.display = 'none';
+        return true;
     }
 
     openFromSelect.addEventListener('change', validateTimes);
     openUntilSelect.addEventListener('change', validateTimes);
+    festivalDateInput.addEventListener('change', validateDuplicate);
 
     form.addEventListener('submit', function(e) {
-        if (!validateTimes()) {
+        const timesOk = validateTimes();
+        const dupOk = validateDuplicate();
+        if (!timesOk || !dupOk) {
             e.preventDefault();
         }
     });
 })();
+/*]]>*/
 </script>
 </body>
 </html>

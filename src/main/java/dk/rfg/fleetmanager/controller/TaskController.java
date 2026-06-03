@@ -109,6 +109,11 @@ public class TaskController {
             populateForm(existing, null, returnTo, model);
             return "tasks/form";
         }
+        // Lock vehicle and driver when task is STARTED or DONE
+        if (existing.getStatus() == TaskStatus.STARTED || existing.getStatus() == TaskStatus.DONE) {
+            task.setVehicleId(existing.getVehicleId());
+            task.setDriverName(existing.getDriverName());
+        }
         task.setStatus(existing.getStatus());
         validateTimeRange(task, result);
         if (result.hasErrors()) { populateForm(task, null, returnTo, model); return "tasks/form"; }

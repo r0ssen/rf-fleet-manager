@@ -60,8 +60,20 @@ public class OpeningHoursController {
         }
 
         int year = appConfig.getFestivalYear();
-        OpeningHours oh = repo.findById(new OpeningHoursId(year, festivalDate))
-            .orElse(new OpeningHours());
+
+        // Reject if opening hours already exist for this date
+        if (repo.existsById(new OpeningHoursId(year, festivalDate))) {
+            List<OpeningHours> hours = repo.findAll().stream()
+                .filter(h -> h.getFestivalYear() == year)
+                .sorted((a, b) -> a.getFestivalDate().compareTo(b.getFestivalDate()))
+                .toList();
+            model.addAttribute("hoursList", hours);
+            model.addAttribute("year", year);
+            model.addAttribute("errorMessage", "Der er allerede registreret åbningstider for " + festivalDate + ". Slet den eksisterende post først.");
+            return "opening-hours/list";
+        }
+
+        OpeningHours oh = new OpeningHours();
         oh.setFestivalYear(year);
         oh.setFestivalDate(festivalDate);
         oh.setOpenFrom(openFromTime);
