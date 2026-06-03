@@ -80,12 +80,35 @@ class TaskServiceTest {
             .atTime(LocalTime.of(10, 0))
             .atZone(ZoneId.systemDefault())
             .toOffsetDateTime();
-        when(taskRepository.findRecentDriverNamesForDay(eq(2026), eq(3), eq(TaskStatus.CANCELLED), eq(LocalDate.of(2026, 6, 5)), eq(beforeTs), eq(PageRequest.of(0, 1))))
-            .thenReturn(List.of("Niels"));
+        Task previous = new Task();
+        previous.setDriverName("Niels");
+        previous.setStartTs(beforeTs.minusMinutes(30));
+        when(taskRepository.findRecentDriverTasksForDay(eq(2026), eq(3), eq(TaskStatus.CANCELLED), eq(LocalDate.of(2026, 6, 5)), eq(beforeTs), eq(PageRequest.of(0, 1))))
+            .thenReturn(List.of(previous));
 
         Optional<String> suggested = service.findSuggestedDriverName(2026, 3, beforeTs);
 
         assertThat(suggested).contains("Niels");
+    }
+
+    @Test
+    void findSuggestedDriverReturnsSourceTime() {
+        OffsetDateTime beforeTs = LocalDate.of(2026, 6, 5)
+            .atTime(LocalTime.of(12, 0))
+            .atZone(ZoneId.systemDefault())
+            .toOffsetDateTime();
+        OffsetDateTime sourceTs = beforeTs.minusMinutes(20);
+        Task previous = new Task();
+        previous.setDriverName("Lars");
+        previous.setStartTs(sourceTs);
+        when(taskRepository.findRecentDriverTasksForDay(eq(2026), eq(7), eq(TaskStatus.CANCELLED), eq(LocalDate.of(2026, 6, 5)), eq(beforeTs), eq(PageRequest.of(0, 1))))
+            .thenReturn(List.of(previous));
+
+        Optional<TaskService.SuggestedDriver> suggested = service.findSuggestedDriver(2026, 7, beforeTs);
+
+        assertThat(suggested).isPresent();
+        assertThat(suggested.get().driverName()).isEqualTo("Lars");
+        assertThat(suggested.get().sourceStartTs()).isEqualTo(sourceTs);
     }
 
     @Test

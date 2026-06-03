@@ -16,16 +16,18 @@ import java.util.Optional;
 @Service
 @Transactional(readOnly = true)
 public class TaskService {
+    public record SuggestedDriver(String driverName, OffsetDateTime sourceStartTs) {}
+
     private final TaskRepository repo;
     public TaskService(TaskRepository repo) { this.repo = repo; }
 
     public List<Task> getTasksForDay(int year, LocalDate date) { return repo.findByDay(year, date); }
     public Optional<Task> getById(int year, int id) { return repo.findById(new TaskId(year, id)); }
-    public Optional<String> findSuggestedDriverName(int year, Integer vehicleId, OffsetDateTime beforeTs) {
+    public Optional<SuggestedDriver> findSuggestedDriver(int year, Integer vehicleId, OffsetDateTime beforeTs) {
         if (vehicleId == null || beforeTs == null) {
             return Optional.empty();
         }
-        return repo.findRecentDriverNamesForDay(
+        return repo.findRecentDriverTasksForDay(
                 year,
                 vehicleId,
                 TaskStatus.CANCELLED,
@@ -33,7 +35,12 @@ public class TaskService {
                 beforeTs,
                 PageRequest.of(0, 1))
             .stream()
-            .findFirst();
+            .findFirst()
+            .map(t -> new SuggestedDriver(t.getDriverName(), t.getStartTs()));
+    }
+
+    public Optional<String> findSuggestedDriverName(int year, Integer vehicleId, OffsetDateTime beforeTs) {
+        return findSuggestedDriver(year, vehicleId, beforeTs).map(SuggestedDriver::driverName);
     }
 
     @Transactional public Task save(Task task) { return repo.save(task); }

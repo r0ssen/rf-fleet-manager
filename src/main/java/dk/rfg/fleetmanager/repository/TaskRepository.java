@@ -47,5 +47,23 @@ public interface TaskRepository extends JpaRepository<Task, TaskId> {
                                              @Param("beforeTs") OffsetDateTime beforeTs,
                                              Pageable pageable);
 
+    @Query("""
+           SELECT t FROM Task t
+           WHERE t.festivalYear = :year
+             AND t.vehicleId = :vehicleId
+             AND t.status <> :cancelled
+             AND t.driverName IS NOT NULL
+             AND TRIM(t.driverName) <> ''
+             AND CAST(t.startTs AS localdate) = :date
+             AND t.startTs < :beforeTs
+           ORDER BY t.startTs DESC, t.taskId DESC
+           """)
+    List<Task> findRecentDriverTasksForDay(@Param("year") int year,
+                                           @Param("vehicleId") int vehicleId,
+                                           @Param("cancelled") TaskStatus cancelled,
+                                           @Param("date") LocalDate date,
+                                           @Param("beforeTs") OffsetDateTime beforeTs,
+                                           Pageable pageable);
+
     List<Task> findByFestivalYearAndStatusOrderByStartTsAsc(int year, TaskStatus status);
 }

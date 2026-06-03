@@ -20,6 +20,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -33,6 +34,7 @@ public class TaskController {
     private final DivisionTeamData divisionTeamData;
     private final ObjectMapper objectMapper;
     private final OpeningHoursRepository openingHoursRepository;
+    private static final DateTimeFormatter HH_MM = DateTimeFormatter.ofPattern("HH:mm");
 
     public TaskController(TaskService taskService, VehicleService vehicleService,
                           AppConfig appConfig, DivisionTeamData divisionTeamData,
@@ -72,9 +74,13 @@ public class TaskController {
                           Model model) throws Exception {
         Task task = new Task();
         applyNewTaskPrefill(task, date, start, vehicleId);
-        boolean driverPrefilled = applySuggestedDriverName(task);
+        var driverPrefill = applySuggestedDriverName(task);
         populateForm(task, date, returnTo, model);
-        model.addAttribute("driverPrefilled", driverPrefilled);
+        model.addAttribute("driverPrefilled", driverPrefill.isPresent());
+        driverPrefill
+            .map(TaskService.SuggestedDriver::sourceStartTs)
+            .map(v -> v.toLocalTime().format(HH_MM))
+            .ifPresent(v -> model.addAttribute("driverPrefilledFromTime", v));
         return "tasks/form";
     }
 
@@ -258,10 +264,13 @@ public class TaskController {
                                                      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
                                                      @RequestParam(required = false) @DateTimeFormat(pattern = "HH:mm") LocalTime start) {
         OffsetDateTime beforeTs = (date != null && start != null) ? toOffsetDateTime(date, start) : null;
-        String suggested = taskService.findSuggestedDriverName(appConfig.getFestivalYear(), vehicleId, beforeTs)
-            .orElse("");
+        var suggested = taskService.findSuggestedDriver(appConfig.getFestivalYear(), vehicleId, beforeTs);
         return ResponseEntity.ok(new java.util.HashMap<String, Object>() {{
-            put("driverName", suggested);
+            put("driverName", suggested.map(TaskService.SuggestedDriver::driverName).orElse(""));
+            put("sourceStartTime", suggested
+                .map(TaskService.SuggestedDriver::sourceStartTs)
+                .map(v -> v.toLocalTime().format(HH_MM))
+                .orElse(""));
         }});
     }
 
@@ -454,16 +463,16 @@ public class TaskController {
         task.setStartTs(toOffsetDateTime(date, start));
     }
 
-    private boolean applySuggestedDriverName(Task task) {
+    private java.util.Optional<TaskService.SuggestedDriver> applySuggestedDriverName(Task task) {
         if (task.getVehicleId() == null) {
-            return false;
+            return java.util.Optional.empty();
         }
         if (task.getDriverName() != null && !task.getDriverName().trim().isEmpty()) {
-            return false;
+            return java.util.Optional.empty();
         }
-        var suggested = taskService.findSuggestedDriverName(appConfig.getFestivalYear(), task.getVehicleId(), task.getStartTs());
-        suggested.ifPresent(task::setDriverName);
-        return suggested.isPresent();
+        var suggested = taskService.findSuggestedDriver(appConfig.getFestivalYear(), task.getVehicleId(), task.getStartTs());
+        suggested.map(TaskService.SuggestedDriver::driverName).ifPresent(task::setDriverName);
+        return suggested;
     }
 
     private boolean hasStartRequirements(Task task) {

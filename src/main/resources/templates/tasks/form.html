@@ -11,7 +11,7 @@
     </div>
 
     <form th:action="${task.taskId == 0} ? @{/tasks} : @{/tasks/{id}(id=${task.taskId})}"
-          th:object="${task}" method="post" id="taskForm">
+          th:object="${task}" method="post" id="taskForm" th:attr="data-is-new=${task.taskId == 0}">
         <input type="hidden" th:field="*{version}"/>
         <input type="hidden" name="returnTo" th:value="${returnTo}"/>
         <div class="form-error" th:if="${#fields.hasAnyErrors()}">
@@ -117,7 +117,8 @@
                 <label>Chauffør <input type="text" th:field="*{driverName}" id="driverNameInput" placeholder="Chaufførens navn"
                                       th:classappend="${driverPrefilled} ? ' input-prefilled' : ''"/></label>
                 <p id="driverPrefillHint" class="prefill-hint" th:if="${task.taskId == 0}"
-                   th:classappend="${driverPrefilled} ? ' visible' : ''">Chauffør er foreslået fra forrige kørsel samme dag.</p>
+                   th:classappend="${driverPrefilled} ? ' visible' : ''"
+                   th:text="${driverPrefilledFromTime != null ? 'Chauffør er foreslået fra forrige kørsel samme dag kl. ' + driverPrefilledFromTime + '.' : 'Chauffør er foreslået fra forrige kørsel samme dag.'}">Chauffør er foreslået fra forrige kørsel samme dag.</p>
             </fieldset>
 
             <fieldset class="fs-status fs-full"
@@ -302,6 +303,8 @@ updateMapLinks();
 </script>
 <script th:inline="javascript">
 (function() {
+    const formEl = document.getElementById('taskForm');
+    const isNewTask = formEl && formEl.dataset.isNew === 'true';
     const startDateInput = document.getElementById('startDate');
     const startTimeInput = document.getElementById('startTime');
     const endTimeInput = document.getElementById('endTime');
@@ -309,15 +312,23 @@ updateMapLinks();
     const vehicleSelect  = document.getElementById('vehicleSelect');
     const driverNameInput = document.getElementById('driverNameInput');
     const driverPrefillHint = document.getElementById('driverPrefillHint');
+    const defaultPrefillHintText = driverPrefillHint ? driverPrefillHint.textContent : '';
     let allTimeOptions = Array.from(startTimeInput.options || [])
         .map(opt => opt.value)
         .filter(v => !!v);
 
-    function markDriverPrefilled(isPrefilled) {
+    function markDriverPrefilled(isPrefilled, sourceTime) {
         if (!driverNameInput) return;
         if (isPrefilled) {
             driverNameInput.classList.add('input-prefilled');
-            if (driverPrefillHint) driverPrefillHint.classList.add('visible');
+            if (driverPrefillHint) {
+                driverPrefillHint.classList.add('visible');
+                if (sourceTime) {
+                    driverPrefillHint.textContent = 'Chauffør er foreslået fra forrige kørsel samme dag kl. ' + sourceTime + '.';
+                } else if (defaultPrefillHintText) {
+                    driverPrefillHint.textContent = defaultPrefillHintText;
+                }
+            }
         } else {
             driverNameInput.classList.remove('input-prefilled');
             if (driverPrefillHint) driverPrefillHint.classList.remove('visible');
@@ -325,15 +336,10 @@ updateMapLinks();
     }
 
     function suggestDriverForVehicle() {
+        if (!isNewTask) return;
         if (!vehicleSelect || !driverNameInput) return;
-        if (!vehicleSelect.value) {
-            markDriverPrefilled(false);
-            return;
-        }
-        if ((driverNameInput.value || '').trim()) {
-            markDriverPrefilled(false);
-            return;
-        }
+        if (!vehicleSelect.value) return;
+        if ((driverNameInput.value || '').trim()) return;
 
         const params = new URLSearchParams();
         if (startDateInput && startDateInput.value) params.set('date', startDateInput.value);
@@ -347,7 +353,7 @@ updateMapLinks();
             .then(data => {
                 if (data && data.driverName && !(driverNameInput.value || '').trim()) {
                     driverNameInput.value = data.driverName;
-                    markDriverPrefilled(true);
+                    markDriverPrefilled(true, data.sourceStartTime || '');
                 }
             })
             .catch(err => console.error('Error fetching suggested driver:', err));
@@ -461,7 +467,7 @@ updateMapLinks();
     if (vehicleSelect) {
         vehicleSelect.addEventListener('change', suggestDriverForVehicle);
     }
-    if (driverNameInput) {
+    if (isNewTask && driverNameInput) {
         driverNameInput.addEventListener('input', function() {
             markDriverPrefilled(false);
         });
