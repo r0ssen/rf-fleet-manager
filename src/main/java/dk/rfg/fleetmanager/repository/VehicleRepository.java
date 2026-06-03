@@ -8,6 +8,11 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface VehicleRepository extends JpaRepository<Vehicle, VehicleId> {
+    @Query("""
+           SELECT v FROM Vehicle v
+           WHERE v.festivalYear = :year
+           ORDER BY CAST(v.vehicleNo AS INTEGER)
+           """)
     List<Vehicle> findByFestivalYearOrderByVehicleNoAsc(int festivalYear);
 
     /** Vehicles available for a date: no rows = all days, any rows = only matching dates. */
@@ -21,7 +26,7 @@ public interface VehicleRepository extends JpaRepository<Vehicle, VehicleId> {
                            WHERE va.festivalYear = :year AND va.vehicleId = v.vehicleId
                              AND va.festivalDate = :date)
              )
-           ORDER BY v.vehicleNo
+           ORDER BY CAST(v.vehicleNo AS INTEGER)
            """)
     List<Vehicle> findAvailableForDate(@Param("year") int year, @Param("date") LocalDate date);
 }
