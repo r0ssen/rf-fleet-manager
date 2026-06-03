@@ -160,7 +160,7 @@
             <button type="submit" class="btn-danger" style="margin-left:auto" th:if="${task.taskId != 0 and task.status != T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}"
                     th:formaction="@{/tasks/{id}/delete(id=${task.taskId})}" formmethod="post" formnovalidate
                     onclick="return confirm('Er du sikker på at du vil slette kørslen?')">
-                Annuller kørsel
+                Slet kørsel
             </button>
             <button type="submit" class="btn-secondary" style="margin-left:auto" th:if="${task.taskId != 0 and task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}"
                     th:formaction="@{/tasks/{id}/delete(id=${task.taskId})}" formmethod="post" formnovalidate
@@ -386,6 +386,12 @@ updateMapLinks();
                     startTimeInput.appendChild(opt);
                 });
 
+                // Sync the hidden startTs field with whatever time is now selected
+                // (the old time may not exist in the new day's options, so the dropdown
+                // will have auto-selected a different value — we must update the hidden field)
+                startTimeInput.dispatchEvent(new Event('change'));
+                // Rebuild end options restoring the preferred end time (overrides the
+                // rebuildEndOptions(null) triggered by the dispatch above)
                 rebuildEndOptions(currentEndTime);
             })
             .catch(err => console.error('Error fetching opening hours:', err));
