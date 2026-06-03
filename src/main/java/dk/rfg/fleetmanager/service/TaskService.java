@@ -42,7 +42,7 @@ public class TaskService {
         Task task = repo.findById(new TaskId(year, id))
             .orElseThrow(() -> new IllegalArgumentException("Task not found: " + id));
         if (task.getStatus() == TaskStatus.CANCELLED) {
-            throw new IllegalArgumentException("Annullerede kørsler kan ikke flyttes. Genåbn først.");
+            throw new IllegalArgumentException("Slettede kørsler kan ikke flyttes. Genåbn først.");
         }
 
         task.setStartTs(date.atTime(start).atZone(ZoneId.systemDefault()).toOffsetDateTime());

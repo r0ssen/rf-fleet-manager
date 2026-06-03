@@ -31,7 +31,7 @@
             <input type="checkbox" id="showCancelledToggle"
                    th:checked="${showCancelled}"
                    onchange="goFleetDate(document.getElementById('fleetDatePicker').value)"/>
-            <span>Vis annullerede kørsler</span>
+            <span>Vis slettede kørsler</span>
         </label>
     </div>
 
@@ -39,7 +39,7 @@
         <span class="legend-item"><span class="swatch ordered"></span> Bestilt</span>
         <span class="legend-item"><span class="swatch started"></span> Startet</span>
         <span class="legend-item"><span class="swatch done"></span> Udført</span>
-        <span class="legend-item"><span class="swatch cancelled"></span> Annulleret</span>
+        <span class="legend-item"><span class="swatch cancelled"></span> Slettet</span>
         <span class="legend-item"><span class="swatch overlap"></span> Overlap / konflikt</span>
         <span class="legend-note">Kørsler uden valgt bil vises nederst som <strong>Ikke tildelt</strong>.</span>
     </div>
@@ -51,7 +51,7 @@
         <div id="statusMenuHint" class="task-context-menu-hint" style="display:none">Vælg en bil for at ændre status.</div>
         <div class="task-context-separator"></div>
         <button type="button" id="duplicateTaskButton" class="task-context-menu-item">Kopiér</button>
-        <button type="button" id="cancelTaskButton" class="task-context-menu-item task-context-menu-item-danger" style="display:none">Annuller kørsel</button>
+        <button type="button" id="cancelTaskButton" class="task-context-menu-item task-context-menu-item-danger" style="display:none">Slet kørsel</button>
         <button type="button" id="reopenTaskButton" class="task-context-menu-item" style="display:none">Genåbn kørsel</button>
     </div>
 
@@ -877,7 +877,7 @@ function goFleetDate(value) {
     if (cancelTaskButton) {
         cancelTaskButton.addEventListener('click', function () {
             if (!contextTaskId) return;
-            if (!confirm('Annuller denne kørsel?')) return;
+            if (!confirm('Slet denne kørsel?')) return;
             var taskId = contextTaskId;
             hideContextMenu();
             toggleCancelTask(taskId);

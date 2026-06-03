@@ -6,7 +6,7 @@ public enum TaskStatus {
             case ORDERED   -> "Bestilt";
             case STARTED   -> "Startet";
             case DONE      -> "Udført";
-            case CANCELLED -> "Annulleret";
+            case CANCELLED -> "Slettet";
         };
     }
 }

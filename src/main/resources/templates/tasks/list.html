@@ -21,7 +21,7 @@
         <a th:href="@{/tasks/new(date=${date},returnTo='tasks')}" class="btn-primary">+ Opret kørsel</a>
         <label style="display:inline-flex;flex-direction:row;align-items:center;gap:0.35rem;margin-left:0.25rem;margin-bottom:0;white-space:nowrap;font-size:12px;color:#4b5563;">
             <input type="checkbox" id="showCancelledToggle" th:checked="${showCancelled}" onchange="goTaskDate(document.getElementById('taskDatePicker').value)"/>
-            <span>Vis annullerede</span>
+            <span>Vis slettede</span>
         </label>
     </div>
 
@@ -103,11 +103,11 @@
                     </form>
                     <form th:if="${t.status.name() != 'CANCELLED'}"
                           th:action="@{/tasks/{id}/delete(id=${t.taskId})}" method="post" style="display:inline"
-                          onsubmit="return confirm('Annuller denne kørsel?')">
+                          onsubmit="return confirm('Slet denne kørsel?')">
                         <input type="hidden" name="date" th:value="${#temporals.format(date,'yyyy-MM-dd')}"/>
                         <input type="hidden" name="returnTo" value="tasks"/>
                         <input type="hidden" name="showCancelled" th:value="${showCancelled}"/>
-                        <button type="submit" class="btn-small btn-danger">Annuller</button>
+                        <button type="submit" class="btn-small btn-danger">Slet</button>
                     </form>
                     <form th:if="${t.status.name() == 'CANCELLED'}"
                           th:action="@{/tasks/{id}/delete(id=${t.taskId})}" method="post" style="display:inline"

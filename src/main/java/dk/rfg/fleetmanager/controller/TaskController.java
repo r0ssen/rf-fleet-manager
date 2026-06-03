@@ -105,7 +105,7 @@ public class TaskController {
         Task existing = taskService.getById(appConfig.getFestivalYear(), id)
             .orElseThrow(() -> new IllegalArgumentException("Task not found: " + id));
         if (existing.getStatus() == TaskStatus.CANCELLED) {
-            result.reject("task.cancelled.readonly", "Annullerede kørsler kan ikke redigeres. Brug Genåbn først.");
+            result.reject("task.cancelled.readonly", "Slettede kørsler kan ikke redigeres. Brug Genåbn først.");
             populateForm(existing, null, returnTo, model);
             return "tasks/form";
         }
