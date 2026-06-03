@@ -6,6 +6,9 @@ import jakarta.validation.constraints.NotBlank;
 
 import java.time.OffsetDateTime;
 
+import org.hibernate.annotations.JdbcType;
+import org.hibernate.dialect.type.PostgreSQLEnumJdbcType;
+
 @Entity
 @Table(name = "tasks")
 @IdClass(TaskId.class)
@@ -67,7 +70,8 @@ public class Task {
     private String description;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false, columnDefinition = "task_status")
+    @JdbcType(PostgreSQLEnumJdbcType.class)
+    @Column(name = "status", nullable = false)
     private TaskStatus status = TaskStatus.ORDERED;
     @Column(name = "received_by")
     private String receivedBy;
