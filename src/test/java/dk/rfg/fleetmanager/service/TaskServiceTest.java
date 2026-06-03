@@ -80,7 +80,7 @@ class TaskServiceTest {
             .atTime(LocalTime.of(10, 0))
             .atZone(ZoneId.systemDefault())
             .toOffsetDateTime();
-        when(taskRepository.findRecentDriverNamesForDay(eq(2026), eq(3), eq(LocalDate.of(2026, 6, 5)), eq(beforeTs), eq(PageRequest.of(0, 1))))
+        when(taskRepository.findRecentDriverNamesForDay(eq(2026), eq(3), eq(TaskStatus.CANCELLED), eq(LocalDate.of(2026, 6, 5)), eq(beforeTs), eq(PageRequest.of(0, 1))))
             .thenReturn(List.of("Niels"));
 
         Optional<String> suggested = service.findSuggestedDriverName(2026, 3, beforeTs);

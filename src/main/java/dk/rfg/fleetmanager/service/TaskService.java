@@ -25,7 +25,13 @@ public class TaskService {
         if (vehicleId == null || beforeTs == null) {
             return Optional.empty();
         }
-        return repo.findRecentDriverNamesForDay(year, vehicleId, beforeTs.toLocalDate(), beforeTs, PageRequest.of(0, 1))
+        return repo.findRecentDriverNamesForDay(
+                year,
+                vehicleId,
+                TaskStatus.CANCELLED,
+                beforeTs.toLocalDate(),
+                beforeTs,
+                PageRequest.of(0, 1))
             .stream()
             .findFirst();
     }

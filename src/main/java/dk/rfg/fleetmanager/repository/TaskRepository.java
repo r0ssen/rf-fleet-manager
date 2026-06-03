@@ -33,7 +33,7 @@ public interface TaskRepository extends JpaRepository<Task, TaskId> {
            SELECT t.driverName FROM Task t
            WHERE t.festivalYear = :year
              AND t.vehicleId = :vehicleId
-             AND t.status <> dk.rfg.fleetmanager.entity.TaskStatus.CANCELLED
+             AND t.status <> :cancelled
              AND t.driverName IS NOT NULL
              AND TRIM(t.driverName) <> ''
              AND CAST(t.startTs AS localdate) = :date
@@ -42,6 +42,7 @@ public interface TaskRepository extends JpaRepository<Task, TaskId> {
            """)
     List<String> findRecentDriverNamesForDay(@Param("year") int year,
                                              @Param("vehicleId") int vehicleId,
+                                             @Param("cancelled") TaskStatus cancelled,
                                              @Param("date") LocalDate date,
                                              @Param("beforeTs") OffsetDateTime beforeTs,
                                              Pageable pageable);
