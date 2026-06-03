@@ -330,10 +330,6 @@
 }
 .task-block:hover { filter: brightness(1.06); }
 .task-block { cursor: pointer; }
-.task-block[data-draggable='false'] {
-    cursor: not-allowed;
-    opacity: 0.9;
-}
 .task-block.dragging {
     opacity: 0.5;
 }
@@ -757,6 +753,7 @@ function goFleetDate(value) {
 
     function bindDragDrop(track) {
         track.addEventListener('dragover', function (event) {
+            if (!dragState || !dragState.taskId) return;
             event.preventDefault();
             track.classList.add('drop-allowed');
         });
@@ -772,10 +769,7 @@ function goFleetDate(value) {
 
             var taskEl = board.querySelector('.task-block[data-task-id="' + taskId + '"]');
             if (!taskEl) return;
-            if (!isTaskMovable(taskEl)) {
-                showFeedback('Startede eller udførte kørsler kan ikke flyttes.', true);
-                return;
-            }
+            if (!isTaskMovable(taskEl)) return;
 
             var openFrom = board.dataset.openFrom;
             var openUntil = board.dataset.openUntil;
@@ -833,7 +827,6 @@ function goFleetDate(value) {
         taskEl.addEventListener('dragstart', function (event) {
             if (!isTaskMovable(taskEl)) {
                 event.preventDefault();
-                showFeedback('Startede eller udførte kørsler kan ikke flyttes.', true);
                 return;
             }
             hideContextMenu();
