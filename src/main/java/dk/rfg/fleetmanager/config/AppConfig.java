@@ -6,7 +6,9 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class AppConfig {
-    @Value("${app.festival-year}") private int festivalYear;
+
+    @Value("${app.festival-year:2026}")
+    private int festivalYear;
 
     @Bean
     public ObjectMapper objectMapper() {
