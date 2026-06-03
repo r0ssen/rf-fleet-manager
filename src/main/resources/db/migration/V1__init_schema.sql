@@ -16,13 +16,6 @@ CREATE TABLE vehicles (
     CONSTRAINT uq_vehicle_no UNIQUE (festival_year, vehicle_no)
 );
 
-CREATE TABLE vehicle_availability (
-    festival_year SMALLINT NOT NULL, vehicle_id INT NOT NULL, festival_date DATE NOT NULL,
-    is_available BOOLEAN NOT NULL DEFAULT TRUE, notes TEXT,
-    CONSTRAINT pk_vehicle_availability PRIMARY KEY (festival_year, vehicle_id, festival_date),
-    CONSTRAINT fk_va_vehicle FOREIGN KEY (festival_year, vehicle_id) REFERENCES vehicles (festival_year, vehicle_id) ON DELETE CASCADE
-);
-
 CREATE TABLE employees (
     festival_year SMALLINT NOT NULL, employee_id SERIAL,
     first_name VARCHAR(100) NOT NULL, last_name VARCHAR(100) NOT NULL,
