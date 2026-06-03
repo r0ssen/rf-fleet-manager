@@ -67,6 +67,9 @@ public class TaskService {
         if (task.getStatus() == TaskStatus.CANCELLED) {
             throw new IllegalArgumentException("Slettede kørsler kan ikke flyttes. Genåbn først.");
         }
+        if (task.getStatus() == TaskStatus.STARTED || task.getStatus() == TaskStatus.DONE) {
+            throw new IllegalArgumentException("Startede eller udførte kørsler kan ikke flyttes.");
+        }
 
         task.setStartTs(date.atTime(start).atZone(ZoneId.systemDefault()).toOffsetDateTime());
         task.setEndTs(date.atTime(end).atZone(ZoneId.systemDefault()).toOffsetDateTime());

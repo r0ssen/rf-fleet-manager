@@ -112,6 +112,19 @@ class TaskServiceTest {
     }
 
     @Test
+    void moveTaskFailsWhenTaskIsStarted() {
+        Task started = new Task();
+        started.setFestivalYear(2026);
+        started.setTaskId(50);
+        started.setStatus(TaskStatus.STARTED);
+        when(taskRepository.findById(new TaskId(2026, 50))).thenReturn(Optional.of(started));
+
+        assertThatThrownBy(() -> service.moveTask(2026, 50, LocalDate.of(2026, 6, 7), LocalTime.of(10, 0), LocalTime.of(10, 30), 1))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Startede eller udførte kørsler kan ikke flyttes.");
+    }
+
+    @Test
     void findSuggestedDriverNameReturnsEmptyWhenStartMissing() {
         Optional<String> suggested = service.findSuggestedDriverName(2026, 3, null);
 

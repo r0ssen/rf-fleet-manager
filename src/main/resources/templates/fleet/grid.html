@@ -121,8 +121,7 @@
                        th:href="@{/tasks/{id}/edit(id=${task.taskId},returnTo='fleet')}"
                        class="task-block"
                        th:classappend="' status-' + ${task.statusClass} + (${task.darkText} ? ' dark-text' : '') + (${task.overlapping} ? ' overlap' : '')"
-                       draggable="true"
-                       th:attr="data-task-id=${task.taskId},data-start=${task.startTime},data-end=${task.endTime},data-vehicle-id=${task.vehicleId},data-status=${task.statusClass}"
+                       th:attr="draggable=${task.statusClass != 'started' and task.statusClass != 'done'},data-draggable=${task.statusClass != 'started' and task.statusClass != 'done'},data-task-id=${task.taskId},data-start=${task.startTime},data-end=${task.endTime},data-vehicle-id=${task.vehicleId},data-status=${task.statusClass}"
                        th:style="${task.style}"
                        th:title="${task.title}">
                         <span class="task-time" th:text="${task.timeLabel}"></span>
@@ -331,6 +330,10 @@
 }
 .task-block:hover { filter: brightness(1.06); }
 .task-block { cursor: pointer; }
+.task-block[data-draggable='false'] {
+    cursor: not-allowed;
+    opacity: 0.9;
+}
 .task-block.dragging {
     opacity: 0.5;
 }
@@ -659,6 +662,12 @@ function goFleetDate(value) {
         return Math.max(5, end - start);
     }
 
+    function isTaskMovable(taskEl) {
+        if (!taskEl) return false;
+        var status = (taskEl.dataset.status || '').toLowerCase();
+        return status !== 'started' && status !== 'done';
+    }
+
     function showFeedback(message, isError) {
         var el = document.getElementById('fleetDragFeedback');
         if (!el) return;
@@ -763,6 +772,10 @@ function goFleetDate(value) {
 
             var taskEl = board.querySelector('.task-block[data-task-id="' + taskId + '"]');
             if (!taskEl) return;
+            if (!isTaskMovable(taskEl)) {
+                showFeedback('Startede eller udførte kørsler kan ikke flyttes.', true);
+                return;
+            }
 
             var openFrom = board.dataset.openFrom;
             var openUntil = board.dataset.openUntil;
@@ -818,6 +831,11 @@ function goFleetDate(value) {
             showContextMenu(taskEl.dataset.taskId, event.clientX, event.clientY);
         });
         taskEl.addEventListener('dragstart', function (event) {
+            if (!isTaskMovable(taskEl)) {
+                event.preventDefault();
+                showFeedback('Startede eller udførte kørsler kan ikke flyttes.', true);
+                return;
+            }
             hideContextMenu();
             board.dataset.dragging = '1';
             taskEl.classList.add('dragging');
