@@ -101,6 +101,14 @@ public class FleetGridService {
             vehicles = List.of();
         }
 
+        vehicles = vehicles.stream()
+            .sorted(Comparator
+                .comparingInt((Vehicle vehicle) -> parseVehicleNo(vehicle.getVehicleNo()))
+                .thenComparing(vehicle -> Optional.ofNullable(vehicle.getVehicleNo()).orElse(""), String.CASE_INSENSITIVE_ORDER)
+                .thenComparingInt(Vehicle::getVehicleId)
+            )
+            .toList();
+
         if (!hoursFromDb) {
             return new GridData(buildEmptyRows(vehicles), List.of(), null, null, false);
         }
@@ -350,6 +358,17 @@ public class FleetGridService {
 
     private String pct(double value) {
         return String.format(Locale.ROOT, "%.4f%%", value);
+    }
+
+    private int parseVehicleNo(String vehicleNo) {
+        if (vehicleNo == null) {
+            return Integer.MAX_VALUE;
+        }
+        try {
+            return Integer.parseInt(vehicleNo.trim());
+        } catch (NumberFormatException ex) {
+            return Integer.MAX_VALUE;
+        }
     }
 
     private record ScheduledTask(Task task,
