@@ -4,7 +4,7 @@
 -- Any rows for a vehicle = available only on those specific dates.
 
 CREATE TABLE vehicle_availability (
-    festival_year SMALLINT NOT NULL,
+    festival_year INTEGER NOT NULL,
     vehicle_id    INT      NOT NULL,
     festival_date DATE     NOT NULL,
     CONSTRAINT pk_vehicle_availability PRIMARY KEY (festival_year, vehicle_id, festival_date),

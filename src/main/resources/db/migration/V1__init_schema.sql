@@ -3,7 +3,7 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 CREATE TYPE task_status AS ENUM ('ORDERED','STARTED','DONE','CANCELLED');
 
 CREATE TABLE vehicles (
-    festival_year SMALLINT NOT NULL, vehicle_id SERIAL,
+    festival_year INTEGER NOT NULL, vehicle_id SERIAL,
     vehicle_no VARCHAR(20) NOT NULL, registration VARCHAR(20), model TEXT,
     total_weight_kg NUMERIC(8,0), payload_kg NUMERIC(8,0),
     vehicle_length_mm NUMERIC(7,0), vehicle_width_mm NUMERIC(7,0), vehicle_height_mm NUMERIC(7,0),
@@ -17,7 +17,7 @@ CREATE TABLE vehicles (
 );
 
 CREATE TABLE employees (
-    festival_year SMALLINT NOT NULL, employee_id SERIAL,
+    festival_year INTEGER NOT NULL, employee_id SERIAL,
     first_name VARCHAR(100) NOT NULL, last_name VARCHAR(100) NOT NULL,
     phone_mobile VARCHAR(30), email VARCHAR(255),
     is_admin BOOLEAN NOT NULL DEFAULT FALSE, is_active BOOLEAN NOT NULL DEFAULT TRUE,
@@ -25,7 +25,7 @@ CREATE TABLE employees (
 );
 
 CREATE TABLE user_accounts (
-    festival_year SMALLINT NOT NULL, employee_id INT NOT NULL,
+    festival_year INTEGER NOT NULL, employee_id INT NOT NULL,
     username VARCHAR(100) NOT NULL, password_hash TEXT NOT NULL,
     is_admin BOOLEAN NOT NULL DEFAULT FALSE,
     CONSTRAINT pk_user_accounts PRIMARY KEY (festival_year, employee_id),
@@ -34,7 +34,7 @@ CREATE TABLE user_accounts (
 );
 
 CREATE TABLE tasks (
-    festival_year SMALLINT NOT NULL, task_id SERIAL,
+    festival_year INTEGER NOT NULL, task_id SERIAL,
     start_ts TIMESTAMPTZ NOT NULL, end_ts TIMESTAMPTZ, created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     start_point TEXT, end_point TEXT, via_point TEXT,
     division TEXT, team TEXT, affiliation TEXT,

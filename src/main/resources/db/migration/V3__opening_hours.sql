@@ -3,7 +3,7 @@
 -- Replaces the hardcoded InsertTime() logic from the Delphi app.
 
 CREATE TABLE opening_hours (
-    festival_year   SMALLINT    NOT NULL,
+    festival_year   INTEGER    NOT NULL,
     festival_date   DATE        NOT NULL,
     open_from       TIME        NOT NULL DEFAULT '08:00',
     open_until      TIME        NOT NULL DEFAULT '22:00',
