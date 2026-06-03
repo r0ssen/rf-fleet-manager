@@ -8,7 +8,8 @@ import java.math.BigDecimal;
 @IdClass(VehicleId.class)
 public class Vehicle {
 
-    @Id @Column(name = "festival_year") private int festivalYear;
+    @Id @Column(name = "festival_year", columnDefinition = "SMALLINT")
+    private int festivalYear;
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "vehicles_vehicle_id_seq_gen")
     @SequenceGenerator(name = "vehicles_vehicle_id_seq_gen", sequenceName = "vehicles_vehicle_id_seq", allocationSize = 1)

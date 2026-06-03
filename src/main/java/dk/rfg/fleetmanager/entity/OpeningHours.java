@@ -9,7 +9,8 @@ import java.time.LocalTime;
 @IdClass(OpeningHoursId.class)
 public class OpeningHours {
 
-    @Id @Column(name = "festival_year") private int festivalYear;
+    @Id @Column(name = "festival_year", columnDefinition = "SMALLINT")
+    private int festivalYear;
     @Id @Column(name = "festival_date") private LocalDate festivalDate;
     @Column(name = "open_from",  nullable = false) private LocalTime openFrom;
     @Column(name = "open_until", nullable = false) private LocalTime openUntil;

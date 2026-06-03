@@ -8,7 +8,8 @@ import java.time.LocalDate;
 @IdClass(VehicleAvailabilityId.class)
 public class VehicleAvailability {
 
-    @Id @Column(name = "festival_year") private int festivalYear;
+    @Id@Column(name = "festival_year", columnDefinition = "SMALLINT")
+    private int festivalYear;
     @Id @Column(name = "vehicle_id")    private int vehicleId;
     @Id @Column(name = "festival_date") private LocalDate festivalDate;
 

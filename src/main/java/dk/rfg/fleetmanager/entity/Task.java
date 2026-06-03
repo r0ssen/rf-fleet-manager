@@ -12,7 +12,7 @@ import java.time.OffsetDateTime;
 public class Task {
 
     @Id
-    @Column(name = "festival_year")
+    @Column(name = "festival_year", columnDefinition = "SMALLINT")
     private int festivalYear;
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "tasks_task_id_seq_gen")
