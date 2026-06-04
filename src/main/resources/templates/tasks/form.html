@@ -100,7 +100,13 @@
                 <a id="directionsBtn" href="#" target="_blank" class="btn-secondary directions-btn">Hent rutevejledning</a>
             </fieldset>
 
-            <fieldset class="fs-personnel fs-full" th:disabled="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}
+            <fieldset class="fs-description" th:disabled="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}">
+                <legend>Beskrivelse</legend>
+                <textarea th:field="*{description}" rows="5" placeholder="Hvad skal transporteres? Varer, udstyr, antal paller…"></textarea>
+                <label>Modtaget af <input type="text" th:field="*{receivedBy}" placeholder="Dispatcherens navn"/></label>
+            </fieldset>
+
+            <fieldset class="fs-personnel" th:disabled="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}
                                                         or ${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).STARTED}
                                                         or ${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).DONE}">
                 <legend>Personel</legend>
@@ -121,7 +127,7 @@
                    th:text="${driverPrefilledFromTime != null ? 'Chauffør er foreslået fra forrige kørsel samme dag kl. ' + driverPrefilledFromTime + '.' : 'Chauffør er foreslået fra forrige kørsel samme dag.'}">Chauffør er foreslået fra forrige kørsel samme dag.</p>
             </fieldset>
 
-            <fieldset class="fs-status fs-full"
+            <fieldset class="fs-status"
                       th:disabled="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}"
                       th:classappend="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).ORDERED} ? ' status-card-ordered' :
                                      (${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).STARTED} ? ' status-card-started' :
@@ -150,12 +156,6 @@
                             th:formaction="@{/tasks/{id}/status(id=${task.taskId})}" formmethod="post" formnovalidate
                             name="status" value="ORDERED">Til Bestilt</button>
                 </div>
-            </fieldset>
-
-            <fieldset class="fs-description" th:disabled="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}">
-                <legend>Beskrivelse</legend>
-                <textarea th:field="*{description}" rows="5" placeholder="Hvad skal transporteres? Varer, udstyr, antal paller…"></textarea>
-                <label>Modtaget af <input type="text" th:field="*{receivedBy}" placeholder="Dispatcherens navn"/></label>
             </fieldset>
 
         </div>
