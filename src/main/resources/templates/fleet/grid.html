@@ -582,6 +582,21 @@ function goFleetDate(value) {
     }
 
     function updateNeedle() {
+        var datePicker = document.getElementById('fleetDatePicker');
+        var selectedDate = datePicker ? datePicker.value : '';
+        var today = new Date();
+        var todayIso = today.getFullYear() + '-'
+            + String(today.getMonth() + 1).padStart(2, '0') + '-'
+            + String(today.getDate()).padStart(2, '0');
+
+        // Current-time needle is only relevant when viewing today.
+        if (!selectedDate || selectedDate !== todayIso) {
+            board.querySelectorAll('.current-time-line').forEach(function (l) {
+                l.style.display = 'none';
+            });
+            return;
+        }
+
         var openFrom  = board.dataset.openFrom;
         var openUntil = board.dataset.openUntil;
         if (!openFrom || !openUntil) return;
