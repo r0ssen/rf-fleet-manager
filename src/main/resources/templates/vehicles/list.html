@@ -28,7 +28,6 @@
                 <td>
                     <span th:if="${v.hasPalletLifter}" class="tag">Palleløfter</span>
                     <span th:if="${v.hasSackTruck}"    class="tag">Sækkevogn</span>
-                    <span th:if="${v.canFetch}"        class="tag">Kan hente</span>
                 </td>
                 <td>
                     <a th:href="@{/vehicles/{id}/edit(id=${v.vehicleId})}" class="btn-small">Rediger</a>

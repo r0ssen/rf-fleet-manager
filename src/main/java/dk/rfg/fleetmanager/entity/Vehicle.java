@@ -28,7 +28,6 @@ public class Vehicle {
     @Column(name = "cargo_height_mm",   precision = 7) private BigDecimal cargoHeightMm;
     @Column(name = "has_pallet_lifter", nullable = false) private boolean hasPalletLifter;
     @Column(name = "has_sack_truck",    nullable = false) private boolean hasSackTruck;
-    @Column(name = "can_fetch",         nullable = false) private boolean canFetch;
     @Column(name = "description") private String description;
 
     @Version
@@ -68,8 +67,6 @@ public class Vehicle {
     public void setHasPalletLifter(boolean v)  { this.hasPalletLifter = v; }
     public boolean isHasSackTruck()    { return hasSackTruck; }
     public void setHasSackTruck(boolean v)     { this.hasSackTruck = v; }
-    public boolean isCanFetch()        { return canFetch; }
-    public void setCanFetch(boolean v)         { this.canFetch = v; }
     public String getDescription()     { return description; }
     public void setDescription(String v)       { this.description = v; }
     public long getVersion()           { return version; }
