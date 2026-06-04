@@ -57,7 +57,8 @@
                         <strong>Fejl:</strong> Der er allerede registreret åbningstider for denne dato. Slet den eksisterende post først.
                     </div>
                     <label>Dato
-                        <input type="date" name="festivalDate" id="festivalDate" required/>
+                        <input type="text" id="festivalDateDisplay" placeholder="dd/mm/yyyy" maxlength="10" required/>
+                        <input type="hidden" name="festivalDate" id="festivalDate"/>
                     </label>
                     <label>Åbner
                         <select name="openFrom" id="openFrom" required></select>
@@ -99,9 +100,20 @@
     const form = document.getElementById('openingHoursForm');
     const openFromSelect = document.getElementById('openFrom');
     const openUntilSelect = document.getElementById('openUntil');
-    const festivalDateInput = document.getElementById('festivalDate');
+    const festivalDateHidden = document.getElementById('festivalDate');
+    const festivalDateDisplay = document.getElementById('festivalDateDisplay');
     const timeError = document.getElementById('timeError');
     const duplicateError = document.getElementById('duplicateError');
+
+    function danishToIso(da) {
+        var m = da.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+        return m ? m[3] + '-' + m[2] + '-' + m[1] : '';
+    }
+
+    festivalDateDisplay.addEventListener('change', function() {
+        festivalDateHidden.value = danishToIso(this.value);
+        validateDuplicate();
+    });
 
     function validateTimes() {
         const openFrom = openFromSelect.value;
@@ -113,7 +125,7 @@
     }
 
     function validateDuplicate() {
-        const date = festivalDateInput.value;
+        const date = festivalDateHidden.value;
         if (date && existingDates.has(date)) {
             duplicateError.style.display = '';
             return false;
@@ -124,7 +136,6 @@
 
     openFromSelect.addEventListener('change', validateTimes);
     openUntilSelect.addEventListener('change', validateTimes);
-    festivalDateInput.addEventListener('change', validateDuplicate);
 
     form.addEventListener('submit', function(e) {
         const timesOk = validateTimes();

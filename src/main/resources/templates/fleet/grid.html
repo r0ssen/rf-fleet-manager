@@ -10,9 +10,10 @@
 
         <div class="date-nav">
             <a th:href="@{/fleet(date=${prevDay},showCancelled=${showCancelled})}" class="btn-secondary">&#8249;</a>
-            <input type="date" name="date" id="fleetDatePicker"
-                   th:value="${#temporals.format(date, 'yyyy-MM-dd')}"
-                   onchange="goFleetDate(this.value)"/>
+            <input type="text" id="fleetDatePicker"
+                   th:value="${#temporals.format(date, 'dd/MM/yyyy')}"
+                   placeholder="dd/mm/yyyy" maxlength="10" size="10"
+                   onchange="goFleetDateDanish(this.value)"/>
             <a th:href="@{/fleet(date=${nextDay},showCancelled=${showCancelled})}" class="btn-secondary">&#8250;</a>
             <span class="date-label"
                   th:text="${#temporals.format(date, 'EEEE d. MMMM yyyy', danishLocale)}">
@@ -30,7 +31,7 @@
         <label class="filter-toggle">
             <input type="checkbox" id="showCancelledToggle"
                    th:checked="${showCancelled}"
-                   onchange="goFleetDate(document.getElementById('fleetDatePicker').value)"/>
+                   onchange="goFleetDateDanish(document.getElementById('fleetDatePicker').value)"/>
             <span>Vis slettede kørsler</span>
         </label>
     </div>
@@ -510,16 +511,16 @@
 </style>
 
 <script>
-function goFleetDate(value) {
+function goFleetDate(isoDate) {
     var params = new URLSearchParams();
-    if (value) {
-        params.set('date', value);
-    }
+    if (isoDate) params.set('date', isoDate);
     var showCancelled = document.getElementById('showCancelledToggle');
-    if (showCancelled && showCancelled.checked) {
-        params.set('showCancelled', 'true');
-    }
+    if (showCancelled && showCancelled.checked) params.set('showCancelled', 'true');
     window.location = '/fleet' + (params.toString() ? ('?' + params.toString()) : '');
+}
+function goFleetDateDanish(value) {
+    var m = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (m) goFleetDate(m[3] + '-' + m[2] + '-' + m[1]);
 }
 
 (function () {

@@ -11,16 +11,17 @@
         <h1>Kørselsadministration</h1>
         <div class="date-nav">
             <a th:href="@{/tasks(date=${prevDay},showCancelled=${showCancelled})}" class="btn-secondary">&#8249;</a>
-            <input type="date" name="date" id="taskDatePicker"
-                   th:value="${#temporals.format(date, 'yyyy-MM-dd')}"
-                   onchange="goTaskDate(this.value)"/>
+            <input type="text" id="taskDatePicker"
+                   th:value="${#temporals.format(date, 'dd/MM/yyyy')}"
+                   placeholder="dd/mm/yyyy" maxlength="10" size="10"
+                   onchange="goTaskDateDanish(this.value)"/>
             <a th:href="@{/tasks(date=${nextDay},showCancelled=${showCancelled})}" class="btn-secondary">&#8250;</a>
             <span class="date-label"
                   th:text="${#temporals.format(date, 'EEEE d. MMMM yyyy', danishLocale)}"></span>
         </div>
         <a th:href="@{/tasks/new(date=${date},returnTo='tasks')}" class="btn-primary">+ Opret kørsel</a>
         <label style="display:inline-flex;flex-direction:row;align-items:center;gap:0.35rem;margin-left:0.25rem;margin-bottom:0;white-space:nowrap;font-size:12px;color:#4b5563;">
-            <input type="checkbox" id="showCancelledToggle" th:checked="${showCancelled}" onchange="goTaskDate(document.getElementById('taskDatePicker').value)"/>
+            <input type="checkbox" id="showCancelledToggle" th:checked="${showCancelled}" onchange="goTaskDateDanish(document.getElementById('taskDatePicker').value)"/>
             <span>Vis slettede</span>
         </label>
     </div>
@@ -141,16 +142,16 @@
     </div>
 </main>
 <script>
-function goTaskDate(value) {
+function goTaskDate(isoDate) {
     var params = new URLSearchParams();
-    if (value) {
-        params.set('date', value);
-    }
+    if (isoDate) params.set('date', isoDate);
     var showCancelled = document.getElementById('showCancelledToggle');
-    if (showCancelled && showCancelled.checked) {
-        params.set('showCancelled', 'true');
-    }
+    if (showCancelled && showCancelled.checked) params.set('showCancelled', 'true');
     window.location = '/tasks' + (params.toString() ? ('?' + params.toString()) : '');
+}
+function goTaskDateDanish(value) {
+    var m = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (m) goTaskDate(m[3] + '-' + m[2] + '-' + m[1]);
 }
 </script>
 </body>

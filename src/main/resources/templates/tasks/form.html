@@ -30,7 +30,8 @@
                                         </div>
                 <div class="field-row">
                     <label>Dato / Start
-                        <input type="date" id="startDate" required/>
+                        <input type="text" id="startDateDisplay" placeholder="dd/mm/yyyy" maxlength="10" required/>
+                        <input type="date" id="startDate" style="display:none"/>
                     </label>
                 </div>
                 <div class="field-row">
@@ -180,11 +181,26 @@
 </main>
 <script th:inline="javascript">
 (function() {
-    const startDateInput = document.getElementById('startDate');
-    const startTimeInput = document.getElementById('startTime');
-    const startTsHidden  = document.getElementById('startTsHidden');
-    const endTimeInput   = document.getElementById('endTime');
-    const endTsHidden    = document.getElementById('endTsHidden');
+    const startDateInput   = document.getElementById('startDate');
+    const startDateDisplay = document.getElementById('startDateDisplay');
+    const startTimeInput   = document.getElementById('startTime');
+    const startTsHidden    = document.getElementById('startTsHidden');
+    const endTimeInput     = document.getElementById('endTime');
+    const endTsHidden      = document.getElementById('endTsHidden');
+
+    function isoToDanish(iso) {
+        var m = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        return m ? m[3] + '/' + m[2] + '/' + m[1] : '';
+    }
+    function danishToIso(da) {
+        var m = da.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+        return m ? m[3] + '-' + m[2] + '-' + m[1] : '';
+    }
+
+    function setStartDate(iso) {
+        startDateInput.value = iso;
+        startDateDisplay.value = isoToDanish(iso);
+    }
 
     function ensureSelectHasValue(select, value) {
         if (!select || !value) return;
@@ -197,10 +213,6 @@
         }
     }
 
-    /**
-     * Parse an OffsetDateTime string (e.g. "2026-05-04T14:30:00+02:00") into date/time components.
-     * Returns { date: "2026-05-04", time: "14:30" } or null if unparseable.
-     */
     function parseOffsetDateTime(value) {
         if (!value) return null;
         try {
@@ -212,30 +224,22 @@
         }
     }
 
-    /**
-     * Create an OffsetDateTime string from a date and time in HH:mm format.
-     */
     function createOffsetDateTime(date, time) {
         if (!date || !time) return '';
-        // Format: YYYY-MM-DDTHH:mm (output format expected by Spring binding converter)
         return date + 'T' + time;
     }
 
-    /**
-     * Initialize form with existing values (if editing).
-     */
     function initializeForm() {
         const startTsValue = startTsHidden.value;
         if (startTsValue) {
             const parsed = parseOffsetDateTime(startTsValue);
             if (parsed) {
                 ensureSelectHasValue(startTimeInput, parsed.time);
-                startDateInput.value = parsed.date;
+                setStartDate(parsed.date);
                 startTimeInput.value = parsed.time;
             }
         } else {
-            // Default to today at 08:00 if new task
-            startDateInput.value = new Date().toISOString().split('T')[0];
+            setStartDate(new Date().toISOString().split('T')[0]);
             ensureSelectHasValue(startTimeInput, '08:00');
             startTimeInput.value = '08:00';
         }
@@ -247,34 +251,34 @@
                 ensureSelectHasValue(endTimeInput, parsed.time);
                 endTimeInput.value = parsed.time;
             }
-        } else {
         }
     }
 
-    /**
-     * Sync start date/time inputs to the hidden OffsetDateTime field.
-     */
     function updateStartTs() {
         const date = startDateInput.value;
         const time = startTimeInput.value;
         startTsHidden.value = createOffsetDateTime(date, time);
     }
 
-    /**
-     * Sync end date/time inputs to the hidden OffsetDateTime field.
-     */
     function updateEndTs() {
         const date = startDateInput.value;
         const time = endTimeInput.value;
         endTsHidden.value = createOffsetDateTime(date, time);
     }
 
-    // Event listeners
+    // Sync display text input → hidden date input
+    startDateDisplay.addEventListener('change', function() {
+        const iso = danishToIso(this.value);
+        if (iso) {
+            startDateInput.value = iso;
+            startDateInput.dispatchEvent(new Event('change'));
+        }
+    });
+
     startDateInput.addEventListener('change', updateStartTs);
     startTimeInput.addEventListener('change', updateStartTs);
     endTimeInput.addEventListener('change', updateEndTs);
 
-    // Initialize on page load
     initializeForm();
     updateStartTs();
     updateEndTs();
