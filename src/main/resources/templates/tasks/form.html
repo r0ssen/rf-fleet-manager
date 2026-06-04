@@ -80,7 +80,7 @@
                 </div>
             </fieldset>
 
-            <fieldset class="fs-places" th:disabled="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}">
+            <fieldset class="fs-places fs-full" th:disabled="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}">
                 <legend>Steder</legend>
                 <label>Fra
                     <div class="input-with-btn">
@@ -100,7 +100,7 @@
                 <a id="directionsBtn" href="#" target="_blank" class="btn-secondary directions-btn">Hent rutevejledning</a>
             </fieldset>
 
-            <fieldset class="fs-personnel" th:disabled="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}
+            <fieldset class="fs-personnel fs-full" th:disabled="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}
                                                         or ${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).STARTED}
                                                         or ${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).DONE}">
                 <legend>Personel</legend>
