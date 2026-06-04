@@ -26,7 +26,7 @@
                 <td th:text="${v.vehicleLengthMm != null ? v.vehicleLengthMm + ' × ' + v.vehicleWidthMm + ' × ' + v.vehicleHeightMm : ''}"></td>
                 <td th:text="${v.cargoLengthMm  != null ? v.cargoLengthMm  + ' × ' + v.cargoWidthMm  + ' × ' + v.cargoHeightMm  : ''}"></td>
                 <td>
-                    <span th:if="${v.hasPalletLifter}" class="tag">Pallelejer</span>
+                    <span th:if="${v.hasPalletLifter}" class="tag">Palleløfter</span>
                     <span th:if="${v.hasSackTruck}"    class="tag">Sækkevogn</span>
                     <span th:if="${v.canFetch}"        class="tag">Kan hente</span>
                 </td>
