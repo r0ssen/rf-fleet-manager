@@ -102,7 +102,7 @@
 
             <fieldset class="fs-description" th:disabled="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}">
                 <legend>Beskrivelse</legend>
-                <textarea th:field="*{description}" rows="5" placeholder="Hvad skal transporteres? Varer, udstyr, antal paller…"></textarea>
+                <textarea th:field="*{description}" rows="1" id="descriptionTextarea" placeholder="Hvad skal transporteres? Varer, udstyr, antal paller…" style="overflow:hidden;resize:none;"></textarea>
                 <label>Modtaget af <input type="text" th:field="*{receivedBy}" placeholder="Dispatcherens navn"/></label>
             </fieldset>
 
@@ -539,5 +539,14 @@ updateMapLinks();
     display: block;
 }
 </style>
+<script>
+(function() {
+    var ta = document.getElementById('descriptionTextarea');
+    if (!ta) return;
+    function fit() { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; }
+    ta.addEventListener('input', fit);
+    fit();
+})();
+</script>
 </body>
 </html>
