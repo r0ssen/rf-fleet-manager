@@ -109,6 +109,7 @@
                            th:classappend="${dispatcherPrefilled} ? ' input-prefilled' : ''"/>
                     <p id="dispatcherPrefillHint" class="prefill-hint"
                        th:classappend="${dispatcherPrefilled} ? ' visible' : ''">Foreslået fra seneste kørsel.</p>
+                    <p id="dispatcherWarning" class="field-warning" style="display:none">Ingen dispatcher angivet.</p>
                 </label>
             </fieldset>
 
@@ -134,6 +135,7 @@
                             <button type="button" class="map-btn" id="vehicleInfoBtn" title="Bilinformation" onclick="showVehicleInfo()">?</button>
                             <div id="vehicleInfoPopup" class="vehicle-info-popup" style="display:none"></div>
                         </div>
+                        <p id="vehicleWarning" class="field-warning" style="display:none">Ingen bil valgt.</p>
                     </label>
                     <label>Chauffør
                         <input type="text" th:field="*{driverName}" id="driverNameInput" placeholder="Chaufførens navn"
@@ -543,14 +545,29 @@ updateMapLinks();
         });
     }
 
+    // Field warnings
+    var vehicleWarning    = document.getElementById('vehicleWarning');
+    var dispatcherWarning = document.getElementById('dispatcherWarning');
+    function updateVehicleWarning() {
+        if (vehicleWarning) vehicleWarning.style.display = vehicleSelect && !vehicleSelect.value ? '' : 'none';
+    }
+    function updateDispatcherWarning() {
+        var v = receivedByInput ? receivedByInput.value.trim() : 'x';
+        if (dispatcherWarning) dispatcherWarning.style.display = v ? 'none' : '';
+    }
+    if (vehicleSelect) vehicleSelect.addEventListener('change', updateVehicleWarning);
+    updateVehicleWarning();
+
     // Dispatcher prefill hint — clear styling when user edits
     var receivedByInput = document.getElementById('receivedByInput');
     var dispatcherHint = document.getElementById('dispatcherPrefillHint');
-    if (receivedByInput && dispatcherHint) {
+    if (receivedByInput) {
         receivedByInput.addEventListener('input', function() {
             receivedByInput.classList.remove('input-prefilled');
-            dispatcherHint.classList.remove('visible');
+            if (dispatcherHint) dispatcherHint.classList.remove('visible');
+            updateDispatcherWarning();
         });
+        updateDispatcherWarning();
     }
 
     // Enable/disable Start button based on driver name
@@ -630,6 +647,12 @@ updateMapLinks();
 }
 .prefill-hint.visible {
     display: block;
+}
+.field-warning {
+    margin: 0.2rem 0 0;
+    font-size: 12px;
+    font-weight: 600;
+    color: #c2410c;
 }
 .vehicle-info-popup {
     position: absolute;
