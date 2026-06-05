@@ -128,7 +128,7 @@
                         <span class="task-time" th:text="${task.timeLabel}"></span>
                         <span th:if="${task.overlapping}" class="task-overlap-flag">OVERLAP</span>
                         <span class="task-booker" th:text="${task.bookerName}"></span>
-                        <span th:if="${!task.compactText and task.routeLabel != null and !#strings.isEmpty(task.routeLabel)}"
+                        <span th:if="${task.routeLabel != null and !#strings.isEmpty(task.routeLabel)}"
                               class="task-route"
                               th:text="${task.routeLabel}"></span>
                     </a>

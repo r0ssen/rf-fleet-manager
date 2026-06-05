@@ -19,8 +19,8 @@ import java.util.stream.Collectors;
 @Service
 public class FleetGridService {
 
-    private static final int LANE_HEIGHT_PX = 96;
-    private static final int BLOCK_HEIGHT_PX = 88;
+    private static final int LANE_HEIGHT_PX = 70;
+    private static final int BLOCK_HEIGHT_PX = 62;
     private static final double COMPACT_BLOCK_MAX_WIDTH_PERCENT = 12.0;
     private static final ZoneId DISPLAY_ZONE = ZoneId.systemDefault();
 
@@ -222,7 +222,7 @@ public class FleetGridService {
             ));
         }
 
-        int rowHeightPx = Math.max(56, laneEnds.size() * LANE_HEIGHT_PX + 8);
+        int rowHeightPx = Math.max(BLOCK_HEIGHT_PX + 12, laneEnds.size() * LANE_HEIGHT_PX + 8);
         return new TimelineRow(label, subLabel, editUrl, vehicleId, taskBlocks, rowHeightPx, unassigned);
     }
 
