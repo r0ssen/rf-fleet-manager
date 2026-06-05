@@ -156,7 +156,7 @@
                 <legend>Status</legend>
                 <p class="status-title"><strong th:text="'Nuværende status: ' + ${task.status.danishLabel()}">Nuværende status</strong></p>
                 <p class="status-note" th:if="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).ORDERED and task.vehicleId == null}">
-                    Vælg bil for at kunne starte kørslen.
+                    Vælg bil og chauffør for at kunne starte kørslen.
                 </p>
                 <div class="field-row" th:if="${task.taskId != 0 and task.vehicleId != null and task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).ORDERED}">
                     <button type="button" id="startButton" class="btn-small"
