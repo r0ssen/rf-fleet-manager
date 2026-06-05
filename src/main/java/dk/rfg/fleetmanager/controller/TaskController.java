@@ -263,6 +263,13 @@ public class TaskController {
         var result = vehicles.stream().map(v -> new java.util.HashMap<String, Object>(){{
             put("vehicleId", v.getVehicleId());
             put("label", "Bil " + v.getVehicleNo() + (v.getModel() != null ? ": " + v.getModel() : ""));
+            put("reg", v.getRegistration());
+            put("payload", v.getPayloadKg());
+            put("cargoL", v.getCargoLengthMm());
+            put("cargoW", v.getCargoWidthMm());
+            put("cargoH", v.getCargoHeightMm());
+            put("lifter", v.isHasPalletLifter());
+            put("truck", v.isHasSackTruck());
         }}).toList();
         return ResponseEntity.ok(result);
     }
