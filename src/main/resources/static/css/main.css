@@ -41,6 +41,8 @@ nav {
 .nav-links a:hover { color: #fff; border-bottom-color: rgba(255,255,255,.8); }
 .nav-logout { display: flex; align-items: center; gap: 0.75rem; margin-left: auto; }
 .nav-logout span { color: rgba(255,255,255,.8); font-size: 13px; }
+.btn-logout { background: rgba(255,255,255,.15); color: #fff; border: 1px solid rgba(255,255,255,.3); border-radius: 4px; padding: 4px 12px; font-size: 13px; cursor: pointer; }
+.btn-logout:hover { background: rgba(255,255,255,.25); opacity: 1; }
 
 /* Layout */
 main { max-width: 1400px; margin: 1.5rem auto; padding: 0 1rem; }

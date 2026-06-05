@@ -13,10 +13,15 @@
     <div class="nav-links">
         <a th:href="@{/tasks}">Kørsler</a>
         <a th:href="@{/fleet}">Flådeoversigt</a>
-        <a th:href="@{/vehicles}">Biler</a>
-        <a th:href="@{/opening-hours}">Åbningstider</a>
+        <a sec:authorize="hasRole('ADMIN')" th:href="@{/vehicles}">Biler</a>
+        <a sec:authorize="hasRole('ADMIN')" th:href="@{/opening-hours}">Åbningstider</a>
     </div>
-    <div class="nav-logout"></div>
+    <div class="nav-logout">
+        <span class="nav-user" sec:authentication="name"></span>
+        <form th:action="@{/logout}" method="post" style="display:inline">
+            <button type="submit" class="btn-logout">Log ud</button>
+        </form>
+    </div>
 </nav>
 </body>
 </html>
