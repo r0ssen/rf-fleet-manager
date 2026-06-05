@@ -90,14 +90,12 @@
                 <div class="fleet-row-label" th:classappend="${row.unassigned} ? ' unassigned' : ''">
                     <a th:if="${row.editUrl != null}" th:href="${row.editUrl}" class="row-link">
                         <span class="row-title" th:text="${row.label}"></span>
-                        <span th:if="${row.unassigned}" class="row-alert-badge">Ingen bil valgt</span>
                         <span th:if="${row.subLabel != null and !#strings.isEmpty(row.subLabel)}"
                               class="row-subtitle"
                               th:text="${row.subLabel}"></span>
                     </a>
                     <div th:if="${row.editUrl == null}" class="row-link row-link-static">
                         <span class="row-title" th:text="${row.label}"></span>
-                        <span th:if="${row.unassigned}" class="row-alert-badge">Ingen bil valgt</span>
                         <span th:if="${row.subLabel != null and !#strings.isEmpty(row.subLabel)}"
                               class="row-subtitle"
                               th:text="${row.subLabel}"></span>
