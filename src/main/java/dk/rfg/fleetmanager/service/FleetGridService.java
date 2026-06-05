@@ -154,7 +154,7 @@ public class FleetGridService {
             .filter(task -> task.getVehicleId() == null)
             .toList();
         if (!unassignedTasks.isEmpty()) {
-            rows.add(buildRow(
+            rows.add(0, buildRow(
                 "Ikke tildelt",
                 "Kørsler uden bil",
                 null,
