@@ -117,9 +117,16 @@
                             <select th:field="*{vehicleId}" id="vehicleSelect">
                                 <option value="">(vælg)</option>
                                 <option th:each="v : ${vehicles}" th:value="${v.vehicleId}"
-                                        th:text="${'Bil ' + v.vehicleNo + (v.model != null ? ': ' + v.model : '')}"></option>
+                                        th:text="${'Bil ' + v.vehicleNo + (v.model != null ? ': ' + v.model : '')}"
+                                        th:attr="data-reg=${v.registration},
+                                                 data-model=${v.model},
+                                                 data-payload=${v.payloadKg},
+                                                 data-lifter=${v.hasPalletLifter},
+                                                 data-truck=${v.hasSackTruck},
+                                                 data-desc=${v.description}"></option>
                             </select>
-                            <span class="map-btn" title="Bilinformation">?</span>
+                            <button type="button" class="map-btn" id="vehicleInfoBtn" title="Bilinformation" onclick="showVehicleInfo()">?</button>
+                            <div id="vehicleInfoPopup" class="vehicle-info-popup" style="display:none"></div>
                         </div>
                     </label>
                     <label>Chauffør
@@ -610,6 +617,21 @@ updateMapLinks();
 .prefill-hint.visible {
     display: block;
 }
+.vehicle-info-popup {
+    position: absolute;
+    z-index: 200;
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    box-shadow: 0 4px 16px rgba(0,0,0,.12);
+    font-size: 13px;
+    min-width: 200px;
+    white-space: nowrap;
+}
+.vehicle-info-popup table { border-collapse: collapse; }
+.vehicle-info-popup td { padding: 2px 8px 2px 0; }
+.vehicle-info-popup td:first-child { font-weight: 600; color: #555; }
 .print-only { display: none; }
 @media print {
     nav, .form-header, form, script { display: none !important; }
@@ -640,6 +662,28 @@ updateMapLinks();
 .input-phone { max-width: 17ch; }
 </style>
 <script>
+window.showVehicleInfo = function() {
+    var sel = document.getElementById('vehicleSelect');
+    var popup = document.getElementById('vehicleInfoPopup');
+    var opt = sel && sel.options[sel.selectedIndex];
+    if (!opt || !opt.value) { popup.style.display = 'none'; return; }
+    var rows = '';
+    function row(label, val) { if (val && val !== 'null') rows += '<tr><td>' + label + '</td><td>' + val + '</td></tr>'; }
+    row('Model', opt.dataset.model);
+    row('Reg.nr.', opt.dataset.reg);
+    row('Nyttelast', opt.dataset.payload ? opt.dataset.payload + ' kg' : null);
+    row('Palleløfter', opt.dataset.lifter === 'true' ? 'Ja' : 'Nej');
+    row('Sækkevogn', opt.dataset.truck === 'true' ? 'Ja' : 'Nej');
+    row('Bemærkning', opt.dataset.desc);
+    popup.innerHTML = '<table>' + rows + '</table>';
+    popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
+};
+document.addEventListener('click', function(e) {
+    var popup = document.getElementById('vehicleInfoPopup');
+    var btn = document.getElementById('vehicleInfoBtn');
+    if (popup && btn && !popup.contains(e.target) && e.target !== btn) popup.style.display = 'none';
+});
+
 (function() {
     var ta = document.getElementById('descriptionTextarea');
     if (!ta) return;
