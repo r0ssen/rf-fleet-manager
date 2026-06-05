@@ -47,6 +47,4 @@ jobs:
           RAILWAY_SERVICE: ${{ secrets.RAILWAY_SERVICE }}
         run: |
           source "$HOME/.railway/env"
-          echo "Token length: ${#RAILWAY_TOKEN}"
-          echo "First 4 chars: ${RAILWAY_TOKEN:0:4}"
-          railway whoami
+          railway up --service $RAILWAY_SERVICE --verbose
