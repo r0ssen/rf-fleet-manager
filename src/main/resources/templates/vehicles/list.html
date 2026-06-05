@@ -13,7 +13,7 @@
         <thead>
             <tr>
                 <th>Bil nr.</th><th>Nummerplade</th><th>Model</th><th>Lastevægt (kg)</th>
-                <th>Udvendige mål (L×B×H mm)</th><th>Indvendige mål (L×B×H mm)</th>
+                <th>Udvendige mål (L×B×H m)</th><th>Indvendige mål (L×B×H m)</th>
                 <th>Udstyr</th><th>Handlinger</th>
             </tr>
         </thead>
@@ -23,8 +23,8 @@
                 <td th:text="${v.registration}"></td>
                 <td th:text="${v.model}"></td>
                 <td th:text="${v.payloadKg}"></td>
-                <td th:text="${v.vehicleLengthMm != null ? v.vehicleLengthMm + ' × ' + v.vehicleWidthMm + ' × ' + v.vehicleHeightMm : ''}"></td>
-                <td th:text="${v.cargoLengthMm  != null ? v.cargoLengthMm  + ' × ' + v.cargoWidthMm  + ' × ' + v.cargoHeightMm  : ''}"></td>
+                <td th:text="${v.vehicleLengthMm != null ? #numbers.formatDecimal(v.vehicleLengthMm.doubleValue()/1000,1,2) + ' × ' + #numbers.formatDecimal(v.vehicleWidthMm.doubleValue()/1000,1,2) + ' × ' + #numbers.formatDecimal(v.vehicleHeightMm.doubleValue()/1000,1,2) : ''}"></td>
+                <td th:text="${v.cargoLengthMm  != null ? #numbers.formatDecimal(v.cargoLengthMm.doubleValue()/1000,1,2)  + ' × ' + #numbers.formatDecimal(v.cargoWidthMm.doubleValue()/1000,1,2)  + ' × ' + #numbers.formatDecimal(v.cargoHeightMm.doubleValue()/1000,1,2)  : ''}"></td>
                 <td>
                     <span th:if="${v.hasPalletLifter}" class="tag">Palleløfter</span>
                     <span th:if="${v.hasSackTruck}"    class="tag">Sækkevogn</span>
