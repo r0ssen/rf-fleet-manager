@@ -234,7 +234,7 @@ public class TaskController {
         List<String> timeOptions = new ArrayList<>();
         LocalTime openFrom = hours.getOpenFrom();
         LocalTime openUntil = hours.getOpenUntil();
-        for (LocalTime t = openFrom; !t.isAfter(openUntil); t = t.plusMinutes(5)) {
+        for (LocalTime t = openFrom; !t.isAfter(openUntil); t = t.plusMinutes(15)) {
             timeOptions.add(String.format("%02d:%02d", t.getHour(), t.getMinute()));
         }
         return ResponseEntity.ok(new java.util.HashMap<Object, Object>(){{
@@ -349,7 +349,7 @@ public class TaskController {
         LocalTime openFrom  = oh.map(h -> h.getOpenFrom()).orElse(LocalTime.of(8, 0));
         LocalTime openUntil = oh.map(h -> h.getOpenUntil()).orElse(null);
         if (oh.isPresent()) {
-            for (LocalTime t = openFrom; !t.isAfter(openUntil); t = t.plusMinutes(5)) {
+            for (LocalTime t = openFrom; !t.isAfter(openUntil); t = t.plusMinutes(15)) {
                 timeOptions.add(String.format("%02d:%02d", t.getHour(), t.getMinute()));
             }
         }
