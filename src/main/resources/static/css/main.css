@@ -71,12 +71,12 @@ tr:last-child td { border-bottom: none; }
 tr:hover td { background: #fafafa; }
 
 .col-time { white-space: nowrap; font-weight: 600; width: 100px; }
-.col-booker { min-width: 140px; max-width: 220px; white-space: nowrap; overflow: hidden; }
-.col-route { min-width: 180px; max-width: 280px; white-space: nowrap; overflow: hidden; }
-.col-affiliation { min-width: 120px; max-width: 180px; white-space: nowrap; overflow: hidden; color: #555; }
-.col-vehicle { white-space: nowrap; }
-.col-driver, .col-dispatcher { white-space: nowrap; min-width: 110px; }
-.col-desc { min-width: 120px; max-width: 200px; white-space: nowrap; overflow: hidden; color: #555; }
+.col-booker { white-space: nowrap; overflow: hidden; max-width: 0; }
+.col-route { white-space: nowrap; overflow: hidden; max-width: 0; }
+.col-affiliation { white-space: nowrap; overflow: hidden; max-width: 0; color: #555; }
+.col-vehicle { white-space: nowrap; overflow: hidden; max-width: 0; }
+.col-driver, .col-dispatcher { white-space: nowrap; overflow: hidden; max-width: 0; }
+.col-desc { white-space: nowrap; overflow: hidden; max-width: 0; color: #555; }
 .col-status { width: 130px; }
 .col-actions { white-space: nowrap; width: 120px; }
 .desc-text { display: block; overflow: hidden; text-overflow: ellipsis; }
