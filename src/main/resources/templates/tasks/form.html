@@ -30,8 +30,7 @@
                 </div>
                 <div class="time-row">
                     <label>Dato / Start
-                        <input type="text" id="startDateDisplay" placeholder="dd/mm/yyyy" maxlength="10" required/>
-                        <input type="date" id="startDate" style="display:none"/>
+                        <input type="date" id="startDate" required/>
                     </label>
                     <label>Tid (fra)
                         <select id="startTime" required>
@@ -100,7 +99,7 @@
             <fieldset class="fs-description" th:disabled="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}">
                 <legend>Beskrivelse</legend>
                 <textarea th:field="*{description}" rows="1" id="descriptionTextarea" placeholder="Hvad skal transporteres? Varer, udstyr, antal paller…" style="overflow:hidden;resize:none;"></textarea>
-                <label>Modtaget af <input type="text" th:field="*{receivedBy}" placeholder="Dispatcherens navn"/></label>
+                <label>Modtaget af <input type="text" th:field="*{receivedBy}" placeholder=" navn"/></label>
             </fieldset>
 
             <fieldset class="fs-personnel" th:disabled="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}
@@ -177,26 +176,11 @@
 </main>
 <script th:inline="javascript">
 (function() {
-    const startDateInput   = document.getElementById('startDate');
-    const startDateDisplay = document.getElementById('startDateDisplay');
-    const startTimeInput   = document.getElementById('startTime');
-    const startTsHidden    = document.getElementById('startTsHidden');
-    const endTimeInput     = document.getElementById('endTime');
-    const endTsHidden      = document.getElementById('endTsHidden');
-
-    function isoToDanish(iso) {
-        var m = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-        return m ? m[3] + '/' + m[2] + '/' + m[1] : '';
-    }
-    function danishToIso(da) {
-        var m = da.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-        return m ? m[3] + '-' + m[2] + '-' + m[1] : '';
-    }
-
-    function setStartDate(iso) {
-        startDateInput.value = iso;
-        startDateDisplay.value = isoToDanish(iso);
-    }
+    const startDateInput = document.getElementById('startDate');
+    const startTimeInput = document.getElementById('startTime');
+    const startTsHidden  = document.getElementById('startTsHidden');
+    const endTimeInput   = document.getElementById('endTime');
+    const endTsHidden    = document.getElementById('endTsHidden');
 
     function ensureSelectHasValue(select, value) {
         if (!select || !value) return;
@@ -231,11 +215,11 @@
             const parsed = parseOffsetDateTime(startTsValue);
             if (parsed) {
                 ensureSelectHasValue(startTimeInput, parsed.time);
-                setStartDate(parsed.date);
+                startDateInput.value = parsed.date;
                 startTimeInput.value = parsed.time;
             }
         } else {
-            setStartDate(new Date().toISOString().split('T')[0]);
+            startDateInput.value = new Date().toISOString().split('T')[0];
             ensureSelectHasValue(startTimeInput, '08:00');
             startTimeInput.value = '08:00';
         }
@@ -261,15 +245,6 @@
         const time = endTimeInput.value;
         endTsHidden.value = createOffsetDateTime(date, time);
     }
-
-    // Sync display text input → hidden date input
-    startDateDisplay.addEventListener('change', function() {
-        const iso = danishToIso(this.value);
-        if (iso) {
-            startDateInput.value = iso;
-            startDateInput.dispatchEvent(new Event('change'));
-        }
-    });
 
     startDateInput.addEventListener('change', updateStartTs);
     startTimeInput.addEventListener('change', updateStartTs);
