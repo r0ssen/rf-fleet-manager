@@ -791,13 +791,11 @@ function goFleetDateDanish(value) {
 
             var rect = track.getBoundingClientRect();
             var x = event.clientX - rect.left;
-            var grabOffset = dragState && dragState.taskId === taskId ? dragState.grabOffsetPx : 0;
-            var leftPx = x - grabOffset;
-            var ratio = Math.max(0, Math.min(1, leftPx / rect.width));
+            var ratio = Math.max(0, Math.min(1, x / rect.width));
             var clickedMins = fromMins + ratio * span;
 
             var maxStart = Math.max(fromMins, untilMins - dur);
-            var startMins = Math.round(clickedMins / 5) * 5;
+            var startMins = Math.round(clickedMins / 15) * 15;
             startMins = Math.max(fromMins, Math.min(maxStart, startMins));
             var endMins = startMins + dur;
 
