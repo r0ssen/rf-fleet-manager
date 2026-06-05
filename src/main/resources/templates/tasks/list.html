@@ -176,6 +176,13 @@ function goTaskDateDanish(value) {
     var m = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
     if (m) goTaskDate(m[3] + '-' + m[2] + '-' + m[1]);
 }
+document.addEventListener('DOMContentLoaded', function() {
+    flatpickr('#taskDatePicker', {
+        locale: 'da',
+        dateFormat: 'd/m/Y',
+        allowInput: true
+    });
+});
 </script>
 </body>
 </html>

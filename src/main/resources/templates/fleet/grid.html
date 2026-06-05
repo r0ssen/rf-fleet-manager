@@ -925,5 +925,15 @@ function goFleetDate(isoDate) {
 })();
 </script>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    flatpickr('#fleetDatePicker', {
+        locale: 'da',
+        dateFormat: 'd/m/Y',
+        allowInput: true
+    });
+});
+</script>
+
 </body>
 </html>
