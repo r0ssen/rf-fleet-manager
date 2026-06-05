@@ -19,6 +19,34 @@
         </div>
         <div class="form-grid">
 
+            <fieldset class="fs-booker fs-full" th:disabled="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}">
+                <legend>Bestiller</legend>
+                <div class="booker-grid">
+                    <label>Division
+                        <input type="text" th:field="*{division}" placeholder="Division" required maxlength="80" th:errorclass="input-error"/>
+                        <p class="field-error" th:if="${#fields.hasErrors('division')}" th:errors="*{division}"></p>
+                    </label>
+                    <label>Navn
+                        <input type="text" th:field="*{bookerName}" placeholder="Bestillerens navn" maxlength="75" required th:errorclass="input-error"/>
+                        <p class="field-error" th:if="${#fields.hasErrors('bookerName')}" th:errors="*{bookerName}"></p>
+                    </label>
+                    <label>Telefon
+                        <input type="tel" th:field="*{bookerPhone}" placeholder="Telefon" maxlength="15" required th:errorclass="input-error" class="input-phone"/>
+                        <p class="field-error" th:if="${#fields.hasErrors('bookerPhone')}" th:errors="*{bookerPhone}"></p>
+                    </label>
+                    <label>Team
+                        <input type="text" th:field="*{team}" placeholder="Team" required maxlength="80" th:errorclass="input-error"/>
+                        <p class="field-error" th:if="${#fields.hasErrors('team')}" th:errors="*{team}"></p>
+                    </label>
+                    <label>Kontaktperson
+                        <input type="text" th:field="*{contactName}" placeholder="Kontaktpersons navn" maxlength="75"/>
+                    </label>
+                    <label>Telefon
+                        <input type="tel" th:field="*{contactPhone}" placeholder="Telefon" maxlength="15" class="input-phone"/>
+                    </label>
+                </div>
+            </fieldset>
+
             <fieldset class="fs-time fs-full" th:disabled="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}">
                 <legend>Tidspunkt</legend>
                 <div class="time-order-error"
@@ -52,34 +80,6 @@
                 <input type="hidden" th:field="*{endTs}" id="endTsHidden"/>
             </fieldset>
 
-            <fieldset class="fs-booker fs-full" th:disabled="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}">
-                <legend>Bestiller</legend>
-                <div class="booker-grid">
-                    <label>Division
-                        <input type="text" th:field="*{division}" placeholder="Division" required maxlength="80" th:errorclass="input-error"/>
-                        <p class="field-error" th:if="${#fields.hasErrors('division')}" th:errors="*{division}"></p>
-                    </label>
-                    <label>Navn
-                        <input type="text" th:field="*{bookerName}" placeholder="Bestillerens navn" maxlength="75" required th:errorclass="input-error"/>
-                        <p class="field-error" th:if="${#fields.hasErrors('bookerName')}" th:errors="*{bookerName}"></p>
-                    </label>
-                    <label>Telefon
-                        <input type="tel" th:field="*{bookerPhone}" placeholder="Telefon" maxlength="15" required th:errorclass="input-error" class="input-phone"/>
-                        <p class="field-error" th:if="${#fields.hasErrors('bookerPhone')}" th:errors="*{bookerPhone}"></p>
-                    </label>
-                    <label>Team
-                        <input type="text" th:field="*{team}" placeholder="Team" required maxlength="80" th:errorclass="input-error"/>
-                        <p class="field-error" th:if="${#fields.hasErrors('team')}" th:errors="*{team}"></p>
-                    </label>
-                    <label>Kontaktperson
-                        <input type="text" th:field="*{contactName}" placeholder="Kontaktpersons navn" maxlength="75"/>
-                    </label>
-                    <label>Telefon
-                        <input type="tel" th:field="*{contactPhone}" placeholder="Telefon" maxlength="15" class="input-phone"/>
-                    </label>
-                </div>
-            </fieldset>
-
             <fieldset class="fs-places fs-full" th:disabled="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}">
                 <legend>Steder</legend>
                 <label>Fra
@@ -103,31 +103,35 @@
             <fieldset class="fs-description" th:disabled="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}">
                 <legend>Beskrivelse</legend>
                 <textarea th:field="*{description}" rows="1" id="descriptionTextarea" placeholder="Hvad skal transporteres? Varer, udstyr, antal paller…" style="overflow:hidden;resize:none;"></textarea>
-                <label>Modtaget af <input type="text" th:field="*{receivedBy}" placeholder=" navn"/></label>
+                <label>Modtaget af <input type="text" th:field="*{receivedBy}" placeholder="Navn"/></label>
             </fieldset>
 
-            <fieldset class="fs-personnel" th:disabled="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}
+            <fieldset class="fs-personnel fs-full" th:disabled="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}
                                                         or ${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).STARTED}
                                                         or ${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).DONE}">
                 <legend>Personel</legend>
-                <label>Bil
-                    <div class="input-with-btn">
-                        <select th:field="*{vehicleId}" id="vehicleSelect">
-                            <option value="">(vælg)</option>
-                            <option th:each="v : ${vehicles}" th:value="${v.vehicleId}"
-                                    th:text="${'Bil ' + v.vehicleNo + (v.model != null ? ': ' + v.model : '')}"></option>
-                        </select>
-                        <span class="map-btn" title="Bilinformation">?</span>
-                    </div>
-                </label>
-                <label>Chauffør <input type="text" th:field="*{driverName}" id="driverNameInput" placeholder="Chaufførens navn"
-                                      th:classappend="${driverPrefilled} ? ' input-prefilled' : ''"/></label>
-                <p id="driverPrefillHint" class="prefill-hint" th:if="${task.taskId == 0}"
-                   th:classappend="${driverPrefilled} ? ' visible' : ''"
-                   th:text="${driverPrefilledFromTime != null ? 'Chauffør er foreslået fra forrige kørsel samme dag kl. ' + driverPrefilledFromTime + '.' : 'Chauffør er foreslået fra forrige kørsel samme dag.'}">Chauffør er foreslået fra forrige kørsel samme dag.</p>
+                <div class="time-row">
+                    <label>Bil
+                        <div class="input-with-btn">
+                            <select th:field="*{vehicleId}" id="vehicleSelect">
+                                <option value="">(vælg)</option>
+                                <option th:each="v : ${vehicles}" th:value="${v.vehicleId}"
+                                        th:text="${'Bil ' + v.vehicleNo + (v.model != null ? ': ' + v.model : '')}"></option>
+                            </select>
+                            <span class="map-btn" title="Bilinformation">?</span>
+                        </div>
+                    </label>
+                    <label>Chauffør
+                        <input type="text" th:field="*{driverName}" id="driverNameInput" placeholder="Chaufførens navn"
+                               th:classappend="${driverPrefilled} ? ' input-prefilled' : ''"/>
+                        <p id="driverPrefillHint" class="prefill-hint" th:if="${task.taskId == 0}"
+                           th:classappend="${driverPrefilled} ? ' visible' : ''"
+                           th:text="${driverPrefilledFromTime != null ? 'Chauffør er foreslået fra forrige kørsel samme dag kl. ' + driverPrefilledFromTime + '.' : 'Chauffør er foreslået fra forrige kørsel samme dag.'}">Chauffør er foreslået fra forrige kørsel samme dag.</p>
+                    </label>
+                </div>
             </fieldset>
 
-            <fieldset class="fs-status"
+            <fieldset class="fs-status fs-full"
                       th:disabled="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}"
                       th:classappend="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).ORDERED} ? ' status-card-ordered' :
                                      (${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).STARTED} ? ' status-card-started' :
@@ -135,13 +139,14 @@
                                      (${task.vehicleId == null} ? ' status-card-unassigned' : '')">
                 <legend>Status</legend>
                 <p class="status-title"><strong th:text="'Nuværende status: ' + ${task.status.danishLabel()}">Nuværende status</strong></p>
-                <p class="status-note" th:if="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).ORDERED and (task.vehicleId == null or #strings.isEmpty(task.driverName))}">
-                    Vælg både bil og chauffør for at kunne starte kørslen.
+                <p class="status-note" th:if="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).ORDERED and task.vehicleId == null}">
+                    Vælg bil for at kunne starte kørslen.
                 </p>
-                <div class="field-row" th:if="${task.taskId != 0 and task.vehicleId != null and not #strings.isEmpty(task.driverName) and task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).ORDERED}">
-                    <button type="submit" class="btn-small"
+                <div class="field-row" th:if="${task.taskId != 0 and task.vehicleId != null and task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).ORDERED}">
+                    <button type="submit" id="startButton" class="btn-small"
                             th:formaction="@{/tasks/{id}/status(id=${task.taskId})}" formmethod="post" formnovalidate
-                            name="status" value="STARTED">Start</button>
+                            name="status" value="STARTED"
+                            th:disabled="${#strings.isEmpty(task.driverName)}">Start</button>
                 </div>
                 <div class="field-row" th:if="${task.taskId != 0 and task.vehicleId != null and task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).STARTED}">
                     <button type="submit" class="btn-small"
@@ -524,6 +529,14 @@ updateMapLinks();
     if (isNewTask && driverNameInput) {
         driverNameInput.addEventListener('input', function() {
             markDriverPrefilled(false);
+        });
+    }
+
+    // Enable/disable Start button based on driver name
+    var startButton = document.getElementById('startButton');
+    if (startButton && driverNameInput) {
+        driverNameInput.addEventListener('input', function() {
+            startButton.disabled = !this.value.trim();
         });
     }
 
