@@ -71,16 +71,16 @@ tr:last-child td { border-bottom: none; }
 tr:hover td { background: #fafafa; }
 
 .col-time { white-space: nowrap; font-weight: 600; width: 100px; }
-.col-booker { min-width: 140px; }
-.col-route { min-width: 180px; }
-.col-affiliation { min-width: 160px; color: #555; }
+.col-booker { min-width: 140px; max-width: 220px; white-space: nowrap; overflow: hidden; }
+.col-route { min-width: 180px; max-width: 280px; white-space: nowrap; overflow: hidden; }
+.col-affiliation { min-width: 120px; max-width: 180px; white-space: nowrap; overflow: hidden; color: #555; }
 .col-vehicle { white-space: nowrap; }
 .col-driver { white-space: nowrap; }
-.col-desc { min-width: 160px; color: #555; }
+.col-desc { min-width: 120px; max-width: 200px; white-space: nowrap; overflow: hidden; color: #555; }
 .col-status { width: 130px; }
 .col-actions { white-space: nowrap; width: 120px; }
-.desc-text { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.phone, .contact, .team, .via { display: block; font-size: 12px; color: #666; }
+.desc-text { display: block; overflow: hidden; text-overflow: ellipsis; }
+.phone, .contact, .team, .via { display: block; font-size: 12px; color: #666; overflow: hidden; text-overflow: ellipsis; }
 .arrow { color: #999; margin: 0 2px; }
 .map-link { font-size: 14px; text-decoration: none; }
 .vehicle-missing-badge {
