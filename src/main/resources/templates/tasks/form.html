@@ -426,7 +426,13 @@ updateMapLinks();
                 endTimeInput.appendChild(opt);
             });
 
-        if (previousEnd && Array.from(endTimeInput.options).some(opt => opt.value === previousEnd)) {
+        if (previousEnd) {
+            if (!Array.from(endTimeInput.options).some(opt => opt.value === previousEnd)) {
+                const opt = document.createElement('option');
+                opt.value = previousEnd;
+                opt.textContent = previousEnd;
+                endTimeInput.appendChild(opt);
+            }
             endTimeInput.value = previousEnd;
         } else {
             endTimeInput.value = '';
@@ -479,9 +485,16 @@ updateMapLinks();
                     const opt = document.createElement('option');
                     opt.value = time;
                     opt.textContent = time;
-                    if (time === currentStartTime) opt.selected = true;
                     startTimeInput.appendChild(opt);
                 });
+                // If the task's existing time is not on a 15-min boundary, add it so it isn't lost
+                if (currentStartTime && !Array.from(startTimeInput.options).some(o => o.value === currentStartTime)) {
+                    const opt = document.createElement('option');
+                    opt.value = currentStartTime;
+                    opt.textContent = currentStartTime;
+                    startTimeInput.appendChild(opt);
+                }
+                if (currentStartTime) startTimeInput.value = currentStartTime;
 
                 // Sync the hidden startTs field with whatever time is now selected
                 // (the old time may not exist in the new day's options, so the dropdown
