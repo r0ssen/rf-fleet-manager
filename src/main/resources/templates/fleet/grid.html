@@ -326,7 +326,7 @@
     color: #fff;
     text-decoration: none;
     box-shadow: 0 1px 4px rgba(0,0,0,.18);
-    overflow: visible;
+    overflow: hidden;
     min-width: 72px;
 }
 .task-block:hover { filter: brightness(1.06); }
@@ -376,16 +376,16 @@
 .task-booker {
     font-weight: 700;
     font-size: 13px;
-    white-space: normal;
-    overflow-wrap: anywhere;
-    word-break: break-word;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     line-height: 1.3;
 }
 .task-route {
     font-size: 11px;
-    white-space: normal;
-    overflow-wrap: anywhere;
-    word-break: break-word;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     opacity: 0.95;
     line-height: 1.3;
 }
