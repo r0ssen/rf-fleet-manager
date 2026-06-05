@@ -35,6 +35,14 @@ jobs:
 
       - name: Run tests
         run: mvn test
+      
+      - name: Debug Railway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          railway --version
+          echo "Token length: ${#RAILWAY_TOKEN}"
+          railway whoami
 
       - name: Install Railway CLI
         run: npm i -g @railway/cli@3.22.0
