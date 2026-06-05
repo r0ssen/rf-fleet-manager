@@ -35,12 +35,16 @@ jobs:
 
       - name: Run tests
         run: mvn test
-
+      
       - name: Install Railway CLI
-        run: npm i -g @railway/cli
+        run: |
+          curl -fsSL https://railway.com/install.sh | bash
+          echo "$HOME/.railway/bin" >> $GITHUB_PATH
     
       - name: Deploy to Railway
-        run: railway up --service $RAILWAY_SERVICE --verbose
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           RAILWAY_SERVICE: ${{ secrets.RAILWAY_SERVICE }}
+        run: |
+          source "$HOME/.railway/env"
+          railway up --service $RAILWAY_SERVICE --verbose
