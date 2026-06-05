@@ -584,7 +584,9 @@ function goFleetDateDanish(value) {
 
     function updateNeedle() {
         var datePicker = document.getElementById('fleetDatePicker');
-        var selectedDate = datePicker ? datePicker.value : '';
+        var raw = datePicker ? datePicker.value : '';
+        var dm = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+        var selectedDate = dm ? dm[3] + '-' + dm[2] + '-' + dm[1] : raw;
         var today = new Date();
         var todayIso = today.getFullYear() + '-'
             + String(today.getMonth() + 1).padStart(2, '0') + '-'
