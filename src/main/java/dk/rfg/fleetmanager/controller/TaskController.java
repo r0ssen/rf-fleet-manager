@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.bind.annotation.*;
 import java.time.DateTimeException;
@@ -47,6 +48,7 @@ public class TaskController {
     @GetMapping
     public String list(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
                        @RequestParam(defaultValue = "false") boolean showCancelled,
+                       @RequestParam(defaultValue = "false") boolean showDone,
                        Model model) throws Exception {
         if (date == null) date = LocalDate.now();
         int year = appConfig.getFestivalYear();
@@ -56,12 +58,18 @@ public class TaskController {
                 .filter(t -> t.getStatus() != TaskStatus.CANCELLED)
                 .toList();
         }
+        if (!showDone) {
+            tasks = tasks.stream()
+                .filter(t -> t.getStatus() != TaskStatus.DONE)
+                .toList();
+        }
         model.addAttribute("tasks", tasks);
         model.addAttribute("date", date);
         model.addAttribute("statuses", editableStatuses());
         model.addAttribute("prevDay", date.minusDays(1));
         model.addAttribute("nextDay", date.plusDays(1));
         model.addAttribute("showCancelled", showCancelled);
+        model.addAttribute("showDone", showDone);
         model.addAttribute("danishLocale", java.util.Locale.forLanguageTag("da"));
         model.addAttribute("now", OffsetDateTime.now(ZoneId.systemDefault()));
         return "tasks/list";
@@ -76,11 +84,9 @@ public class TaskController {
         Task task = new Task();
         applyNewTaskPrefill(task, date, start, vehicleId);
         var driverPrefill = applySuggestedDriverName(task);
-        var dispatcherSuggestion = taskService.findSuggestedDispatcher(appConfig.getFestivalYear());
-        dispatcherSuggestion.ifPresent(task::setReceivedBy);
         populateForm(task, date, returnTo, model);
         model.addAttribute("driverPrefilled", driverPrefill.isPresent());
-        model.addAttribute("dispatcherPrefilled", dispatcherSuggestion.isPresent());
+        model.addAttribute("dispatcherPrefilled", false);
         driverPrefill
             .map(TaskService.SuggestedDriver::sourceStartTs)
             .map(v -> v.toLocalTime().format(HH_MM))
@@ -101,10 +107,11 @@ public class TaskController {
     @PostMapping
     public String create(@Valid @ModelAttribute Task task, BindingResult result,
                          @RequestParam(required = false, defaultValue = "fleet") String returnTo,
-                         Model model) throws Exception {
+                         Authentication auth, Model model) throws Exception {
         validateTimeRange(task, result);
         if (result.hasErrors()) { populateForm(task, null, returnTo, model); return "tasks/form"; }
         task.setFestivalYear(appConfig.getFestivalYear());
+        task.setReceivedBy(auth.getName());
         taskService.save(task);
         LocalDate date = task.getStartTs() != null ? task.getStartTs().toLocalDate() : null;
         return "tasks".equals(returnTo) ? redirectToTaskDate(date) : redirectToFleetDate(date);
@@ -130,6 +137,7 @@ public class TaskController {
             task.setDriverName(existing.getDriverName());
         }
         task.setStatus(existing.getStatus());
+        task.setReceivedBy(existing.getReceivedBy());
         validateTimeRange(task, result);
         if (result.hasErrors()) { populateForm(task, null, returnTo, model); return "tasks/form"; }
         taskService.save(task);
@@ -147,23 +155,24 @@ public class TaskController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestParam(required = false, defaultValue = "fleet") String returnTo,
             @RequestParam(required = false, defaultValue = "false") boolean showCancelled,
+            @RequestParam(required = false, defaultValue = "false") boolean showDone,
             RedirectAttributes attrs) {
         LocalDate redirectDate = resolveRedirectDate(id, date);
         Task task = taskService.getById(appConfig.getFestivalYear(), id).orElse(null);
         if (task == null || !isAllowedStatusTransition(task.getStatus(), status)) {
             return "tasks".equals(returnTo)
-                ? redirectToTaskDate(redirectDate, showCancelled)
+                ? redirectToTaskDate(redirectDate, showCancelled, showDone)
                 : redirectToFleetDate(redirectDate);
         }
         if (status == TaskStatus.STARTED && !hasStartRequirements(task)) {
             attrs.addFlashAttribute("errorMessage", "Du skal vælge både bil og chauffør før en kørsel kan startes.");
             return "tasks".equals(returnTo)
-                ? redirectToTaskDate(redirectDate, showCancelled)
+                ? redirectToTaskDate(redirectDate, showCancelled, showDone)
                 : redirectToFleetDate(redirectDate);
         }
         taskService.updateStatus(appConfig.getFestivalYear(), id, status);
         return "tasks".equals(returnTo)
-            ? redirectToTaskDate(redirectDate, showCancelled)
+            ? redirectToTaskDate(redirectDate, showCancelled, showDone)
             : redirectToFleetDate(redirectDate);
     }
 
@@ -201,7 +210,8 @@ public class TaskController {
     public String delete(@PathVariable int id,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestParam(required = false, defaultValue = "fleet") String returnTo,
-            @RequestParam(required = false, defaultValue = "false") boolean showCancelled) {
+            @RequestParam(required = false, defaultValue = "false") boolean showCancelled,
+            @RequestParam(required = false, defaultValue = "false") boolean showDone) {
         LocalDate redirectDate = resolveRedirectDate(id, date);
         TaskStatus currentStatus = taskService.getById(appConfig.getFestivalYear(), id)
             .map(Task::getStatus)
@@ -209,19 +219,20 @@ public class TaskController {
         TaskStatus nextStatus = currentStatus == TaskStatus.CANCELLED ? TaskStatus.ORDERED : TaskStatus.CANCELLED;
         taskService.updateStatus(appConfig.getFestivalYear(), id, nextStatus);
         return "tasks".equals(returnTo)
-            ? redirectToTaskDate(redirectDate, showCancelled)
+            ? redirectToTaskDate(redirectDate, showCancelled, showDone)
             : redirectToFleetDate(redirectDate);
     }
 
     @PostMapping("/{id}/duplicate")
     public String duplicateFromList(@PathVariable int id,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @RequestParam(defaultValue = "false") boolean showCancelled) {
+            @RequestParam(defaultValue = "false") boolean showCancelled,
+            @RequestParam(defaultValue = "false") boolean showDone) {
         Task duplicated = taskService.duplicateWithoutVehicle(appConfig.getFestivalYear(), id);
         LocalDate redirectDate = date != null
             ? date
             : (duplicated.getStartTs() != null ? duplicated.getStartTs().toLocalDate() : LocalDate.now());
-        return redirectToTaskDate(redirectDate, showCancelled);
+        return redirectToTaskDate(redirectDate, showCancelled, showDone);
     }
 
     @GetMapping("/api/teams")
@@ -291,14 +302,7 @@ public class TaskController {
         }});
     }
 
-    @GetMapping("/api/last-dispatcher")
-    @ResponseBody
-    public ResponseEntity<?> getLastDispatcher() {
-        var name = taskService.findSuggestedDispatcher(appConfig.getFestivalYear()).orElse("");
-        return ResponseEntity.ok(new java.util.HashMap<String, Object>() {{ put("receivedBy", name); }});
-    }
-
-    @PostMapping("/api/{id}/move")
+@PostMapping("/api/{id}/move")
     @ResponseBody
     public ResponseEntity<?> moveTask(@PathVariable int id,
                                       @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
@@ -430,17 +434,16 @@ public class TaskController {
     }
 
     private String redirectToTaskDate(LocalDate date, boolean showCancelled) {
+        return redirectToTaskDate(date, showCancelled, false);
+    }
+
+    private String redirectToTaskDate(LocalDate date, boolean showCancelled, boolean showDone) {
         StringBuilder redirect = new StringBuilder("redirect:/tasks");
         List<String> params = new ArrayList<>();
-        if (date != null) {
-            params.add("date=" + date);
-        }
-        if (showCancelled) {
-            params.add("showCancelled=true");
-        }
-        if (!params.isEmpty()) {
-            redirect.append('?').append(String.join("&", params));
-        }
+        if (date != null) params.add("date=" + date);
+        if (showCancelled) params.add("showCancelled=true");
+        if (showDone) params.add("showDone=true");
+        if (!params.isEmpty()) redirect.append('?').append(String.join("&", params));
         return redirect.toString();
     }
 
