@@ -5,7 +5,7 @@
 <nav th:replace="~{fragments/layout :: nav}"></nav>
 <main class="form-main">
     <div class="form-header">
-        <a th:href="@{/vehicles}" class="back-link">← Tilbage til biler</a>
+        <a th:href="${backUrl}" class="back-link">← Tilbage</a>
         <h1 th:text="${vehicle.vehicleId == 0} ? 'Tilføj bil' : (readOnly ? 'Bildetaljer' : 'Rediger bil')">Bil</h1>
     </div>
     <form th:action="${vehicle.vehicleId == 0} ? @{/vehicles} : @{/vehicles/{id}(id=${vehicle.vehicleId})}"
@@ -89,7 +89,7 @@
         </div>
         <div class="form-actions">
             <button th:if="${!readOnly}" type="submit" class="btn-primary">Gem</button>
-            <a th:href="@{/vehicles}" class="btn-secondary">Tilbage</a>
+            <a th:href="${backUrl}" class="btn-secondary">Tilbage</a>
         </div>
     </form>
 </main>

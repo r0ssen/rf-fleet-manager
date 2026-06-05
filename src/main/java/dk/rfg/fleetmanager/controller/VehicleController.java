@@ -45,6 +45,7 @@ public class VehicleController {
     public String newForm(Model model) {
         model.addAttribute("vehicle", new Vehicle());
         model.addAttribute("readOnly", false);
+        model.addAttribute("backUrl", "/vehicles");
         populateAvailabilityModel(0, model);
         return "vehicles/form";
     }
@@ -65,12 +66,15 @@ public class VehicleController {
     }
 
     @GetMapping("/{id}/edit")
-    public String editForm(@PathVariable int id, Model model, Authentication auth) {
+    public String editForm(@PathVariable int id,
+                           @RequestParam(value = "returnTo", required = false) String returnTo,
+                           Model model, Authentication auth) {
         model.addAttribute("vehicle", vehicleService.getById(appConfig.getFestivalYear(), id)
                 .orElseThrow(() -> new IllegalArgumentException("Vehicle not found: " + id)));
         boolean isAdmin = auth.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
         model.addAttribute("readOnly", !isAdmin);
+        model.addAttribute("backUrl", "fleet".equals(returnTo) ? "/fleet" : "/vehicles");
         populateAvailabilityModel(id, model);
         return "vehicles/form";
     }

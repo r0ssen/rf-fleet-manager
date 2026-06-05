@@ -63,6 +63,7 @@ public class TaskController {
         model.addAttribute("nextDay", date.plusDays(1));
         model.addAttribute("showCancelled", showCancelled);
         model.addAttribute("danishLocale", java.util.Locale.forLanguageTag("da"));
+        model.addAttribute("now", OffsetDateTime.now(ZoneId.systemDefault()));
         return "tasks/list";
     }
 

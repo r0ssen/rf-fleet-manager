@@ -48,6 +48,8 @@
                 <td class="col-time">
                     <span th:text="${#temporals.format(t.startTs, 'HH:mm')}"></span>
                     <span th:if="${t.endTs != null}"> – <span th:text="${#temporals.format(t.endTs, 'HH:mm')}"></span></span>
+                    <span th:if="${t.status.name() == 'ORDERED' and t.startTs.isBefore(now)}"
+                          class="overdue-badge" title="Kørslen er ikke startet og tidspunktet er overskredet">!</span>
                 </td>
                 <td class="col-booker">
                     <strong th:text="${t.bookerName}"></strong>
