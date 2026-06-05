@@ -233,7 +233,7 @@
                 <th>Beskrivelse</th>
                 <td colspan="3" th:text="${task.description}"></td>
             </tr>
-            <tr th:if="${task.receivedBy != null and !#strings.isEmpty(task.receivedBy)}">
+            <tr>
                 <th>Oprettet af</th>
                 <td colspan="3" th:text="${task.receivedBy}"></td>
             </tr>
