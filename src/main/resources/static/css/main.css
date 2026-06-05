@@ -83,7 +83,7 @@ tr:hover td { background: #fafafa; }
 .phone, .contact, .team, .via { display: block; font-size: 12px; color: #666; overflow: hidden; text-overflow: ellipsis; }
 .arrow { color: #999; margin: 0 2px; }
 .map-link { font-size: 14px; text-decoration: none; }
-.vehicle-missing-badge {
+.vehicle-missing-badge, .driver-missing-badge {
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
@@ -95,6 +95,12 @@ tr:hover td { background: #fafafa; }
     font-size: 11px;
     font-weight: 700;
     white-space: nowrap;
+}
+
+.driver-missing-badge {
+    background: #fefce8;
+    border-color: #facc15;
+    color: #854d0e;
 }
 
 /* Status rows */
