@@ -68,8 +68,8 @@
                     <span th:if="${t.vehicleId == null}" class="vehicle-missing-badge">Ikke tildelt bil</span>
                 </td>
                 <td class="col-driver">
-                    <span th:if="${!#strings.isEmpty(t.driverName)}" th:text="${t.driverName}"></span>
-                    <span th:if="${#strings.isEmpty(t.driverName) and t.status.name() != 'CANCELLED'}" class="driver-missing-badge">Ingen chauffør</span>
+                    <span th:if="${t.driverName != null and !#strings.isEmpty(#strings.trim(t.driverName))}" th:text="${t.driverName}"></span>
+                    <span th:if="${(t.driverName == null or #strings.isEmpty(#strings.trim(t.driverName))) and t.status.name() != 'CANCELLED'}" class="driver-missing-badge">Ingen chauffør</span>
                 </td>
                 <td class="col-desc"><span class="desc-text" th:text="${t.description}"></span></td>
                 <td class="col-status">
