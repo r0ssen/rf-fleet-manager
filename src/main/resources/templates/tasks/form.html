@@ -177,6 +177,64 @@
             </button>
         </div>
     </form>
+
+    <!-- Print-only view -->
+    <div class="print-only">
+        <div class="po-header">
+            <div>
+                <div class="po-title">Kørsel</div>
+                <div class="po-status" th:text="${task.status.danishLabel()}"></div>
+            </div>
+            <div class="po-id" th:if="${task.taskId != 0}" th:text="'#' + ${task.taskId}"></div>
+        </div>
+
+        <table class="po-table">
+            <tr>
+                <th>Dato</th>
+                <td th:text="${task.startTs != null} ? ${#temporals.format(task.startTs, 'dd/MM/yyyy')} : '–'"></td>
+                <th>Division</th>
+                <td th:text="${task.division}"></td>
+            </tr>
+            <tr>
+                <th>Tidspunkt</th>
+                <td th:text="${task.startTs != null} ? (${#temporals.format(task.startTs, 'HH:mm')} + (${task.endTs != null} ? ' – ' + ${#temporals.format(task.endTs, 'HH:mm')} : '')) : '–'"></td>
+                <th>Team</th>
+                <td th:text="${task.team}"></td>
+            </tr>
+            <tr>
+                <th>Fra</th>
+                <td th:text="${task.startPoint}"></td>
+                <th>Bestiller</th>
+                <td th:text="${task.bookerName}"></td>
+            </tr>
+            <tr>
+                <th>Til</th>
+                <td th:text="${task.endPoint}"></td>
+                <th>Telefon</th>
+                <td th:text="${task.bookerPhone}"></td>
+            </tr>
+            <tr th:if="${task.viaPoint != null}">
+                <th>Via</th>
+                <td th:text="${task.viaPoint}"></td>
+                <th>Kontaktperson</th>
+                <td th:text="${task.contactName}"></td>
+            </tr>
+            <tr>
+                <th>Bil</th>
+                <td th:text="${task.vehicle != null} ? ${'Bil ' + task.vehicle.vehicleNo + (task.vehicle.model != null ? ' – ' + task.vehicle.model : '')} : '–'"></td>
+                <th>Chauffør</th>
+                <td th:text="${task.driverName}"></td>
+            </tr>
+            <tr th:if="${task.description != null and !#strings.isEmpty(task.description)}">
+                <th>Beskrivelse</th>
+                <td colspan="3" th:text="${task.description}"></td>
+            </tr>
+            <tr th:if="${task.receivedBy != null and !#strings.isEmpty(task.receivedBy)}">
+                <th>Modtaget af</th>
+                <td colspan="3" th:text="${task.receivedBy}"></td>
+            </tr>
+        </table>
+    </div>
 </main>
 <script th:inline="javascript">
 (function() {
@@ -516,6 +574,20 @@ updateMapLinks();
 }
 .prefill-hint.visible {
     display: block;
+}
+.print-only { display: none; }
+@media print {
+    nav, .form-header, form, script { display: none !important; }
+    main { max-width: 100%; margin: 0; padding: 0; }
+    .print-only { display: block; font-family: sans-serif; font-size: 11pt; color: #000; }
+    .po-header { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid #000; padding-bottom: 6pt; margin-bottom: 10pt; }
+    .po-title { font-size: 18pt; font-weight: bold; }
+    .po-status { font-size: 10pt; color: #444; margin-top: 2pt; }
+    .po-id { font-size: 10pt; color: #666; }
+    .po-table { width: 100%; border-collapse: collapse; }
+    .po-table th, .po-table td { padding: 5pt 8pt; border: 1px solid #ccc; vertical-align: top; }
+    .po-table th { background: #f0f0f0; font-weight: 600; white-space: nowrap; width: 14%; }
+    .po-table td { width: 36%; }
 }
 .time-row {
     display: grid;
