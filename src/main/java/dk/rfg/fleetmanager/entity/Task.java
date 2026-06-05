@@ -102,7 +102,7 @@ public class Task {
 
     public String directionsUrl() {
         if (startPoint == null || endPoint == null) { return null; }
-        return "https://maps.google.dk/maps?daddr=" + startPoint.replace(" ", "+") + "+to:" + endPoint.replace(" ", "+");
+        return "https://www.google.com/maps/dir/" + startPoint.replace(" ", "+") + "/" + endPoint.replace(" ", "+");
     }
 
     public int getFestivalYear() {

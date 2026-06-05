@@ -338,7 +338,7 @@ const mapToBtn        = document.getElementById('mapTo');
 function updateMapLinks() {
     const from = encodeURIComponent((startPointInput.value || '').trim());
     const to   = encodeURIComponent((endPointInput.value || '').trim());
-    if (from && to) directionsBtn.href = 'https://maps.google.dk/maps?daddr=' + from + '+to:' + to;
+    if (from && to) directionsBtn.href = 'https://www.google.com/maps/dir/' + from + '/' + to;
     if (from) mapFromBtn.href = 'https://maps.google.dk/maps?q=' + from;
     if (to)   mapToBtn.href   = 'https://maps.google.dk/maps?q=' + to;
 }
