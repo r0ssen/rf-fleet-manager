@@ -652,8 +652,8 @@ function goFleetDateDanish(value) {
             var ratio = Math.max(0, Math.min(1, x / rect.width));
             var clickedMins = fromMins + ratio * span;
 
-            var startMins = Math.round(clickedMins / 5) * 5;
-            startMins = Math.max(fromMins, Math.min(untilMins - 5, startMins));
+            var startMins = Math.round(clickedMins / 15) * 15;
+            startMins = Math.max(fromMins, Math.min(untilMins - 15, startMins));
 
             var params = new URLSearchParams();
             params.set('date', date);
