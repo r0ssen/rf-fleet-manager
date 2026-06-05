@@ -75,7 +75,7 @@ tr:hover td { background: #fafafa; }
 .col-route { min-width: 180px; max-width: 280px; white-space: nowrap; overflow: hidden; }
 .col-affiliation { min-width: 120px; max-width: 180px; white-space: nowrap; overflow: hidden; color: #555; }
 .col-vehicle { white-space: nowrap; }
-.col-driver { white-space: nowrap; min-width: 110px; }
+.col-driver, .col-dispatcher { white-space: nowrap; min-width: 110px; }
 .col-desc { min-width: 120px; max-width: 200px; white-space: nowrap; overflow: hidden; color: #555; }
 .col-status { width: 130px; }
 .col-actions { white-space: nowrap; width: 120px; }
@@ -98,9 +98,9 @@ tr:hover td { background: #fafafa; }
 }
 
 .driver-missing-badge {
-    background: #fefce8;
-    border-color: #facc15;
-    color: #854d0e;
+    background: #fff7ed;
+    border-color: #f97316;
+    color: #9a3412;
 }
 
 /* Status rows */

@@ -75,8 +75,11 @@ public class TaskController {
         Task task = new Task();
         applyNewTaskPrefill(task, date, start, vehicleId);
         var driverPrefill = applySuggestedDriverName(task);
+        var dispatcherSuggestion = taskService.findSuggestedDispatcher(appConfig.getFestivalYear());
+        dispatcherSuggestion.ifPresent(task::setReceivedBy);
         populateForm(task, date, returnTo, model);
         model.addAttribute("driverPrefilled", driverPrefill.isPresent());
+        model.addAttribute("dispatcherPrefilled", dispatcherSuggestion.isPresent());
         driverPrefill
             .map(TaskService.SuggestedDriver::sourceStartTs)
             .map(v -> v.toLocalTime().format(HH_MM))
@@ -278,6 +281,13 @@ public class TaskController {
                 .map(v -> v.toLocalTime().format(HH_MM))
                 .orElse(""));
         }});
+    }
+
+    @GetMapping("/api/last-dispatcher")
+    @ResponseBody
+    public ResponseEntity<?> getLastDispatcher() {
+        var name = taskService.findSuggestedDispatcher(appConfig.getFestivalYear()).orElse("");
+        return ResponseEntity.ok(new java.util.HashMap<String, Object>() {{ put("receivedBy", name); }});
     }
 
     @PostMapping("/api/{id}/move")

@@ -104,7 +104,12 @@
             <fieldset class="fs-description" th:disabled="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}">
                 <legend>Beskrivelse</legend>
                 <textarea th:field="*{description}" rows="1" id="descriptionTextarea" placeholder="Hvad skal transporteres? Varer, udstyr, antal paller…" style="overflow:hidden;resize:none;"></textarea>
-                <label>Modtaget af <input type="text" th:field="*{receivedBy}" placeholder="Navn"/></label>
+                <label>Modtaget af
+                    <input type="text" th:field="*{receivedBy}" id="receivedByInput" placeholder="Navn"
+                           th:classappend="${dispatcherPrefilled} ? ' input-prefilled' : ''"/>
+                    <p id="dispatcherPrefillHint" class="prefill-hint"
+                       th:classappend="${dispatcherPrefilled} ? ' visible' : ''">Foreslået fra seneste kørsel.</p>
+                </label>
             </fieldset>
 
             <fieldset class="fs-personnel fs-full" th:disabled="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}
@@ -539,6 +544,16 @@ updateMapLinks();
         });
     }
 
+    // Dispatcher prefill hint — clear styling when user edits
+    var receivedByInput = document.getElementById('receivedByInput');
+    var dispatcherHint = document.getElementById('dispatcherPrefillHint');
+    if (receivedByInput && dispatcherHint) {
+        receivedByInput.addEventListener('input', function() {
+            receivedByInput.classList.remove('input-prefilled');
+            dispatcherHint.classList.remove('visible');
+        });
+    }
+
     // Enable/disable Start button based on driver name
     var startButton = document.getElementById('startButton');
     if (startButton && driverNameInput) {
@@ -668,13 +683,14 @@ window.showVehicleInfo = function() {
     var opt = sel && sel.options[sel.selectedIndex];
     if (!opt || !opt.value) { popup.style.display = 'none'; return; }
     var rows = '';
-    function row(label, val) { if (val && val !== 'null') rows += '<tr><td>' + label + '</td><td>' + val + '</td></tr>'; }
-    row('Model', opt.dataset.model);
-    row('Reg.nr.', opt.dataset.reg);
-    row('Nyttelast', opt.dataset.payload ? opt.dataset.payload + ' kg' : null);
+    function val(v) { return (v && v !== 'null' && v.trim() !== '') ? v : '–'; }
+    function row(label, v) { rows += '<tr><td>' + label + '</td><td>' + v + '</td></tr>'; }
+    row('Model', val(opt.dataset.model));
+    row('Reg.nr.', val(opt.dataset.reg));
+    row('Nyttelast', opt.dataset.payload && opt.dataset.payload !== 'null' ? opt.dataset.payload + ' kg' : '–');
     row('Palleløfter', opt.dataset.lifter === 'true' ? 'Ja' : 'Nej');
     row('Sækkevogn', opt.dataset.truck === 'true' ? 'Ja' : 'Nej');
-    row('Bemærkning', opt.dataset.desc);
+    if (opt.dataset.desc && opt.dataset.desc !== 'null' && opt.dataset.desc.trim() !== '') row('Bemærkning', opt.dataset.desc);
     popup.innerHTML = '<table>' + rows + '</table>';
     popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
 };

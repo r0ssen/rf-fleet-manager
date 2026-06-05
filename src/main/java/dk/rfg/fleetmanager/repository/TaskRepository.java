@@ -65,5 +65,17 @@ public interface TaskRepository extends JpaRepository<Task, TaskId> {
                                            @Param("beforeTs") OffsetDateTime beforeTs,
                                            Pageable pageable);
 
+    @Query("""
+           SELECT t.receivedBy FROM Task t
+           WHERE t.festivalYear = :year
+             AND t.status <> :cancelled
+             AND t.receivedBy IS NOT NULL
+             AND TRIM(t.receivedBy) <> ''
+           ORDER BY t.startTs DESC, t.taskId DESC
+           """)
+    List<String> findRecentDispatcherNames(@Param("year") int year,
+                                           @Param("cancelled") TaskStatus cancelled,
+                                           Pageable pageable);
+
     List<Task> findByFestivalYearAndStatusOrderByStartTsAsc(int year, TaskStatus status);
 }

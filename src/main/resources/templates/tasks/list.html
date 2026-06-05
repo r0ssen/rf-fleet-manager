@@ -36,6 +36,7 @@
                 <th>Afdeling</th>
                 <th>Bil</th>
                 <th>Chauffør</th>
+                <th>Dispatcher</th>
                 <th>Beskrivelse</th>
                 <th>Status</th>
                 <th>Handlinger</th>
@@ -70,6 +71,10 @@
                 <td class="col-driver">
                     <span th:if="${t.driverName != null and !#strings.isEmpty(#strings.trim(t.driverName))}" th:text="${t.driverName}"></span>
                     <span th:if="${(t.driverName == null or #strings.isEmpty(#strings.trim(t.driverName))) and t.status.name() != 'CANCELLED'}" class="driver-missing-badge">Ingen chauffør</span>
+                </td>
+                <td class="col-dispatcher">
+                    <span th:if="${t.receivedBy != null and !#strings.isEmpty(#strings.trim(t.receivedBy))}" th:text="${t.receivedBy}"></span>
+                    <span th:if="${(t.receivedBy == null or #strings.isEmpty(#strings.trim(t.receivedBy))) and t.status.name() != 'CANCELLED'}" class="driver-missing-badge">Ingen dispatcher</span>
                 </td>
                 <td class="col-desc"><span class="desc-text" th:text="${t.description}"></span></td>
                 <td class="col-status">
@@ -128,7 +133,7 @@
                 </td>
             </tr>
             <tr th:if="${#lists.isEmpty(tasks)}">
-                <td colspan="9" class="empty">Ingen kørsler registreret for denne dag.</td>
+                <td colspan="10" class="empty">Ingen kørsler registreret for denne dag.</td>
             </tr>
         </tbody>
     </table>
