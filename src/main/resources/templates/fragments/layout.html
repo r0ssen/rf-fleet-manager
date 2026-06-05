@@ -16,6 +16,7 @@
         <a th:href="@{/fleet}">Flådeoversigt</a>
         <a sec:authorize="hasRole('ADMIN')" th:href="@{/vehicles}">Biler</a>
         <a sec:authorize="hasRole('ADMIN')" th:href="@{/opening-hours}">Åbningstider</a>
+        <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin/users}">Brugere</a>
     </div>
     <div class="nav-logout">
         <span class="nav-user" sec:authentication="name"></span>

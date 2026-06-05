@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="da">
+<head th:replace="~{fragments/layout :: head('Brugere')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main>
+    <div class="toolbar">
+        <h1>Brugere</h1>
+        <a th:href="@{/admin/users/new}" class="btn-primary">+ Opret bruger</a>
+    </div>
+
+    <div th:if="${successMessage}" class="alert alert-info" th:text="${successMessage}"></div>
+    <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
+
+    <div class="table-wrap">
+    <table>
+        <thead>
+            <tr>
+                <th>Brugernavn</th>
+                <th>Rolle</th>
+                <th>Handlinger</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="u : ${users}">
+                <td th:text="${u.username}"></td>
+                <td>
+                    <span th:text="${u.role.name() == 'ADMIN' ? 'Admin' : 'Agent'}"
+                          th:classappend="${u.role.name() == 'ADMIN'} ? ' tag tag-admin' : ' tag'"></span>
+                </td>
+                <td>
+                    <a th:href="@{/admin/users/{id}/edit(id=${u.id})}" class="btn-small">Rediger</a>
+                    <form th:action="@{/admin/users/{id}/delete(id=${u.id})}" method="post"
+                          style="display:inline" onsubmit="return confirm('Slet brugeren ' + /*[[${u.username}]]*/ '?')">
+                        <button type="submit" class="btn-small btn-danger">Slet</button>
+                    </form>
+                </td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(users)}">
+                <td colspan="3" class="empty">Ingen brugere oprettet.</td>
+            </tr>
+        </tbody>
+    </table>
+    </div>
+</main>
+</body>
+</html>
