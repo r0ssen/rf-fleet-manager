@@ -9,12 +9,9 @@
         <h1>Flådeoversigt</h1>
 
         <div class="date-nav">
-            <a th:href="@{/fleet(date=${prevDay},showCancelled=${showCancelled})}" class="btn-secondary">&#8249;</a>
-            <input type="text" id="fleetDatePicker"
-                   th:value="${#temporals.format(date, 'dd/MM/yyyy')}"
-                   placeholder="dd/mm/yyyy" maxlength="10" size="10"
-                   onchange="goFleetDateDanish(this.value)"/>
-            <a th:href="@{/fleet(date=${nextDay},showCancelled=${showCancelled})}" class="btn-secondary">&#8250;</a>
+            <input type="date" id="fleetDatePicker"
+                   th:value="${#temporals.format(date, 'yyyy-MM-dd')}"
+                   onchange="goFleetDate(this.value)"/>
             <span class="date-label"
                   th:text="${#temporals.format(date, 'EEEE d. MMMM yyyy', danishLocale)}">
             </span>
@@ -31,7 +28,7 @@
         <label class="filter-toggle">
             <input type="checkbox" id="showCancelledToggle"
                    th:checked="${showCancelled}"
-                   onchange="goFleetDateDanish(document.getElementById('fleetDatePicker').value)"/>
+                   onchange="goFleetDate(document.getElementById('fleetDatePicker').value)"/>
             <span>Vis slettede kørsler</span>
         </label>
     </div>
@@ -508,10 +505,6 @@ function goFleetDate(isoDate) {
     if (showCancelled && showCancelled.checked) params.set('showCancelled', 'true');
     window.location = '/fleet' + (params.toString() ? ('?' + params.toString()) : '');
 }
-function goFleetDateDanish(value) {
-    var m = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-    if (m) goFleetDate(m[3] + '-' + m[2] + '-' + m[1]);
-}
 
 (function () {
     var board = document.querySelector('.fleet-board');
@@ -574,9 +567,7 @@ function goFleetDateDanish(value) {
 
     function updateNeedle() {
         var datePicker = document.getElementById('fleetDatePicker');
-        var raw = datePicker ? datePicker.value : '';
-        var dm = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-        var selectedDate = dm ? dm[3] + '-' + dm[2] + '-' + dm[1] : raw;
+        var selectedDate = datePicker ? datePicker.value : '';
         var today = new Date();
         var todayIso = today.getFullYear() + '-'
             + String(today.getMonth() + 1).padStart(2, '0') + '-'
