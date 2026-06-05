@@ -52,27 +52,31 @@
                 <input type="hidden" th:field="*{endTs}" id="endTsHidden"/>
             </fieldset>
 
-            <fieldset class="fs-booker" th:disabled="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}">
+            <fieldset class="fs-booker fs-full" th:disabled="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}">
                 <legend>Bestiller</legend>
-                <div class="field-row">
+                <div class="booker-grid">
                     <label>Division
                         <input type="text" th:field="*{division}" placeholder="Division" required maxlength="80" th:errorclass="input-error"/>
+                        <p class="field-error" th:if="${#fields.hasErrors('division')}" th:errors="*{division}"></p>
                     </label>
-                    <p class="field-error" th:if="${#fields.hasErrors('division')}" th:errors="*{division}"></p>
+                    <label>Navn
+                        <input type="text" th:field="*{bookerName}" placeholder="Bestillerens navn" maxlength="27" required th:errorclass="input-error"/>
+                        <p class="field-error" th:if="${#fields.hasErrors('bookerName')}" th:errors="*{bookerName}"></p>
+                    </label>
+                    <label>Telefon
+                        <input type="tel" th:field="*{bookerPhone}" placeholder="Telefon" maxlength="9" required th:errorclass="input-error"/>
+                        <p class="field-error" th:if="${#fields.hasErrors('bookerPhone')}" th:errors="*{bookerPhone}"></p>
+                    </label>
                     <label>Team
                         <input type="text" th:field="*{team}" placeholder="Team" required maxlength="80" th:errorclass="input-error"/>
+                        <p class="field-error" th:if="${#fields.hasErrors('team')}" th:errors="*{team}"></p>
                     </label>
-                    <p class="field-error" th:if="${#fields.hasErrors('team')}" th:errors="*{team}"></p>
-                </div>
-                <div class="field-row">
-                    <label>Navn <input type="text" th:field="*{bookerName}" placeholder="Bestillerens navn" maxlength="27" required th:errorclass="input-error"/></label>
-                    <p class="field-error" th:if="${#fields.hasErrors('bookerName')}" th:errors="*{bookerName}"></p>
-                    <label>Telefon <input type="tel" th:field="*{bookerPhone}" placeholder="Telefon" maxlength="9" required th:errorclass="input-error"/></label>
-                    <p class="field-error" th:if="${#fields.hasErrors('bookerPhone')}" th:errors="*{bookerPhone}"></p>
-                </div>
-                <div class="field-row">
-                    <label>Kontaktperson <input type="text" th:field="*{contactName}" placeholder="Kontaktpersons navn" maxlength="27"/></label>
-                    <label>Telefon <input type="tel" th:field="*{contactPhone}" placeholder="Telefon" maxlength="9"/></label>
+                    <label>Kontaktperson
+                        <input type="text" th:field="*{contactName}" placeholder="Kontaktpersons navn" maxlength="27"/>
+                    </label>
+                    <label>Telefon
+                        <input type="tel" th:field="*{contactPhone}" placeholder="Telefon" maxlength="9"/>
+                    </label>
                 </div>
             </fieldset>
 
@@ -513,7 +517,7 @@ updateMapLinks();
 .prefill-hint.visible {
     display: block;
 }
-.time-row {
+.time-row, .booker-grid {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     gap: 1rem;
