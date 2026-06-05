@@ -60,11 +60,11 @@
                         <p class="field-error" th:if="${#fields.hasErrors('division')}" th:errors="*{division}"></p>
                     </label>
                     <label>Navn
-                        <input type="text" th:field="*{bookerName}" placeholder="Bestillerens navn" maxlength="27" required th:errorclass="input-error"/>
+                        <input type="text" th:field="*{bookerName}" placeholder="Bestillerens navn" maxlength="75" required th:errorclass="input-error"/>
                         <p class="field-error" th:if="${#fields.hasErrors('bookerName')}" th:errors="*{bookerName}"></p>
                     </label>
                     <label>Telefon
-                        <input type="tel" th:field="*{bookerPhone}" placeholder="Telefon" maxlength="9" required th:errorclass="input-error"/>
+                        <input type="tel" th:field="*{bookerPhone}" placeholder="Telefon" maxlength="15" required th:errorclass="input-error" class="input-phone"/>
                         <p class="field-error" th:if="${#fields.hasErrors('bookerPhone')}" th:errors="*{bookerPhone}"></p>
                     </label>
                     <label>Team
@@ -72,10 +72,10 @@
                         <p class="field-error" th:if="${#fields.hasErrors('team')}" th:errors="*{team}"></p>
                     </label>
                     <label>Kontaktperson
-                        <input type="text" th:field="*{contactName}" placeholder="Kontaktpersons navn" maxlength="27"/>
+                        <input type="text" th:field="*{contactName}" placeholder="Kontaktpersons navn" maxlength="75"/>
                     </label>
                     <label>Telefon
-                        <input type="tel" th:field="*{contactPhone}" placeholder="Telefon" maxlength="9"/>
+                        <input type="tel" th:field="*{contactPhone}" placeholder="Telefon" maxlength="15" class="input-phone"/>
                     </label>
                 </div>
             </fieldset>
@@ -517,12 +517,20 @@ updateMapLinks();
 .prefill-hint.visible {
     display: block;
 }
-.time-row, .booker-grid {
+.time-row {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     gap: 1rem;
     align-items: start;
 }
+.booker-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 17ch;
+    gap: 0.5rem 1rem;
+    align-items: start;
+}
+.booker-grid label { margin-bottom: 0; }
+.input-phone { max-width: 17ch; }
 </style>
 <script>
 (function() {
