@@ -142,6 +142,7 @@
                                th:classappend="${driverPrefilled} ? ' input-prefilled' : ''"/>
                         <p id="driverPrefillHint" class="prefill-hint" th:if="${task.taskId == 0}"
                            th:classappend="${driverPrefilled} ? ' visible' : ''">Foreslået fra seneste kørsel.</p>
+                        <p id="driverWarning" class="field-warning" style="display:none">Ingen chauffør angivet.</p>
                     </label>
                 </div>
             </fieldset>
@@ -547,16 +548,23 @@ updateMapLinks();
 
     // Field warnings
     var vehicleWarning    = document.getElementById('vehicleWarning');
+    var driverWarning     = document.getElementById('driverWarning');
     var dispatcherWarning = document.getElementById('dispatcherWarning');
     function updateVehicleWarning() {
         if (vehicleWarning) vehicleWarning.style.display = vehicleSelect && !vehicleSelect.value ? '' : 'none';
+    }
+    function updateDriverWarning() {
+        var v = driverNameInput ? driverNameInput.value.trim() : 'x';
+        if (driverWarning) driverWarning.style.display = v ? 'none' : '';
     }
     function updateDispatcherWarning() {
         var v = receivedByInput ? receivedByInput.value.trim() : 'x';
         if (dispatcherWarning) dispatcherWarning.style.display = v ? 'none' : '';
     }
     if (vehicleSelect) vehicleSelect.addEventListener('change', updateVehicleWarning);
+    if (driverNameInput) driverNameInput.addEventListener('input', updateDriverWarning);
     updateVehicleWarning();
+    updateDriverWarning();
 
     // Dispatcher prefill hint — clear styling when user edits
     var receivedByInput = document.getElementById('receivedByInput');
@@ -652,7 +660,7 @@ updateMapLinks();
     margin: 0.2rem 0 0;
     font-size: 12px;
     font-weight: 600;
-    color: #c2410c;
+    color: #dc2626;
 }
 .vehicle-info-popup {
     position: absolute;
