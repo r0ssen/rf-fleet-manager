@@ -370,23 +370,15 @@
     border: 1px solid #f9a8c0;
     box-shadow: 0 2px 8px rgba(159, 18, 57, 0.2);
 }
+.task-time, .task-booker, .task-route {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+}
 .task-time { font-size: 11px; opacity: 0.88; font-weight: 500; }
-.task-booker {
-    font-weight: 700;
-    font-size: 13px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    line-height: 1.3;
-}
-.task-route {
-    font-size: 11px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    opacity: 0.95;
-    line-height: 1.3;
-}
+.task-booker { font-weight: 700; font-size: 13px; }
+.task-route { font-size: 11px; opacity: 0.95; }
 .task-overlap-flag {
     align-self: flex-start;
     font-size: 10px;
