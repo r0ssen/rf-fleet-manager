@@ -43,15 +43,17 @@ class FleetGridServiceTest {
 
         assertThat(grid.hoursFromDb()).isTrue();
         assertThat(grid.rows()).hasSize(3);
-        assertThat(grid.rows().getFirst().label()).isEqualTo("Bil 1");
-        assertThat(grid.rows().getFirst().taskBlocks()).hasSize(1);
-        assertThat(grid.rows().getFirst().taskBlocks().getFirst().bookerName()).isEqualTo("Alice");
-        assertThat(grid.rows().getFirst().taskBlocks().getFirst().style()).contains("left:6.2500%", "width:18.7500%", "top:4px");
+        // Unassigned row is now first
+        assertThat(grid.rows().getFirst().label()).isEqualTo("Ikke tildelt");
+        assertThat(grid.rows().getFirst().taskBlocks().getFirst().bookerName()).isEqualTo("Bob");
         assertThat(grid.rows().getFirst().taskBlocks().getFirst().overlapping()).isFalse();
-        assertThat(grid.rows().getFirst().taskBlocks().getFirst().compactText()).isFalse();
-        assertThat(grid.rows().get(2).label()).isEqualTo("Ikke tildelt");
-        assertThat(grid.rows().get(2).taskBlocks().getFirst().bookerName()).isEqualTo("Bob");
-        assertThat(grid.rows().get(2).taskBlocks().getFirst().overlapping()).isFalse();
+        // Bil 1 is second
+        assertThat(grid.rows().get(1).label()).isEqualTo("Bil 1");
+        assertThat(grid.rows().get(1).taskBlocks()).hasSize(1);
+        assertThat(grid.rows().get(1).taskBlocks().getFirst().bookerName()).isEqualTo("Alice");
+        assertThat(grid.rows().get(1).taskBlocks().getFirst().style()).contains("left:6.2500%", "width:18.7500%", "top:4px");
+        assertThat(grid.rows().get(1).taskBlocks().getFirst().overlapping()).isFalse();
+        assertThat(grid.rows().get(1).taskBlocks().getFirst().compactText()).isFalse();
     }
 
     @Test
@@ -70,7 +72,7 @@ class FleetGridServiceTest {
         assertThat(grid.rows().getFirst().taskBlocks()).hasSize(2);
         assertThat(grid.rows().getFirst().rowHeightPx()).isGreaterThan(56);
         assertThat(grid.rows().getFirst().taskBlocks().get(0).style()).contains("top:4px");
-        assertThat(grid.rows().getFirst().taskBlocks().get(1).style()).contains("top:100px");
+        assertThat(grid.rows().getFirst().taskBlocks().get(1).style()).contains("top:74px");
         assertThat(grid.rows().getFirst().taskBlocks().get(0).overlapping()).isTrue();
         assertThat(grid.rows().getFirst().taskBlocks().get(1).overlapping()).isTrue();
     }
@@ -122,9 +124,10 @@ class FleetGridServiceTest {
         FleetGridService.GridData grid = service.buildGrid(2026, date);
 
         assertThat(grid.rows()).hasSize(2);
-        assertThat(grid.rows().get(1).label()).isEqualTo("Ikke tildelt");
-        assertThat(grid.rows().get(1).taskBlocks()).hasSize(2);
-        assertThat(grid.rows().get(1).taskBlocks()).allSatisfy(taskBlock ->
+        // Unassigned row is now first
+        assertThat(grid.rows().getFirst().label()).isEqualTo("Ikke tildelt");
+        assertThat(grid.rows().getFirst().taskBlocks()).hasSize(2);
+        assertThat(grid.rows().getFirst().taskBlocks()).allSatisfy(taskBlock ->
             assertThat(taskBlock.overlapping()).isFalse()
         );
     }
