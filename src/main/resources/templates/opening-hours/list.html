@@ -57,7 +57,10 @@
                         <strong>Fejl:</strong> Der er allerede registreret åbningstider for denne dato. Slet den eksisterende post først.
                     </div>
                     <label>Dato
-                        <input type="date" name="festivalDate" id="festivalDate" required/>
+                        <input type="text" id="festivalDateDisplay" placeholder="dd/mm/yyyy"
+                               maxlength="10" required autocomplete="off"
+                               oninput="syncFestivalDate(this.value)"/>
+                        <input type="hidden" name="festivalDate" id="festivalDate"/>
                     </label>
                     <label>Åbner
                         <select name="openFrom" id="openFrom" required></select>
@@ -100,10 +103,18 @@
     const openFromSelect = document.getElementById('openFrom');
     const openUntilSelect = document.getElementById('openUntil');
     const festivalDateInput = document.getElementById('festivalDate');
+    const festivalDateDisplay = document.getElementById('festivalDateDisplay');
     const timeError = document.getElementById('timeError');
     const duplicateError = document.getElementById('duplicateError');
 
-    festivalDateInput.addEventListener('change', validateDuplicate);
+    function syncFestivalDate(value) {
+        var m = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+        festivalDateInput.value = m ? m[3] + '-' + m[2] + '-' + m[1] : '';
+        validateDuplicate();
+    }
+    window.syncFestivalDate = syncFestivalDate;
+
+    festivalDateDisplay.addEventListener('change', function() { syncFestivalDate(this.value); });
 
     function validateTimes() {
         const openFrom = openFromSelect.value;
@@ -128,6 +139,13 @@
     openUntilSelect.addEventListener('change', validateTimes);
 
     form.addEventListener('submit', function(e) {
+        if (!festivalDateInput.value) {
+            festivalDateDisplay.setCustomValidity('Angiv en dato i formatet dd/mm/åååå.');
+            festivalDateDisplay.reportValidity();
+            e.preventDefault();
+            return;
+        }
+        festivalDateDisplay.setCustomValidity('');
         const timesOk = validateTimes();
         const dupOk = validateDuplicate();
         if (!timesOk || !dupOk) {

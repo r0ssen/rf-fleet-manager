@@ -59,7 +59,9 @@
                 </div>
                 <div class="time-row">
                     <label>Dato / Start
-                        <input type="date" id="startDate" required/>
+                        <input type="text" id="startDateDisplay" placeholder="dd/mm/yyyy"
+                               maxlength="10" required autocomplete="off"/>
+                        <input type="date" id="startDate" style="display:none"/>
                     </label>
                     <label>Tid (fra)
                         <select id="startTime" required>
@@ -300,6 +302,27 @@
         return date + 'T' + time;
     }
 
+    const startDateDisplay = document.getElementById('startDateDisplay');
+
+    function isoToDanish(iso) {
+        if (!iso) return '';
+        var p = iso.split('-');
+        return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : '';
+    }
+
+    function danishToIso(value) {
+        var m = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+        return m ? m[3] + '-' + m[2] + '-' + m[1] : '';
+    }
+
+    if (startDateDisplay) {
+        startDateDisplay.addEventListener('change', function() {
+            var iso = danishToIso(this.value);
+            startDateInput.value = iso;
+            startDateInput.dispatchEvent(new Event('change'));
+        });
+    }
+
     function initializeForm() {
         const startTsValue = startTsHidden.value;
         if (startTsValue) {
@@ -307,10 +330,13 @@
             if (parsed) {
                 ensureSelectHasValue(startTimeInput, parsed.time);
                 startDateInput.value = parsed.date;
+                if (startDateDisplay) startDateDisplay.value = isoToDanish(parsed.date);
                 startTimeInput.value = parsed.time;
             }
         } else {
-            startDateInput.value = new Date().toISOString().split('T')[0];
+            const todayIso = new Date().toISOString().split('T')[0];
+            startDateInput.value = todayIso;
+            if (startDateDisplay) startDateDisplay.value = isoToDanish(todayIso);
             ensureSelectHasValue(startTimeInput, '08:00');
             startTimeInput.value = '08:00';
         }
