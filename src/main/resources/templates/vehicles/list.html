@@ -1,12 +1,14 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="da">
 <head th:replace="~{fragments/layout :: head('Biler')}"></head>
 <body>
 <nav th:replace="~{fragments/layout :: nav}"></nav>
 <main>
     <div class="toolbar">
         <h1>Biler</h1>
-        <a th:href="@{/vehicles/new}" class="btn-primary">+ Tilføj bil</a>
+        <a sec:authorize="hasRole('ADMIN')" th:href="@{/vehicles/new}" class="btn-primary">+ Tilføj bil</a>
     </div>
     <div class="table-wrap">
     <table>
@@ -30,8 +32,10 @@
                     <span th:if="${v.hasSackTruck}"    class="tag">Sækkevogn</span>
                 </td>
                 <td>
-                    <a th:href="@{/vehicles/{id}/edit(id=${v.vehicleId})}" class="btn-small">Rediger</a>
-                    <form th:action="@{/vehicles/{id}/delete(id=${v.vehicleId})}" method="post"
+                    <a sec:authorize="hasRole('ADMIN')" th:href="@{/vehicles/{id}/edit(id=${v.vehicleId})}" class="btn-small">Rediger</a>
+                    <a sec:authorize="!hasRole('ADMIN')" th:href="@{/vehicles/{id}/edit(id=${v.vehicleId})}" class="btn-small">Se detaljer</a>
+                    <form sec:authorize="hasRole('ADMIN')"
+                          th:action="@{/vehicles/{id}/delete(id=${v.vehicleId})}" method="post"
                           style="display:inline" onsubmit="return confirm('Slet denne bil?')">
                         <button type="submit" class="btn-small btn-danger">Slet</button>
                     </form>

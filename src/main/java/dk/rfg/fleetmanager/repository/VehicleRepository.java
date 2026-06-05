@@ -8,6 +8,8 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface VehicleRepository extends JpaRepository<Vehicle, VehicleId> {
+    boolean existsByFestivalYearAndVehicleNoAndVehicleIdNot(int festivalYear, String vehicleNo, int vehicleId);
+
     @Query("""
            SELECT v FROM Vehicle v
            WHERE v.festivalYear = :year

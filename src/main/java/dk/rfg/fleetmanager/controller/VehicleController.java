@@ -7,6 +7,7 @@ import dk.rfg.fleetmanager.repository.VehicleAvailabilityRepository;
 import dk.rfg.fleetmanager.service.VehicleService;
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -43,6 +44,7 @@ public class VehicleController {
     @GetMapping("/new")
     public String newForm(Model model) {
         model.addAttribute("vehicle", new Vehicle());
+        model.addAttribute("readOnly", false);
         populateAvailabilityModel(0, model);
         return "vehicles/form";
     }
@@ -51,8 +53,11 @@ public class VehicleController {
     public String create(@Valid @ModelAttribute Vehicle vehicle, BindingResult result,
                          @RequestParam(value = "availableDates", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) List<LocalDate> availableDates,
                          Model model) {
-        if (result.hasErrors()) { populateAvailabilityModel(0, model); return "vehicles/form"; }
         int year = appConfig.getFestivalYear();
+        if (vehicleService.vehicleNoExists(year, vehicle.getVehicleNo(), 0)) {
+            result.rejectValue("vehicleNo", "duplicate", "Bil nr. '" + vehicle.getVehicleNo() + "' findes allerede.");
+        }
+        if (result.hasErrors()) { model.addAttribute("readOnly", false); populateAvailabilityModel(0, model); return "vehicles/form"; }
         vehicle.setFestivalYear(year);
         Vehicle saved = vehicleService.save(vehicle);
         saveAvailability(year, saved.getVehicleId(), availableDates);
@@ -60,9 +65,12 @@ public class VehicleController {
     }
 
     @GetMapping("/{id}/edit")
-    public String editForm(@PathVariable int id, Model model) {
+    public String editForm(@PathVariable int id, Model model, Authentication auth) {
         model.addAttribute("vehicle", vehicleService.getById(appConfig.getFestivalYear(), id)
                 .orElseThrow(() -> new IllegalArgumentException("Vehicle not found: " + id)));
+        boolean isAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        model.addAttribute("readOnly", !isAdmin);
         populateAvailabilityModel(id, model);
         return "vehicles/form";
     }
@@ -71,8 +79,11 @@ public class VehicleController {
     public String update(@PathVariable int id, @Valid @ModelAttribute Vehicle vehicle, BindingResult result,
                          @RequestParam(value = "availableDates", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) List<LocalDate> availableDates,
                          Model model) {
-        if (result.hasErrors()) { populateAvailabilityModel(id, model); return "vehicles/form"; }
         int year = appConfig.getFestivalYear();
+        if (vehicleService.vehicleNoExists(year, vehicle.getVehicleNo(), id)) {
+            result.rejectValue("vehicleNo", "duplicate", "Bil nr. '" + vehicle.getVehicleNo() + "' findes allerede.");
+        }
+        if (result.hasErrors()) { model.addAttribute("readOnly", false); populateAvailabilityModel(id, model); return "vehicles/form"; }
         vehicle.setFestivalYear(year);
         vehicle.setVehicleId(id);
         vehicleService.save(vehicle);

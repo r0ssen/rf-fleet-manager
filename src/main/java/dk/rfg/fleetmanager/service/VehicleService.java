@@ -15,6 +15,9 @@ public class VehicleService {
     public VehicleService(VehicleRepository repo) { this.repo = repo; }
 
     public List<Vehicle> getAllVehicles(int year) { return repo.findByFestivalYearOrderByVehicleNoAsc(year); }
+    public boolean vehicleNoExists(int year, String vehicleNo, int excludeId) {
+        return repo.existsByFestivalYearAndVehicleNoAndVehicleIdNot(year, vehicleNo, excludeId);
+    }
     public List<Vehicle> getAvailableVehiclesForDate(int year, LocalDate date) { return repo.findAvailableForDate(year, date); }
     public Optional<Vehicle> getById(int year, int id) { return repo.findById(new VehicleId(year, id)); }
 

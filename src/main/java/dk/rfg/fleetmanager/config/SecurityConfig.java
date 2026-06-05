@@ -2,6 +2,7 @@ package dk.rfg.fleetmanager.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -18,6 +19,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/login", "/css/**", "/js/**", "/error").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/vehicles", "/vehicles/*/edit").authenticated()
                 .requestMatchers("/vehicles/**", "/opening-hours/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
