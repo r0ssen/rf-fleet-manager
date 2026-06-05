@@ -138,8 +138,7 @@
                         <input type="text" th:field="*{driverName}" id="driverNameInput" placeholder="Chaufførens navn"
                                th:classappend="${driverPrefilled} ? ' input-prefilled' : ''"/>
                         <p id="driverPrefillHint" class="prefill-hint" th:if="${task.taskId == 0}"
-                           th:classappend="${driverPrefilled} ? ' visible' : ''"
-                           th:text="${driverPrefilledFromTime != null ? 'Chauffør er foreslået fra forrige kørsel samme dag kl. ' + driverPrefilledFromTime + '.' : 'Chauffør er foreslået fra forrige kørsel samme dag.'}">Chauffør er foreslået fra forrige kørsel samme dag.</p>
+                           th:classappend="${driverPrefilled} ? ' visible' : ''">Foreslået fra seneste kørsel.</p>
                     </label>
                 </div>
             </fieldset>
@@ -370,7 +369,6 @@ updateMapLinks();
     const vehicleSelect  = document.getElementById('vehicleSelect');
     const driverNameInput = document.getElementById('driverNameInput');
     const driverPrefillHint = document.getElementById('driverPrefillHint');
-    const defaultPrefillHintText = driverPrefillHint ? driverPrefillHint.textContent : '';
     let allTimeOptions = Array.from(startTimeInput.options || [])
         .map(opt => opt.value)
         .filter(v => !!v);
@@ -379,14 +377,7 @@ updateMapLinks();
         if (!driverNameInput) return;
         if (isPrefilled) {
             driverNameInput.classList.add('input-prefilled');
-            if (driverPrefillHint) {
-                driverPrefillHint.classList.add('visible');
-                if (sourceTime) {
-                    driverPrefillHint.textContent = 'Chauffør er foreslået fra forrige kørsel samme dag kl. ' + sourceTime + '.';
-                } else if (defaultPrefillHintText) {
-                    driverPrefillHint.textContent = defaultPrefillHintText;
-                }
-            }
+            if (driverPrefillHint) driverPrefillHint.classList.add('visible');
         } else {
             driverNameInput.classList.remove('input-prefilled');
             if (driverPrefillHint) driverPrefillHint.classList.remove('visible');
