@@ -190,34 +190,38 @@
 
         <table class="po-table">
             <tr>
-                <th>Dato</th>
-                <td th:text="${task.startTs != null} ? ${#temporals.format(task.startTs, 'dd/MM/yyyy')} : '–'"></td>
                 <th>Division</th>
                 <td th:text="${task.division}"></td>
-            </tr>
-            <tr>
-                <th>Tidspunkt</th>
-                <td th:text="${task.startTs != null} ? (${#temporals.format(task.startTs, 'HH:mm')} + (${task.endTs != null} ? ' – ' + ${#temporals.format(task.endTs, 'HH:mm')} : '')) : '–'"></td>
                 <th>Team</th>
                 <td th:text="${task.team}"></td>
             </tr>
             <tr>
-                <th>Fra</th>
-                <td th:text="${task.startPoint}"></td>
-                <th>Bestiller</th>
-                <td th:text="${task.bookerName}"></td>
+                <th>Dato</th>
+                <td th:text="${task.startTs != null} ? ${#temporals.format(task.startTs, 'dd/MM/yyyy')} : '–'"></td>
+                <th>Tidspunkt</th>
+                <td th:text="${task.startTs != null} ? (${#temporals.format(task.startTs, 'HH:mm')} + (${task.endTs != null} ? ' – ' + ${#temporals.format(task.endTs, 'HH:mm')} : '')) : '–'"></td>
             </tr>
             <tr>
-                <th>Til</th>
-                <td th:text="${task.endPoint}"></td>
+                <th>Bestiller</th>
+                <td th:text="${task.bookerName}"></td>
                 <th>Telefon</th>
                 <td th:text="${task.bookerPhone}"></td>
             </tr>
-            <tr th:if="${task.viaPoint != null}">
-                <th>Via</th>
-                <td th:text="${task.viaPoint}"></td>
+            <tr>
                 <th>Kontaktperson</th>
                 <td th:text="${task.contactName}"></td>
+                <th>Kontakt tlf.</th>
+                <td th:text="${task.contactPhone}"></td>
+            </tr>
+            <tr>
+                <th>Fra</th>
+                <td th:text="${task.startPoint}"></td>
+                <th>Til</th>
+                <td th:text="${task.endPoint}"></td>
+            </tr>
+            <tr th:if="${task.viaPoint != null and !#strings.isEmpty(task.viaPoint)}">
+                <th>Via</th>
+                <td colspan="3" th:text="${task.viaPoint}"></td>
             </tr>
             <tr>
                 <th>Bil</th>
@@ -230,7 +234,7 @@
                 <td colspan="3" th:text="${task.description}"></td>
             </tr>
             <tr th:if="${task.receivedBy != null and !#strings.isEmpty(task.receivedBy)}">
-                <th>Modtaget af</th>
+                <th>Oprettet af</th>
                 <td colspan="3" th:text="${task.receivedBy}"></td>
             </tr>
         </table>
@@ -586,8 +590,8 @@ updateMapLinks();
     .po-id { font-size: 10pt; color: #666; }
     .po-table { width: 100%; border-collapse: collapse; }
     .po-table th, .po-table td { padding: 5pt 8pt; border: 1px solid #ccc; vertical-align: top; }
-    .po-table th { background: #f0f0f0; font-weight: 600; white-space: nowrap; width: 14%; }
-    .po-table td { width: 36%; }
+    .po-table th { background: #f0f0f0; font-weight: 600; white-space: nowrap; width: 15%; }
+    .po-table td { width: 35%; }
 }
 .time-row {
     display: grid;
