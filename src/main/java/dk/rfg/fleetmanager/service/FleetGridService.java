@@ -140,7 +140,7 @@ public class FleetGridService {
             rows.add(buildRow(
                 vehicle.displayLabel(),
                 vehicle.getRegistration(),
-                "/vehicles/" + vehicle.getVehicleId() + "/edit",
+                "/vehicles/" + vehicle.getVehicleId() + "/edit?returnTo=fleet",
                 vehicle.getVehicleId(),
                 tasksByVehicle.getOrDefault(vehicle.getVehicleId(), List.of()),
                 openingStart,
@@ -172,7 +172,7 @@ public class FleetGridService {
 
     private List<TimelineRow> buildEmptyRows(List<Vehicle> vehicles) {
         return vehicles.stream()
-            .map(vehicle -> new TimelineRow(vehicle.displayLabel(), vehicle.getRegistration(), "/vehicles/" + vehicle.getVehicleId() + "/edit", vehicle.getVehicleId(), List.of(), 56, false))
+            .map(vehicle -> new TimelineRow(vehicle.displayLabel(), vehicle.getRegistration(), "/vehicles/" + vehicle.getVehicleId() + "/edit?returnTo=fleet", vehicle.getVehicleId(), List.of(), 56, false))
             .toList();
     }
 

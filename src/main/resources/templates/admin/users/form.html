@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="da">
+<head th:replace="~{fragments/layout :: head(${userId == null} ? 'Opret bruger' : 'Rediger bruger')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav}"></nav>
+<main class="form-main">
+    <div class="form-header">
+        <a th:href="@{/admin/users}" class="back-link">← Tilbage til brugere</a>
+        <h1 th:text="${userId == null} ? 'Opret bruger' : 'Rediger bruger'">Bruger</h1>
+    </div>
+
+    <div th:if="${not #lists.isEmpty(errors)}" class="alert alert-error">
+        <ul style="margin:0; padding-left:1.25rem;">
+            <li th:each="e : ${errors}" th:text="${e}"></li>
+        </ul>
+    </div>
+
+    <form th:action="${userId == null} ? @{/admin/users} : @{/admin/users/{id}(id=${userId})}"
+          th:object="${userForm}" method="post">
+        <div class="form-grid" style="max-width:480px;">
+            <fieldset style="grid-column:1/-1;">
+                <legend>Brugeroplysninger</legend>
+                <label>Brugernavn *
+                    <input type="text" th:field="*{username}" required autocomplete="off" placeholder="F.eks. jens"/>
+                </label>
+                <label>
+                    <span th:text="${userId == null} ? 'Adgangskode *' : 'Ny adgangskode (lad stå tom for at beholde den nuværende)'">Adgangskode</span>
+                    <input type="password" th:field="*{password}" autocomplete="new-password"
+                           th:required="${userId == null}" placeholder="••••••••"/>
+                </label>
+                <label>
+                    <span th:text="${userId == null} ? 'Bekræft adgangskode *' : 'Bekræft ny adgangskode'">Bekræft adgangskode</span>
+                    <input type="password" th:field="*{confirmPassword}" autocomplete="new-password" placeholder="••••••••"/>
+                </label>
+                <label>Rolle *
+                    <select th:field="*{role}" required>
+                        <option value="">— Vælg rolle —</option>
+                        <option th:each="r : ${roles}"
+                                th:value="${r.name()}"
+                                th:text="${r.name() == 'ADMIN' ? 'Admin' : 'Agent'}"
+                                th:selected="${userForm.role == r}"></option>
+                    </select>
+                </label>
+            </fieldset>
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn-primary">Gem</button>
+            <a th:href="@{/admin/users}" class="btn-secondary">Annullér</a>
+        </div>
+    </form>
+</main>
+</body>
+</html>

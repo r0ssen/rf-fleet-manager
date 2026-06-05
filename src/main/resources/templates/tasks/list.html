@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="da">
 <head th:replace="~{fragments/layout :: head('Kørsler')}"></head>
 <body>
 <nav th:replace="~{fragments/layout :: nav}"></nav>
@@ -10,16 +11,20 @@
     <div class="toolbar">
         <h1>Kørselsadministration</h1>
         <div class="date-nav">
-            <a th:href="@{/tasks(date=${prevDay},showCancelled=${showCancelled})}" class="btn-secondary">&#8249;</a>
+            <a th:href="@{/tasks(date=${prevDay},showCancelled=${showCancelled},showDone=${showDone})}" class="btn-secondary">&#8249;</a>
             <input type="text" id="taskDatePicker"
                    th:value="${#temporals.format(date, 'dd/MM/yyyy')}"
                    placeholder="dd/mm/yyyy" maxlength="10" size="10"
                    onchange="goTaskDateDanish(this.value)"/>
-            <a th:href="@{/tasks(date=${nextDay},showCancelled=${showCancelled})}" class="btn-secondary">&#8250;</a>
+            <a th:href="@{/tasks(date=${nextDay},showCancelled=${showCancelled},showDone=${showDone})}" class="btn-secondary">&#8250;</a>
             <span class="date-label"
                   th:text="${#temporals.format(date, 'EEEE d. MMMM yyyy', danishLocale)}"></span>
         </div>
         <a th:href="@{/tasks/new(date=${date},returnTo='tasks')}" class="btn-primary">+ Opret kørsel</a>
+        <label style="display:inline-flex;flex-direction:row;align-items:center;gap:0.35rem;margin-left:0.25rem;margin-bottom:0;white-space:nowrap;font-size:12px;color:#4b5563;">
+            <input type="checkbox" id="showDoneToggle" th:checked="${showDone}" onchange="goTaskDateDanish(document.getElementById('taskDatePicker').value)"/>
+            <span>Vis udførte</span>
+        </label>
         <label style="display:inline-flex;flex-direction:row;align-items:center;gap:0.35rem;margin-left:0.25rem;margin-bottom:0;white-space:nowrap;font-size:12px;color:#4b5563;">
             <input type="checkbox" id="showCancelledToggle" th:checked="${showCancelled}" onchange="goTaskDateDanish(document.getElementById('taskDatePicker').value)"/>
             <span>Vis slettede</span>
@@ -47,6 +52,8 @@
                 <td class="col-time">
                     <span th:text="${#temporals.format(t.startTs, 'HH:mm')}"></span>
                     <span th:if="${t.endTs != null}"> – <span th:text="${#temporals.format(t.endTs, 'HH:mm')}"></span></span>
+                    <span th:if="${t.status.name() == 'ORDERED' and t.startTs.isBefore(now)}"
+                          class="overdue-badge" title="Kørslen er ikke startet og tidspunktet er overskredet">!</span>
                 </td>
                 <td class="col-booker">
                     <strong th:text="${t.bookerName}"></strong>
@@ -88,6 +95,7 @@
                         <input type="hidden" name="date" th:value="${#temporals.format(date,'yyyy-MM-dd')}"/>
                         <input type="hidden" name="returnTo" value="tasks"/>
                         <input type="hidden" name="showCancelled" th:value="${showCancelled}"/>
+                        <input type="hidden" name="showDone" th:value="${showDone}"/>
                         <button type="submit" class="btn-small" name="status" value="STARTED">Start</button>
                     </form>
                     <form th:if="${t.vehicleId != null and t.status.name() == 'STARTED'}"
@@ -95,6 +103,7 @@
                         <input type="hidden" name="date" th:value="${#temporals.format(date,'yyyy-MM-dd')}"/>
                         <input type="hidden" name="returnTo" value="tasks"/>
                         <input type="hidden" name="showCancelled" th:value="${showCancelled}"/>
+                        <input type="hidden" name="showDone" th:value="${showDone}"/>
                         <button type="submit" class="btn-small" name="status" value="ORDERED">Til Bestilt</button>
                         <button type="submit" class="btn-small" name="status" value="DONE">Udført</button>
                     </form>
@@ -103,6 +112,7 @@
                         <input type="hidden" name="date" th:value="${#temporals.format(date,'yyyy-MM-dd')}"/>
                         <input type="hidden" name="returnTo" value="tasks"/>
                         <input type="hidden" name="showCancelled" th:value="${showCancelled}"/>
+                        <input type="hidden" name="showDone" th:value="${showDone}"/>
                         <button type="submit" class="btn-small" name="status" value="ORDERED">Til Bestilt</button>
                     </form>
                 </td>
@@ -112,6 +122,7 @@
                           onsubmit="return confirm('Kopier denne kørsel?')">
                         <input type="hidden" name="date" th:value="${#temporals.format(date,'yyyy-MM-dd')}"/>
                         <input type="hidden" name="showCancelled" th:value="${showCancelled}"/>
+                        <input type="hidden" name="showDone" th:value="${showDone}"/>
                         <button type="submit" class="btn-small btn-secondary">Kopiér</button>
                     </form>
                     <form th:if="${t.status.name() != 'CANCELLED'}"
@@ -120,6 +131,7 @@
                         <input type="hidden" name="date" th:value="${#temporals.format(date,'yyyy-MM-dd')}"/>
                         <input type="hidden" name="returnTo" value="tasks"/>
                         <input type="hidden" name="showCancelled" th:value="${showCancelled}"/>
+                        <input type="hidden" name="showDone" th:value="${showDone}"/>
                         <button type="submit" class="btn-small btn-danger">Slet</button>
                     </form>
                     <form th:if="${t.status.name() == 'CANCELLED'}"
@@ -128,6 +140,7 @@
                         <input type="hidden" name="date" th:value="${#temporals.format(date,'yyyy-MM-dd')}"/>
                         <input type="hidden" name="returnTo" value="tasks"/>
                         <input type="hidden" name="showCancelled" th:value="${showCancelled}"/>
+                        <input type="hidden" name="showDone" th:value="${showDone}"/>
                         <button type="submit" class="btn-small btn-secondary">Genåbn</button>
                     </form>
                 </td>
@@ -155,6 +168,8 @@ function goTaskDate(isoDate) {
     if (isoDate) params.set('date', isoDate);
     var showCancelled = document.getElementById('showCancelledToggle');
     if (showCancelled && showCancelled.checked) params.set('showCancelled', 'true');
+    var showDone = document.getElementById('showDoneToggle');
+    if (showDone && showDone.checked) params.set('showDone', 'true');
     window.location = '/tasks' + (params.toString() ? ('?' + params.toString()) : '');
 }
 function goTaskDateDanish(value) {

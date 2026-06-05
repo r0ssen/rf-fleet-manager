@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="da">
 <head th:replace="~{fragments/layout :: head(${task.taskId == 0} ? 'Ny kørsel' : 'Rediger kørsel')}"></head>
 <body>
 <nav th:replace="~{fragments/layout :: nav}"></nav>
@@ -59,7 +59,9 @@
                 </div>
                 <div class="time-row">
                     <label>Dato / Start
-                        <input type="date" id="startDate" required/>
+                        <input type="text" id="startDateDisplay" placeholder="dd/mm/yyyy"
+                               maxlength="10" required autocomplete="off"/>
+                        <input type="date" id="startDate" style="display:none"/>
                     </label>
                     <label>Tid (fra)
                         <select id="startTime" required>
@@ -109,13 +111,10 @@
             <fieldset class="fs-description" th:disabled="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}">
                 <legend>Beskrivelse</legend>
                 <textarea th:field="*{description}" rows="1" id="descriptionTextarea" placeholder="Hvad skal transporteres? Varer, udstyr, antal paller…" style="overflow:hidden;resize:none;"></textarea>
-                <label>Modtaget af
-                    <input type="text" th:field="*{receivedBy}" id="receivedByInput" placeholder="Navn"
-                           th:classappend="${dispatcherPrefilled} ? ' input-prefilled' : ''"/>
-                    <p id="dispatcherPrefillHint" class="prefill-hint"
-                       th:classappend="${dispatcherPrefilled} ? ' visible' : ''">Foreslået fra seneste kørsel.</p>
-                    <p id="dispatcherWarning" class="field-warning" style="display:none">Ingen dispatcher angivet.</p>
-                </label>
+                <p th:if="${task.taskId != 0 and task.receivedBy != null}" class="dispatcher-label">
+                    Modtaget af: <strong th:text="${task.receivedBy}"></strong>
+                </p>
+                <input type="hidden" th:field="*{receivedBy}"/>
             </fieldset>
 
             <fieldset class="fs-personnel fs-full" th:disabled="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}
@@ -300,6 +299,27 @@
         return date + 'T' + time;
     }
 
+    const startDateDisplay = document.getElementById('startDateDisplay');
+
+    function isoToDanish(iso) {
+        if (!iso) return '';
+        var p = iso.split('-');
+        return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : '';
+    }
+
+    function danishToIso(value) {
+        var m = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+        return m ? m[3] + '-' + m[2] + '-' + m[1] : '';
+    }
+
+    if (startDateDisplay) {
+        startDateDisplay.addEventListener('change', function() {
+            var iso = danishToIso(this.value);
+            startDateInput.value = iso;
+            startDateInput.dispatchEvent(new Event('change'));
+        });
+    }
+
     function initializeForm() {
         const startTsValue = startTsHidden.value;
         if (startTsValue) {
@@ -307,10 +327,13 @@
             if (parsed) {
                 ensureSelectHasValue(startTimeInput, parsed.time);
                 startDateInput.value = parsed.date;
+                if (startDateDisplay) startDateDisplay.value = isoToDanish(parsed.date);
                 startTimeInput.value = parsed.time;
             }
         } else {
-            startDateInput.value = new Date().toISOString().split('T')[0];
+            const todayIso = new Date().toISOString().split('T')[0];
+            startDateInput.value = todayIso;
+            if (startDateDisplay) startDateDisplay.value = isoToDanish(todayIso);
             ensureSelectHasValue(startTimeInput, '08:00');
             startTimeInput.value = '08:00';
         }
@@ -559,17 +582,12 @@ updateMapLinks();
     // Field warnings
     var vehicleWarning    = document.getElementById('vehicleWarning');
     var driverWarning     = document.getElementById('driverWarning');
-    var dispatcherWarning = document.getElementById('dispatcherWarning');
     function updateVehicleWarning() {
         if (vehicleWarning) vehicleWarning.style.display = vehicleSelect && !vehicleSelect.value ? '' : 'none';
     }
     function updateDriverWarning() {
         var v = driverNameInput ? driverNameInput.value.trim() : 'x';
         if (driverWarning) driverWarning.style.display = v ? 'none' : '';
-    }
-    function updateDispatcherWarning() {
-        var v = receivedByInput ? receivedByInput.value.trim() : 'x';
-        if (dispatcherWarning) dispatcherWarning.style.display = v ? 'none' : '';
     }
     if (vehicleSelect) vehicleSelect.addEventListener('change', updateVehicleWarning);
     if (driverNameInput) driverNameInput.addEventListener('input', updateDriverWarning);
@@ -583,9 +601,7 @@ updateMapLinks();
         receivedByInput.addEventListener('input', function() {
             receivedByInput.classList.remove('input-prefilled');
             if (dispatcherHint) dispatcherHint.classList.remove('visible');
-            updateDispatcherWarning();
         });
-        updateDispatcherWarning();
     }
 
     // Enable/disable Start button based on driver name
@@ -656,6 +672,7 @@ updateMapLinks();
     box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.15);
     background: #f0f9ff;
 }
+.dispatcher-label { margin: 0.5rem 0 0; font-size: 13px; color: #6b7280; }
 .prefill-hint {
     display: none;
     margin: 0.25rem 0 0;

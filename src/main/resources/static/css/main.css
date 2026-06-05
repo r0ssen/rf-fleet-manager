@@ -41,6 +41,8 @@ nav {
 .nav-links a:hover { color: #fff; border-bottom-color: rgba(255,255,255,.8); }
 .nav-logout { display: flex; align-items: center; gap: 0.75rem; margin-left: auto; }
 .nav-logout span { color: rgba(255,255,255,.8); font-size: 13px; }
+.btn-logout { background: rgba(255,255,255,.15); color: #fff; border: 1px solid rgba(255,255,255,.3); border-radius: 4px; padding: 4px 12px; font-size: 13px; cursor: pointer; }
+.btn-logout:hover { background: rgba(255,255,255,.25); opacity: 1; }
 
 /* Layout */
 main { max-width: 1400px; margin: 1.5rem auto; padding: 0 1rem; }
@@ -83,6 +85,13 @@ tr:hover td { background: #fafafa; }
 .phone, .contact, .team, .via { display: block; font-size: 12px; color: #666; overflow: hidden; text-overflow: ellipsis; }
 .arrow { color: #999; margin: 0 2px; }
 .map-link { font-size: 14px; text-decoration: none; }
+.overdue-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: #dc2626; color: #fff;
+    font-size: 11px; font-weight: 800; margin-left: 4px;
+    cursor: default;
+}
 .vehicle-missing-badge, .driver-missing-badge {
     display: inline-flex;
     align-items: center;
@@ -147,6 +156,7 @@ tr.row-no-vehicle .vehicle-missing-badge {
 .dot.done    { background: #a5d6a7; }
 
 .tag { display: inline-block; background: #e8f5e9; color: #2e7d32; border-radius: 3px; padding: 1px 6px; font-size: 11px; margin: 1px; }
+.tag-admin { background: #ede9fe; color: #6d28d9; }
 .empty { text-align: center; color: #999; padding: 2rem; }
 
 /* Forms */

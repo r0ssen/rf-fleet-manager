@@ -43,12 +43,7 @@ public class TaskService {
         return findSuggestedDriver(year, vehicleId, beforeTs).map(SuggestedDriver::driverName);
     }
 
-    public Optional<String> findSuggestedDispatcher(int year) {
-        return repo.findRecentDispatcherNames(year, TaskStatus.CANCELLED, PageRequest.of(0, 1))
-            .stream().findFirst();
-    }
-
-    @Transactional public Task save(Task task) { return repo.save(task); }
+@Transactional public Task save(Task task) { return repo.save(task); }
 
     @Transactional
     public Task updateStatus(int year, int id, TaskStatus status) {

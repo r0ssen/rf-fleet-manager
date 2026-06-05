@@ -9,9 +9,10 @@
         <h1>Flådeoversigt</h1>
 
         <div class="date-nav">
-            <input type="date" id="fleetDatePicker"
-                   th:value="${#temporals.format(date, 'yyyy-MM-dd')}"
-                   onchange="goFleetDate(this.value)"/>
+            <input type="text" id="fleetDatePicker"
+                   th:value="${#temporals.format(date, 'dd/MM/yyyy')}"
+                   placeholder="dd/mm/yyyy" maxlength="10" size="10"
+                   onchange="goFleetDateDanish(this.value)"/>
             <span class="date-label"
                   th:text="${#temporals.format(date, 'EEEE d. MMMM yyyy', danishLocale)}">
             </span>
@@ -28,7 +29,7 @@
         <label class="filter-toggle">
             <input type="checkbox" id="showCancelledToggle"
                    th:checked="${showCancelled}"
-                   onchange="goFleetDate(document.getElementById('fleetDatePicker').value)"/>
+                   onchange="goFleetDateDanish(document.getElementById('fleetDatePicker').value)"/>
             <span>Vis slettede kørsler</span>
         </label>
     </div>
@@ -54,7 +55,7 @@
     </div>
 
     <div th:if="${#lists.isEmpty(rows)}" class="empty">
-        Ingen biler registreret for dette år.
+        Ingen biler registreret for denne dag.
         <a th:href="@{/vehicles/new}">Tilføj en bil</a>.
     </div>
 
@@ -498,6 +499,10 @@
 </style>
 
 <script>
+function goFleetDateDanish(value) {
+    var m = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (m) goFleetDate(m[3] + '-' + m[2] + '-' + m[1]);
+}
 function goFleetDate(isoDate) {
     var params = new URLSearchParams();
     if (isoDate) params.set('date', isoDate);
@@ -567,7 +572,9 @@ function goFleetDate(isoDate) {
 
     function updateNeedle() {
         var datePicker = document.getElementById('fleetDatePicker');
-        var selectedDate = datePicker ? datePicker.value : '';
+        var dpVal = datePicker ? datePicker.value : '';
+        var dpMatch = dpVal.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+        var selectedDate = dpMatch ? dpMatch[3] + '-' + dpMatch[2] + '-' + dpMatch[1] : dpVal;
         var today = new Date();
         var todayIso = today.getFullYear() + '-'
             + String(today.getMonth() + 1).padStart(2, '0') + '-'
