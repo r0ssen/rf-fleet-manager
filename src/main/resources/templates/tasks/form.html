@@ -124,11 +124,12 @@
                                 <option th:each="v : ${vehicles}" th:value="${v.vehicleId}"
                                         th:text="${'Bil ' + v.vehicleNo + (v.model != null ? ': ' + v.model : '')}"
                                         th:attr="data-reg=${v.registration},
-                                                 data-model=${v.model},
                                                  data-payload=${v.payloadKg},
+                                                 data-cl=${v.cargoLengthMm},
+                                                 data-cw=${v.cargoWidthMm},
+                                                 data-ch=${v.cargoHeightMm},
                                                  data-lifter=${v.hasPalletLifter},
-                                                 data-truck=${v.hasSackTruck},
-                                                 data-desc=${v.description}"></option>
+                                                 data-truck=${v.hasSackTruck}"></option>
                             </select>
                             <button type="button" class="map-btn" id="vehicleInfoBtn" title="Bilinformation" onclick="showVehicleInfo()">?</button>
                             <div id="vehicleInfoPopup" class="vehicle-info-popup" style="display:none"></div>
@@ -673,15 +674,18 @@ window.showVehicleInfo = function() {
     var popup = document.getElementById('vehicleInfoPopup');
     var opt = sel && sel.options[sel.selectedIndex];
     if (!opt || !opt.value) { popup.style.display = 'none'; return; }
+    function present(v) { return v && v !== 'null' && v.trim() !== ''; }
+    function mmToCm(v) { return present(v) ? (parseFloat(v) / 10).toFixed(0) + ' cm' : '–'; }
     var rows = '';
-    function val(v) { return (v && v !== 'null' && v.trim() !== '') ? v : '–'; }
     function row(label, v) { rows += '<tr><td>' + label + '</td><td>' + v + '</td></tr>'; }
-    row('Model', val(opt.dataset.model));
-    row('Reg.nr.', val(opt.dataset.reg));
-    row('Nyttelast', opt.dataset.payload && opt.dataset.payload !== 'null' ? opt.dataset.payload + ' kg' : '–');
-    row('Palleløfter', opt.dataset.lifter === 'true' ? 'Ja' : 'Nej');
-    row('Sækkevogn', opt.dataset.truck === 'true' ? 'Ja' : 'Nej');
-    if (opt.dataset.desc && opt.dataset.desc !== 'null' && opt.dataset.desc.trim() !== '') row('Bemærkning', opt.dataset.desc);
+    row('Nummerplade', present(opt.dataset.reg) ? opt.dataset.reg : '–');
+    row('Lasteevne', present(opt.dataset.payload) ? opt.dataset.payload + ' kg' : '–');
+    var dims = mmToCm(opt.dataset.cl) + ' × ' + mmToCm(opt.dataset.cw) + ' × ' + mmToCm(opt.dataset.ch);
+    row('Indenvendige mål', dims);
+    var udstyr = [];
+    if (opt.dataset.lifter === 'true') udstyr.push('Palleløfter');
+    if (opt.dataset.truck === 'true') udstyr.push('Sækkevogn');
+    row('Udstyr', udstyr.length ? udstyr.join(', ') : '–');
     popup.innerHTML = '<table>' + rows + '</table>';
     popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
 };
