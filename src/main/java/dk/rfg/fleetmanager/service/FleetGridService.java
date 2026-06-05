@@ -345,7 +345,10 @@ public class FleetGridService {
         if (start.isBlank()) {
             return end;
         }
-        return start + " → " + end;
+        String via = task.getViaPoint() != null && !task.getViaPoint().isBlank()
+            ? " → " + task.getViaPoint().replace("|", " → ")
+            : "";
+        return start + via + " → " + end;
     }
 
     private String formatTime(OffsetDateTime value) {

@@ -102,7 +102,16 @@ public class Task {
 
     public String directionsUrl() {
         if (startPoint == null || endPoint == null) { return null; }
-        return "https://www.google.com/maps/dir/" + startPoint.replace(" ", "+") + "/" + endPoint.replace(" ", "+");
+        String start = startPoint.replace(" ", "+");
+        String end   = endPoint.replace(" ", "+");
+        if (viaPoint == null || viaPoint.isBlank()) {
+            return "https://www.google.com/maps/dir/" + start + "/" + end;
+        }
+        String vias = java.util.Arrays.stream(viaPoint.split("\\|"))
+            .map(String::trim).filter(v -> !v.isEmpty())
+            .map(v -> v.replace(" ", "+"))
+            .collect(java.util.stream.Collectors.joining("/"));
+        return "https://www.google.com/maps/dir/" + start + (vias.isEmpty() ? "" : "/" + vias) + "/" + end;
     }
 
     public int getFestivalYear() {

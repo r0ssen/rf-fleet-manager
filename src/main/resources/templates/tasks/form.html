@@ -97,7 +97,12 @@
                     </div>
                 </label>
                 <p class="field-error" th:if="${#fields.hasErrors('endPoint')}" th:errors="*{endPoint}"></p>
-                <label>Via (valgfrit) <input type="text" th:field="*{viaPoint}" placeholder="Evt. via-punkt"/></label>
+                <div class="via-header">
+                    <span style="font-weight:500;font-size:13px;">Via (valgfrit)</span>
+                    <button type="button" class="btn-small btn-secondary" onclick="addViaPoint('')" style="padding:0 0.5rem;line-height:1.6;">+</button>
+                </div>
+                <div id="viaContainer"></div>
+                <input type="hidden" th:field="*{viaPoint}" id="viaPointHidden"/>
                 <a id="directionsBtn" href="#" target="_blank" class="btn-secondary directions-btn">Hent rutevejledning</a>
             </fieldset>
 
@@ -241,7 +246,7 @@
             </tr>
             <tr th:if="${task.viaPoint != null and !#strings.isEmpty(task.viaPoint)}">
                 <th>Via</th>
-                <td colspan="3" th:text="${task.viaPoint}"></td>
+                <td colspan="3" th:text="${#strings.replace(task.viaPoint, '|', ' → ')}"></td>
             </tr>
             <tr>
                 <th>Bil</th>
@@ -353,9 +358,14 @@ const mapToBtn        = document.getElementById('mapTo');
 function updateMapLinks() {
     const from = encodeURIComponent((startPointInput.value || '').trim());
     const to   = encodeURIComponent((endPointInput.value || '').trim());
-    if (from && to) directionsBtn.href = 'https://www.google.com/maps/dir/' + from + '/' + to;
-    if (from) mapFromBtn.href = 'https://maps.google.dk/maps?q=' + from;
-    if (to)   mapToBtn.href   = 'https://maps.google.dk/maps?q=' + to;
+    const vias = Array.from(document.querySelectorAll('.via-input'))
+        .map(i => encodeURIComponent(i.value.trim())).filter(v => v);
+    if (from && to) {
+        const parts = [from, ...vias, to];
+        directionsBtn.href = 'https://www.google.com/maps/dir/' + parts.join('/');
+    }
+    if (from) mapFromBtn.href = 'https://www.google.com/maps?q=' + from;
+    if (to)   mapToBtn.href   = 'https://www.google.com/maps?q=' + to;
 }
 startPointInput.addEventListener('input', updateMapLinks);
 endPointInput.addEventListener('input',   updateMapLinks);
@@ -662,6 +672,11 @@ updateMapLinks();
     font-weight: 600;
     color: #dc2626;
 }
+.via-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem; }
+.via-row { display: flex; gap: 0.4rem; margin-bottom: 0.4rem; align-items: center; }
+.via-row input { flex: 1; }
+.via-remove-btn { flex-shrink: 0; background: none; border: 1px solid #d1d5db; border-radius: 5px; cursor: pointer; padding: 0.3rem 0.6rem; font-size: 13px; color: #6b7280; line-height: 1; }
+.via-remove-btn:hover { background: #fef2f2; border-color: #fca5a5; color: #dc2626; }
 .vehicle-info-popup {
     position: absolute;
     z-index: 200;
@@ -740,6 +755,41 @@ document.addEventListener('click', function(e) {
     ta.addEventListener('input', fit);
     fit();
 })();
+
+// Via-points
+function syncViaPoints() {
+    var inputs = document.querySelectorAll('.via-input');
+    var val = Array.from(inputs).map(function(i){ return i.value.trim(); }).filter(function(v){ return v; }).join('|');
+    document.getElementById('viaPointHidden').value = val;
+    if (typeof updateMapLinks === 'function') updateMapLinks();
+}
+window.addViaPoint = function(value) {
+    var container = document.getElementById('viaContainer');
+    var row = document.createElement('div');
+    row.className = 'via-row';
+    var input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'via-input';
+    input.placeholder = 'Via-punkt';
+    input.value = value || '';
+    input.addEventListener('input', syncViaPoints);
+    var rm = document.createElement('button');
+    rm.type = 'button';
+    rm.className = 'via-remove-btn';
+    rm.textContent = '×';
+    rm.addEventListener('click', function() { container.removeChild(row); syncViaPoints(); });
+    row.appendChild(input);
+    row.appendChild(rm);
+    container.appendChild(row);
+    if (!value) input.focus();
+    syncViaPoints();
+};
+(function initVia() {
+    var hidden = document.getElementById('viaPointHidden');
+    if (!hidden || !hidden.value) return;
+    hidden.value.split('|').forEach(function(v) { v = v.trim(); if (v) addViaPoint(v); });
+})();
+document.getElementById('taskForm').addEventListener('submit', syncViaPoints);
 </script>
 </body>
 </html>

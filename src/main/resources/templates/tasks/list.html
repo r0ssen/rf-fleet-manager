@@ -55,7 +55,7 @@
                 </td>
                 <td class="col-route">
                     <span th:text="${t.startPoint}"></span>
-                    <span th:if="${t.viaPoint != null}" class="via"> via <em th:text="${t.viaPoint}"></em></span>
+                    <span th:if="${t.viaPoint != null and !#strings.isEmpty(t.viaPoint)}" class="via"> via <em th:text="${#strings.replace(t.viaPoint, '|', ' → ')}"></em></span>
                     <span class="arrow"> → </span>
                     <span th:text="${t.endPoint}"></span>
                     <a th:if="${t.directionsUrl() != null}" th:href="${t.directionsUrl()}" target="_blank" class="map-link" title="Hent rutevejledning">🗺</a>
