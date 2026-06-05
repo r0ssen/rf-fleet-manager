@@ -155,5 +155,17 @@
 })();
 /*]]>*/
 </script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    flatpickr('#festivalDateDisplay', {
+        locale: 'da',
+        dateFormat: 'd/m/Y',
+        allowInput: true,
+        onChange: function(selectedDates, dateStr) {
+            if (window.syncFestivalDate) window.syncFestivalDate(dateStr || '');
+        }
+    });
+});
+</script>
 </body>
 </html>

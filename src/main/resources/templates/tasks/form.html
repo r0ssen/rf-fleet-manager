@@ -808,5 +808,14 @@ window.addViaPoint = function(value) {
 })();
 document.getElementById('taskForm').addEventListener('submit', syncViaPoints);
 </script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    flatpickr('#startDateDisplay', {
+        locale: 'da',
+        dateFormat: 'd/m/Y',
+        allowInput: true
+    });
+});
+</script>
 </body>
 </html>
