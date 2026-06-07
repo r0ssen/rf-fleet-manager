@@ -47,6 +47,7 @@ nav {
 /* Layout */
 main { max-width: 1400px; margin: 1.5rem auto; padding: 0 1rem; }
 .toolbar { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
+.driver-filters { display: flex; flex-direction: row; gap: 0.5rem; align-items: center; }
 h1 { font-size: 1.3rem; font-weight: 700; color: #111; }
 .date-nav { display: flex; align-items: center; gap: 0.5rem; }
 .date-label { font-weight: 600; color: #444; margin-left: 0.5rem; }
@@ -317,6 +318,16 @@ body.login-page { display: flex; align-items: center; justify-content: center; b
         padding: 0.65rem 1rem;
         font-size: 14px;
     }
+
+    /* Driver filter toggles: stack vertically */
+    .driver-filters {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    /* Consistent row gap in form fieldsets */
+    .time-row { gap: 0.5rem !important; }
 }
 
 /* Print */

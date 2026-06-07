@@ -212,7 +212,7 @@
 
         <div class="form-actions">
             <button type="submit" class="btn-primary" th:if="${!isDriver and task.status != T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}">Gem</button>
-            <button type="button" class="btn-secondary" onclick="window.print()">Udskriv</button>
+            <button type="button" class="btn-secondary" th:if="${!isDriver}" onclick="window.print()">Udskriv</button>
             <a th:href="${returnTo == 'tasks'} ? @{/tasks(date=${task.startTs != null} ? ${#temporals.format(task.startTs,'yyyy-MM-dd')} : ${#dates.format(#dates.createNow(),'yyyy-MM-dd')})} : @{/fleet(date=${task.startTs != null} ? ${#temporals.format(task.startTs,'yyyy-MM-dd')} : ${#dates.format(#dates.createNow(),'yyyy-MM-dd')})}"
                class="btn-secondary">Tilbage</a>
             <button type="submit" class="btn-danger" style="margin-left:auto" th:if="${!isDriver and task.taskId != 0 and task.status != T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}"
