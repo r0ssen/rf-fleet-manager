@@ -847,5 +847,31 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+<script th:if="${!isDriver}">
+(function() {
+    var form = document.getElementById('taskForm');
+    if (!form) return;
+    var snapshot = null;
+
+    function snap() {
+        return Array.from(form.querySelectorAll('input:not([type=hidden]), select, textarea'))
+            .map(function(el) { return (el.name || el.id) + '=' + el.value; })
+            .join('&');
+    }
+
+    // Delay snapshot until async fetches (opening hours, vehicles) have settled
+    setTimeout(function() { snapshot = snap(); }, 1000);
+
+    window.addEventListener('beforeunload', function(e) {
+        if (snapshot !== null && snap() !== snapshot) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+
+    // Clear on any form submission (save, delete, reopen, start)
+    form.addEventListener('submit', function() { snapshot = null; });
+})();
+</script>
 </body>
 </html>
