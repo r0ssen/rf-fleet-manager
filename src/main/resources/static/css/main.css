@@ -87,6 +87,8 @@ tr:hover td { background: #fafafa; }
 /* On desktop: tel: links are inert — look and behave like plain text */
 a.phone { pointer-events: none; text-decoration: none; cursor: text; }
 .tel-link { display: none; }
+/* Contact column is mobile-only; contact span inside booker stays on desktop */
+.col-contact { display: none; }
 .arrow { color: #999; margin: 0 2px; }
 .map-link { font-size: 14px; text-decoration: none; }
 .overdue-badge {
@@ -300,6 +302,11 @@ body.login-page { display: flex; align-items: center; justify-content: center; m
     a.phone { pointer-events: auto; cursor: pointer; }
     .tel-link { display: inline-block; margin-top: 0.3rem; font-size: 13px; font-weight: 600; color: #E87200; text-decoration: none; }
     .tel-link:hover { text-decoration: underline; }
+
+    /* Contact: own card row on mobile; hide inline span inside bestiller */
+    .col-contact { display: flex; }
+    .col-contact.col-contact-empty { display: none; }
+    .mobile-hidden { display: none; }
 
     /* Clickable task cards — hide explicit nav button, show pointer on row */
     .task-table tr[data-href] { cursor: pointer; }

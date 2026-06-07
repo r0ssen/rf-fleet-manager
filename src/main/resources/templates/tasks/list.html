@@ -79,7 +79,13 @@
                 <td class="col-booker" data-label="Bestiller">
                     <strong th:text="${t.bookerName}"></strong>
                     <a th:if="${t.bookerPhone != null}" class="phone" th:href="'tel:' + ${t.bookerPhone}" th:text="${'📞 ' + t.bookerPhone}"></a>
-                    <span th:if="${t.contactName != null}" class="contact" th:text="${'Kontakt: ' + t.contactName}"></span>
+                    <span th:if="${t.contactName != null}" class="contact mobile-hidden" th:text="${'Kontakt: ' + t.contactName}"></span>
+                </td>
+                <td class="col-contact" data-label="Kontakt"
+                    th:classappend="${(t.contactName == null or #strings.isEmpty(t.contactName)) and (t.contactPhone == null or #strings.isEmpty(t.contactPhone))} ? ' col-contact-empty' : ''">
+                    <span th:if="${t.contactName != null and !#strings.isEmpty(t.contactName)}" th:text="${t.contactName}"></span>
+                    <a th:if="${t.contactPhone != null and !#strings.isEmpty(t.contactPhone)}"
+                       class="phone" th:href="'tel:' + ${t.contactPhone}" th:text="${'📞 ' + t.contactPhone}"></a>
                 </td>
                 <td class="col-route" data-label="Steder">
                     <span th:text="${t.startPoint}"></span>
@@ -88,7 +94,7 @@
                     <span th:text="${t.endPoint}"></span>
                     <a th:if="${t.directionsUrl() != null}" th:href="${t.directionsUrl()}" target="_blank" class="map-link" title="Hent rutevejledning">🗺</a>
                 </td>
-                <td class="col-affiliation" data-label="Afdeling">
+                <td class="col-affiliation" data-label="Division">
                     <span th:text="${t.division}"></span>
                     <span th:if="${t.team != null}" class="team">/ <span th:text="${t.team}"></span></span>
                 </td>
