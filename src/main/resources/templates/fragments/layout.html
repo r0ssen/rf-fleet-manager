@@ -18,7 +18,7 @@
     <div class="nav-brand">🚚 Fleet Manager</div>
     <div class="nav-links">
         <a th:href="@{/tasks}">Kørsler</a>
-        <a th:href="@{/fleet}">Flådeoversigt</a>
+        <a sec:authorize="hasAnyRole('ADMIN','AGENT')" th:href="@{/fleet}">Flådeoversigt</a>
         <a sec:authorize="hasRole('ADMIN')" th:href="@{/vehicles}">Biler</a>
         <a sec:authorize="hasRole('ADMIN')" th:href="@{/opening-hours}">Åbningstider</a>
         <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin/users}">Brugere</a>

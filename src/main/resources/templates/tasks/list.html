@@ -66,42 +66,42 @@
         </thead>
         <tbody>
             <tr th:each="t : ${tasks}" th:classappend="'row-' + ${t.status.name().toLowerCase()} + (${t.vehicleId == null} ? ' row-no-vehicle' : '')">
-                <td class="col-time">
+                <td class="col-time" data-label="Tid">
                     <span th:text="${#temporals.format(t.startTs, 'HH:mm')}"></span>
                     <span th:if="${t.endTs != null}"> – <span th:text="${#temporals.format(t.endTs, 'HH:mm')}"></span></span>
                     <span th:if="${t.status.name() == 'ORDERED' and t.startTs.isBefore(now)}"
                           class="overdue-badge" title="Kørslen er ikke startet og tidspunktet er overskredet">!</span>
                 </td>
-                <td class="col-booker">
+                <td class="col-booker" data-label="Bestiller">
                     <strong th:text="${t.bookerName}"></strong>
                     <span th:if="${t.bookerPhone != null}" class="phone" th:text="${'📞 ' + t.bookerPhone}"></span>
                     <span th:if="${t.contactName != null}" class="contact" th:text="${'Kontakt: ' + t.contactName}"></span>
                 </td>
-                <td class="col-route">
+                <td class="col-route" data-label="Steder">
                     <span th:text="${t.startPoint}"></span>
                     <span th:if="${t.viaPoint != null and !#strings.isEmpty(t.viaPoint)}" class="via"> via <em th:text="${#strings.replace(t.viaPoint, '|', ' → ')}"></em></span>
                     <span class="arrow"> → </span>
                     <span th:text="${t.endPoint}"></span>
                     <a th:if="${t.directionsUrl() != null}" th:href="${t.directionsUrl()}" target="_blank" class="map-link" title="Hent rutevejledning">🗺</a>
                 </td>
-                <td class="col-affiliation">
+                <td class="col-affiliation" data-label="Afdeling">
                     <span th:text="${t.division}"></span>
                     <span th:if="${t.team != null}" class="team">/ <span th:text="${t.team}"></span></span>
                 </td>
-                <td class="col-vehicle">
+                <td class="col-vehicle" data-label="Bil">
                     <span th:if="${t.vehicle != null}" th:text="${'Bil ' + t.vehicle.vehicleNo + (t.vehicle.model != null ? ' – ' + t.vehicle.model : '')}"></span>
                     <span th:if="${t.vehicleId == null}" class="vehicle-missing-badge">Ikke tildelt bil</span>
                 </td>
-                <td class="col-driver">
+                <td class="col-driver" data-label="Chauffør">
                     <span th:if="${t.driverName != null and !#strings.isEmpty(#strings.trim(t.driverName))}" th:text="${t.driverName}"></span>
                     <span th:if="${(t.driverName == null or #strings.isEmpty(#strings.trim(t.driverName))) and t.status.name() != 'CANCELLED'}" class="driver-missing-badge">Ingen chauffør</span>
                 </td>
-                <td th:if="${!isDriver}" class="col-dispatcher">
+                <td th:if="${!isDriver}" class="col-dispatcher" data-label="Dispatcher">
                     <span th:if="${t.receivedBy != null and !#strings.isEmpty(#strings.trim(t.receivedBy))}" th:text="${t.receivedBy}"></span>
                     <span th:if="${(t.receivedBy == null or #strings.isEmpty(#strings.trim(t.receivedBy))) and t.status.name() != 'CANCELLED'}" class="driver-missing-badge">Ingen dispatcher</span>
                 </td>
-                <td class="col-desc"><span class="desc-text" th:text="${t.description}"></span></td>
-                <td class="col-status">
+                <td class="col-desc" data-label="Beskrivelse"><span class="desc-text" th:text="${t.description}"></span></td>
+                <td class="col-status" data-label="Status">
                     <div><strong th:text="${t.status.danishLabel()}">Bestilt</strong></div>
                     <div th:if="${!isDriver and t.status.name() == 'ORDERED' and (t.vehicleId == null or #strings.isEmpty(t.driverName))}"
                          class="status-note" style="margin-top:4px;">
@@ -133,7 +133,7 @@
                         <button type="submit" class="btn-small" name="status" value="ORDERED">Til Bestilt</button>
                     </form>
                 </td>
-                <td class="col-actions">
+                <td class="col-actions" data-label="">
                     <!-- DRIVER: read-only detail link only -->
                     <a th:if="${isDriver}" th:href="@{/tasks/{id}/edit(id=${t.taskId},returnTo='tasks')}" class="btn-small">Se detaljer</a>
                     <!-- ADMIN/AGENT: full action set -->
