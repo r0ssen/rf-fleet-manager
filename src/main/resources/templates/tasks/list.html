@@ -67,7 +67,9 @@
             </tr>
         </thead>
         <tbody>
-            <tr th:each="t : ${tasks}" th:classappend="'row-' + ${t.status.name().toLowerCase()} + (${t.vehicleId == null} ? ' row-no-vehicle' : '')">
+            <tr th:each="t : ${tasks}"
+                th:classappend="'row-' + ${t.status.name().toLowerCase()} + (${t.vehicleId == null} ? ' row-no-vehicle' : '')"
+                th:attr="data-href=@{/tasks/{id}/edit(id=${t.taskId},returnTo='tasks')}">
                 <td class="col-time" data-label="Tid">
                     <span th:text="${#temporals.format(t.startTs, 'HH:mm')}"></span>
                     <span th:if="${t.endTs != null}"> – <span th:text="${#temporals.format(t.endTs, 'HH:mm')}"></span></span>
@@ -137,9 +139,9 @@
                 </td>
                 <td class="col-actions" data-label="">
                     <!-- DRIVER: read-only detail link only -->
-                    <a th:if="${isDriver}" th:href="@{/tasks/{id}/edit(id=${t.taskId},returnTo='tasks')}" class="btn-small">Se detaljer</a>
+                    <a th:if="${isDriver}" th:href="@{/tasks/{id}/edit(id=${t.taskId},returnTo='tasks')}" class="btn-small btn-row-nav">Se detaljer</a>
                     <!-- ADMIN/AGENT: full action set -->
-                    <a th:if="${!isDriver}" th:href="@{/tasks/{id}/edit(id=${t.taskId},returnTo='tasks')}" class="btn-small">Rediger</a>
+                    <a th:if="${!isDriver}" th:href="@{/tasks/{id}/edit(id=${t.taskId},returnTo='tasks')}" class="btn-small btn-row-nav">Rediger</a>
                     <form th:if="${!isDriver}" th:action="@{/tasks/{id}/duplicate(id=${t.taskId})}" method="post" style="display:inline"
                           onsubmit="return confirm('Kopier denne kørsel?')">
                         <input type="hidden" name="date" th:value="${#temporals.format(date,'yyyy-MM-dd')}"/>
@@ -209,6 +211,13 @@ function goDriverFilter() {
 document.addEventListener('DOMContentLoaded', function() {
     var picker = document.getElementById('taskDatePicker');
     if (picker) flatpickr(picker, { locale: 'da', dateFormat: 'd/m/Y', allowInput: true });
+
+    document.querySelectorAll('.task-table tr[data-href]').forEach(function(row) {
+        row.addEventListener('click', function(e) {
+            if (e.target.closest('button, a, input, select, form, label')) return;
+            window.location = row.dataset.href;
+        });
+    });
 });
 </script>
 </body>

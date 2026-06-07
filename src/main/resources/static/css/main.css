@@ -293,6 +293,10 @@ body.login-page { display: flex; align-items: center; justify-content: center; m
     .task-table .col-actions .btn-small { padding: 0.45rem 0.85rem; font-size: 13px; }
     .task-table .col-status { width: auto; }
 
+    /* Clickable task cards — hide explicit nav button, show pointer on row */
+    .task-table tr[data-href] { cursor: pointer; }
+    .task-table .btn-row-nav { display: none; }
+
     /* Summary bar */
     .summary-bar { flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
 
