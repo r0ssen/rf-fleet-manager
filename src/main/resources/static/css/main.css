@@ -84,6 +84,8 @@ tr:hover td { background: #fafafa; }
 .col-actions { white-space: nowrap; width: 120px; }
 .desc-text { display: block; overflow: hidden; text-overflow: ellipsis; }
 .phone, .contact, .team, .via { display: block; font-size: 12px; color: #666; overflow: hidden; text-overflow: ellipsis; }
+.tel-link { display: inline-block; margin-top: 0.3rem; font-size: 13px; font-weight: 600; color: #E87200; text-decoration: none; }
+.tel-link:hover { text-decoration: underline; }
 .arrow { color: #999; margin: 0 2px; }
 .map-link { font-size: 14px; text-decoration: none; }
 .overdue-badge {

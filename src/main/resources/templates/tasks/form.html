@@ -33,6 +33,8 @@
                     </label>
                     <label>Telefon
                         <input type="tel" th:field="*{bookerPhone}" placeholder="Telefon" maxlength="15" required th:errorclass="input-error" class="input-phone"/>
+                        <a th:if="${isDriver and task.bookerPhone != null and !#strings.isEmpty(task.bookerPhone)}"
+                           th:href="'tel:' + ${task.bookerPhone}" class="tel-link">📞 Ring op</a>
                         <p class="field-error" th:if="${#fields.hasErrors('bookerPhone')}" th:errors="*{bookerPhone}"></p>
                     </label>
                     <label>Team
@@ -44,6 +46,8 @@
                     </label>
                     <label>Telefon
                         <input type="tel" th:field="*{contactPhone}" placeholder="Telefon" maxlength="15" class="input-phone"/>
+                        <a th:if="${isDriver and task.contactPhone != null and !#strings.isEmpty(task.contactPhone)}"
+                           th:href="'tel:' + ${task.contactPhone}" class="tel-link">📞 Ring op</a>
                     </label>
                 </div>
             </fieldset>
