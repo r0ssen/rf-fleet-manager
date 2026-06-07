@@ -10,13 +10,15 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"/>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/da.js"></script>
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
 </head>
 <body>
 <nav th:fragment="nav">
     <div class="nav-brand">🚚 Fleet Manager</div>
     <div class="nav-links">
         <a th:href="@{/tasks}">Kørsler</a>
-        <a th:href="@{/fleet}">Flådeoversigt</a>
+        <a sec:authorize="hasAnyRole('ADMIN','AGENT')" th:href="@{/fleet}">Flådeoversigt</a>
         <a sec:authorize="hasRole('ADMIN')" th:href="@{/vehicles}">Biler</a>
         <a sec:authorize="hasRole('ADMIN')" th:href="@{/opening-hours}">Åbningstider</a>
         <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin/users}">Brugere</a>

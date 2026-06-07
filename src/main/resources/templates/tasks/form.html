@@ -7,7 +7,7 @@
     <div class="form-header">
         <a th:href="${returnTo == 'tasks'} ? @{/tasks(date=${task.startTs != null} ? ${#temporals.format(task.startTs,'yyyy-MM-dd')} : ${#dates.format(#dates.createNow(),'yyyy-MM-dd')})} : @{/fleet(date=${task.startTs != null} ? ${#temporals.format(task.startTs,'yyyy-MM-dd')} : ${#dates.format(#dates.createNow(),'yyyy-MM-dd')})}"
            class="back-link">← Tilbage til [[${returnTo == 'tasks'} ? 'kørsler' : 'flådeoversigt']]</a>
-        <h1 th:text="${task.taskId == 0} ? 'Administrer kørsel – Ny' : 'Administrer kørsel – Rediger'">Administrer kørsel</h1>
+        <h1 th:text="${isDriver} ? 'Kørsel – Detaljer' : (${task.taskId == 0} ? 'Administrer kørsel – Ny' : 'Administrer kørsel – Rediger')">Administrer kørsel</h1>
     </div>
 
     <form th:action="${task.taskId == 0} ? @{/tasks} : @{/tasks/{id}(id=${task.taskId})}"
@@ -20,7 +20,7 @@
         </div>
         <div class="form-grid">
 
-            <fieldset class="fs-booker fs-full" th:disabled="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}">
+            <fieldset class="fs-booker fs-full" th:disabled="${isDriver or task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}">
                 <legend>Bestiller</legend>
                 <div class="booker-grid">
                     <label>Division
@@ -33,6 +33,8 @@
                     </label>
                     <label>Telefon
                         <input type="tel" th:field="*{bookerPhone}" placeholder="Telefon" maxlength="15" required th:errorclass="input-error" class="input-phone"/>
+                        <a th:if="${isDriver and task.bookerPhone != null and !#strings.isEmpty(task.bookerPhone)}"
+                           th:href="'tel:' + ${task.bookerPhone}" class="tel-link">📞 Ring op</a>
                         <p class="field-error" th:if="${#fields.hasErrors('bookerPhone')}" th:errors="*{bookerPhone}"></p>
                     </label>
                     <label>Team
@@ -44,46 +46,63 @@
                     </label>
                     <label>Telefon
                         <input type="tel" th:field="*{contactPhone}" placeholder="Telefon" maxlength="15" class="input-phone"/>
+                        <a th:if="${isDriver and task.contactPhone != null and !#strings.isEmpty(task.contactPhone)}"
+                           th:href="'tel:' + ${task.contactPhone}" class="tel-link">📞 Ring op</a>
                     </label>
                 </div>
             </fieldset>
 
-            <fieldset class="fs-time fs-full" th:disabled="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}">
+            <fieldset class="fs-time fs-full" th:disabled="${isDriver or task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}">
                 <legend>Tidspunkt</legend>
-                <div class="time-order-error"
-                     th:if="${#strings.contains(#strings.listJoin(#fields.errors('endTs'), ' '), 'efter starttid')}">
-                    <strong>Tidsfejl:</strong> Sluttid skal ligge efter starttid.
-                </div>
-                <div id="noHoursWarning" class="time-order-error" style="display:none;">
-                    <strong>Advarsel:</strong> Ingen åbningstider registreret for denne dato. Kontakt administrator.
-                </div>
-                <div class="time-row">
-                    <label>Dato / Start
-                        <input type="text" id="startDateDisplay" placeholder="dd/mm/yyyy"
-                               maxlength="10" required autocomplete="off"/>
-                        <input type="date" id="startDate" style="display:none"/>
+                <!-- Read-only display for DRIVER -->
+                <div th:if="${isDriver}" class="time-row">
+                    <label>Dato
+                        <input type="text" th:value="${task.startTs != null} ? ${#temporals.format(task.startTs, 'dd/MM/yyyy')} : '–'" disabled/>
                     </label>
                     <label>Tid (fra)
-                        <select id="startTime" required>
-                            <option th:if="${#lists.isEmpty(timeOptions)}" value="08:00">08:00</option>
-                            <option th:each="time : ${timeOptions}" th:value="${time}" th:text="${time}"></option>
-                        </select>
-                        <p class="field-error" th:if="${#fields.hasErrors('startTs')}" th:errors="*{startTs}"></p>
+                        <input type="text" th:value="${task.startTs != null} ? ${#temporals.format(task.startTs, 'HH:mm')} : '–'" disabled/>
                     </label>
                     <label>Tid (til)
-                        <select id="endTime" required th:classappend="${#fields.hasErrors('endTs')} ? ' input-error' : ''">
-                            <option value="">(vælg)</option>
-                            <option th:if="${#lists.isEmpty(timeOptions)}" value="08:15">08:15</option>
-                            <option th:each="time : ${timeOptions}" th:value="${time}" th:text="${time}"></option>
-                        </select>
-                        <p class="field-error" th:if="${#fields.hasErrors('endTs')}" th:errors="*{endTs}"></p>
+                        <input type="text" th:value="${task.endTs != null} ? ${#temporals.format(task.endTs, 'HH:mm')} : '–'" disabled/>
                     </label>
                 </div>
-                <input type="hidden" th:field="*{startTs}" id="startTsHidden"/>
-                <input type="hidden" th:field="*{endTs}" id="endTsHidden"/>
+                <!-- Editable UI for ADMIN/AGENT -->
+                <div th:if="${!isDriver}">
+                    <div class="time-order-error"
+                         th:if="${#strings.contains(#strings.listJoin(#fields.errors('endTs'), ' '), 'efter starttid')}">
+                        <strong>Tidsfejl:</strong> Sluttid skal ligge efter starttid.
+                    </div>
+                    <div id="noHoursWarning" class="time-order-error" style="display:none;">
+                        <strong>Advarsel:</strong> Ingen åbningstider registreret for denne dato. Kontakt administrator.
+                    </div>
+                    <div class="time-row">
+                        <label>Dato / Start
+                            <input type="text" id="startDateDisplay" placeholder="dd/mm/yyyy"
+                                   maxlength="10" required autocomplete="off"/>
+                            <input type="date" id="startDate" style="display:none"/>
+                        </label>
+                        <label>Tid (fra)
+                            <select id="startTime" required>
+                                <option th:if="${#lists.isEmpty(timeOptions)}" value="08:00">08:00</option>
+                                <option th:each="time : ${timeOptions}" th:value="${time}" th:text="${time}"></option>
+                            </select>
+                            <p class="field-error" th:if="${#fields.hasErrors('startTs')}" th:errors="*{startTs}"></p>
+                        </label>
+                        <label>Tid (til)
+                            <select id="endTime" required th:classappend="${#fields.hasErrors('endTs')} ? ' input-error' : ''">
+                                <option value="">(vælg)</option>
+                                <option th:if="${#lists.isEmpty(timeOptions)}" value="08:15">08:15</option>
+                                <option th:each="time : ${timeOptions}" th:value="${time}" th:text="${time}"></option>
+                            </select>
+                            <p class="field-error" th:if="${#fields.hasErrors('endTs')}" th:errors="*{endTs}"></p>
+                        </label>
+                    </div>
+                    <input type="hidden" th:field="*{startTs}" id="startTsHidden"/>
+                    <input type="hidden" th:field="*{endTs}" id="endTsHidden"/>
+                </div>
             </fieldset>
 
-            <fieldset class="fs-places fs-full" th:disabled="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}">
+            <fieldset class="fs-places fs-full" th:disabled="${isDriver or task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}">
                 <legend>Steder</legend>
                 <label>Fra
                     <div class="input-with-btn">
@@ -108,7 +127,7 @@
                 <a id="directionsBtn" href="#" target="_blank" class="btn-secondary directions-btn">Hent rutevejledning</a>
             </fieldset>
 
-            <fieldset class="fs-description" th:disabled="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}">
+            <fieldset class="fs-description" th:disabled="${isDriver or task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}">
                 <legend>Beskrivelse</legend>
                 <textarea th:field="*{description}" rows="1" id="descriptionTextarea" placeholder="Hvad skal transporteres? Varer, udstyr, antal paller…" style="overflow:hidden;resize:none;"></textarea>
                 <p th:if="${task.taskId != 0 and task.receivedBy != null}" class="dispatcher-label">
@@ -117,11 +136,22 @@
                 <input type="hidden" th:field="*{receivedBy}"/>
             </fieldset>
 
-            <fieldset class="fs-personnel fs-full" th:disabled="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}
+            <fieldset class="fs-personnel fs-full" th:disabled="${isDriver
+                                                        or task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}
                                                         or ${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).STARTED}
                                                         or ${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).DONE}">
                 <legend>Personel</legend>
-                <div class="time-row">
+                <!-- Read-only display for DRIVER -->
+                <div th:if="${isDriver}" class="time-row">
+                    <label>Bil
+                        <input type="text" th:value="${task.vehicle != null} ? ${task.vehicle.displayLabel()} : '(ingen bil tildelt)'" disabled/>
+                    </label>
+                    <label>Chauffør
+                        <input type="text" th:field="*{driverName}" disabled/>
+                    </label>
+                </div>
+                <!-- Editable UI for ADMIN/AGENT -->
+                <div th:if="${!isDriver}" class="time-row">
                     <label>Bil
                         <div class="input-with-btn">
                             <select th:field="*{vehicleId}" id="vehicleSelect">
@@ -162,12 +192,12 @@
                 <p class="status-note" th:if="${task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).ORDERED and task.vehicleId == null}">
                     Vælg bil og chauffør for at kunne starte kørslen.
                 </p>
-                <div class="field-row" th:if="${task.taskId != 0 and task.vehicleId != null and task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).ORDERED}">
+                <div class="field-row" th:if="${!isDriver and task.taskId != 0 and task.vehicleId != null and task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).ORDERED}">
                     <button type="button" id="startButton" class="btn-small"
                             th:disabled="${#strings.isEmpty(task.driverName)}"
                             onclick="doStartTask()">Start</button>
                 </div>
-                <div class="field-row" th:if="${task.taskId != 0 and task.vehicleId != null and task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).STARTED}">
+                <div class="field-row" th:if="${!isDriver and task.taskId != 0 and task.vehicleId != null and task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).STARTED}">
                     <button type="submit" class="btn-small"
                             th:formaction="@{/tasks/{id}/status(id=${task.taskId})}" formmethod="post" formnovalidate
                             name="status" value="ORDERED">Til Bestilt</button>
@@ -175,7 +205,7 @@
                             th:formaction="@{/tasks/{id}/status(id=${task.taskId})}" formmethod="post" formnovalidate
                             name="status" value="DONE">Udført</button>
                 </div>
-                <div class="field-row" th:if="${task.taskId != 0 and task.vehicleId != null and task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).DONE}">
+                <div class="field-row" th:if="${!isDriver and task.taskId != 0 and task.vehicleId != null and task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).DONE}">
                     <button type="submit" class="btn-small"
                             th:formaction="@{/tasks/{id}/status(id=${task.taskId})}" formmethod="post" formnovalidate
                             name="status" value="ORDERED">Til Bestilt</button>
@@ -185,16 +215,16 @@
         </div>
 
         <div class="form-actions">
-            <button type="submit" class="btn-primary" th:if="${task.status != T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}">Gem</button>
-            <button type="button" class="btn-secondary" onclick="window.print()">Udskriv</button>
+            <button type="submit" class="btn-primary" th:if="${!isDriver and task.status != T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}">Gem</button>
+            <button type="button" class="btn-secondary" th:if="${!isDriver}" onclick="window.print()">Udskriv</button>
             <a th:href="${returnTo == 'tasks'} ? @{/tasks(date=${task.startTs != null} ? ${#temporals.format(task.startTs,'yyyy-MM-dd')} : ${#dates.format(#dates.createNow(),'yyyy-MM-dd')})} : @{/fleet(date=${task.startTs != null} ? ${#temporals.format(task.startTs,'yyyy-MM-dd')} : ${#dates.format(#dates.createNow(),'yyyy-MM-dd')})}"
                class="btn-secondary">Tilbage</a>
-            <button type="submit" class="btn-danger" style="margin-left:auto" th:if="${task.taskId != 0 and task.status != T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}"
+            <button type="submit" class="btn-danger" style="margin-left:auto" th:if="${!isDriver and task.taskId != 0 and task.status != T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}"
                     th:formaction="@{/tasks/{id}/delete(id=${task.taskId})}" formmethod="post" formnovalidate
                     onclick="return confirm('Er du sikker på at du vil slette kørslen?')">
                 Slet kørsel
             </button>
-            <button type="submit" class="btn-secondary" style="margin-left:auto" th:if="${task.taskId != 0 and task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}"
+            <button type="submit" class="btn-secondary" style="margin-left:auto" th:if="${!isDriver and task.taskId != 0 and task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).CANCELLED}"
                     th:formaction="@{/tasks/{id}/delete(id=${task.taskId})}" formmethod="post" formnovalidate
                     onclick="return confirm('Er du sikker på at du vil genåbne kørslen?')">
                 Genåbn kørsel
@@ -264,7 +294,7 @@
         </table>
     </div>
 </main>
-<script th:inline="javascript">
+<script th:if="${!isDriver}" th:inline="javascript">
 (function() {
     const startDateInput = document.getElementById('startDate');
     const startTimeInput = document.getElementById('startTime');
@@ -395,7 +425,7 @@ endPointInput.addEventListener('input',   updateMapLinks);
 updateMapLinks();
 /*]]>*/
 </script>
-<script th:inline="javascript">
+<script th:if="${!isDriver}" th:inline="javascript">
 (function() {
     const formEl = document.getElementById('taskForm');
     const isNewTask = formEl && formEl.dataset.isNew === 'true';

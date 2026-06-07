@@ -1,5 +1,7 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="da">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="da">
 <head th:replace="~{fragments/layout :: head('Flådeoversigt')}"><title>Oversigt</title></head>
 <body>
 <nav th:replace="~{fragments/layout :: nav}"></nav>
@@ -56,12 +58,12 @@
 
     <div th:if="${#lists.isEmpty(rows)}" class="empty">
         Ingen biler registreret for denne dag.
-        <a th:href="@{/vehicles/new}">Tilføj en bil</a>.
+        <a sec:authorize="hasRole('ADMIN')" th:href="@{/vehicles/new}">Tilføj en bil</a>.
     </div>
 
     <div th:if="${!hoursFromDb}" class="empty">
         Ingen åbningstider registreret for denne dato.
-        <a th:href="@{/opening-hours}">Tilføj åbningstider</a> for at vise tidslinjen.
+        <a sec:authorize="hasRole('ADMIN')" th:href="@{/opening-hours}">Tilføj åbningstider</a> for at vise tidslinjen.
     </div>
 
     <div th:if="${hoursFromDb and !#lists.isEmpty(rows)}" class="grid-scroll">
@@ -514,6 +516,8 @@ function goFleetDate(isoDate) {
 (function () {
     var board = document.querySelector('.fleet-board');
     if (!board) return;
+    var csrfToken = (document.querySelector('meta[name="_csrf"]') || {}).content || '';
+    var csrfHeader = (document.querySelector('meta[name="_csrf_header"]') || {}).content || 'X-CSRF-TOKEN';
     var dragState = null;
     var contextMenu = document.getElementById('fleetTaskMenu');
     var duplicateTaskButton = document.getElementById('duplicateTaskButton');
@@ -713,7 +717,7 @@ function goFleetDate(isoDate) {
         body.set('status', status);
         fetch('/tasks/api/' + taskId + '/status', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8', [csrfHeader]: csrfToken },
             body: body.toString()
         }).then(function (resp) {
             if (!resp.ok) {
@@ -729,7 +733,8 @@ function goFleetDate(isoDate) {
 
     function toggleCancelTask(taskId) {
         fetch('/tasks/api/' + taskId + '/cancel', {
-            method: 'POST'
+            method: 'POST',
+            headers: { [csrfHeader]: csrfToken }
         }).then(function (resp) {
             if (!resp.ok) {
                 return resp.json().then(function (x) { throw new Error(x.error || 'Handling fejlede'); });
@@ -744,7 +749,8 @@ function goFleetDate(isoDate) {
 
     function duplicateTask(taskId) {
         fetch('/tasks/api/' + taskId + '/duplicate', {
-            method: 'POST'
+            method: 'POST',
+            headers: { [csrfHeader]: csrfToken }
         }).then(function (resp) {
             if (!resp.ok) {
                 return resp.json().then(function (x) { throw new Error(x.error || 'Kopiering fejlede'); });
@@ -808,7 +814,7 @@ function goFleetDate(isoDate) {
 
             fetch('/tasks/api/' + taskId + '/move', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8', [csrfHeader]: csrfToken },
                 body: body.toString()
             }).then(function (resp) {
                 if (!resp.ok) {

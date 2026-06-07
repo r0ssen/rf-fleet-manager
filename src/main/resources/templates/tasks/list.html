@@ -9,8 +9,10 @@
     <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
 
     <div class="toolbar">
-        <h1>Kørselsadministration</h1>
-        <div class="date-nav">
+        <h1 th:text="${isDriver} ? 'Mine kørsler' : 'Kørselsadministration'">Kørsler</h1>
+
+        <!-- Date navigation: hidden for DRIVER (always today) -->
+        <div class="date-nav" th:if="${!isDriver}">
             <a th:href="@{/tasks(date=${prevDay},showCancelled=${showCancelled},showDone=${showDone})}" class="btn-secondary">&#8249;</a>
             <input type="text" id="taskDatePicker"
                    th:value="${#temporals.format(date, 'dd/MM/yyyy')}"
@@ -20,12 +22,29 @@
             <span class="date-label"
                   th:text="${#temporals.format(date, 'EEEE d. MMMM yyyy', danishLocale)}"></span>
         </div>
-        <a th:href="@{/tasks/new(date=${date},returnTo='tasks')}" class="btn-primary">+ Opret kørsel</a>
-        <label style="display:inline-flex;flex-direction:row;align-items:center;gap:0.35rem;margin-left:0.25rem;margin-bottom:0;white-space:nowrap;font-size:12px;color:#4b5563;">
+        <span class="date-label" th:if="${isDriver}"
+              th:text="${#temporals.format(date, 'EEEE d. MMMM yyyy', danishLocale)}"></span>
+
+        <a th:if="${!isDriver}" th:href="@{/tasks/new(date=${date},returnTo='tasks')}" class="btn-primary">+ Opret kørsel</a>
+
+        <!-- DRIVER toggles: show STARTED by default; opt-in to ORDERED and DONE -->
+        <div th:if="${isDriver}" class="driver-filters">
+            <label style="display:inline-flex;flex-direction:row;align-items:center;gap:0.35rem;margin-bottom:0;white-space:nowrap;font-size:12px;color:#4b5563;">
+                <input type="checkbox" id="showOrderedToggle" th:checked="${showOrdered}" onchange="goDriverFilter()"/>
+                <span>Vis bestilte</span>
+            </label>
+            <label style="display:inline-flex;flex-direction:row;align-items:center;gap:0.35rem;margin-bottom:0;white-space:nowrap;font-size:12px;color:#4b5563;">
+                <input type="checkbox" id="showDoneToggle" th:checked="${showDone}" onchange="goDriverFilter()"/>
+                <span>Vis udførte</span>
+            </label>
+        </div>
+
+        <!-- Standard ADMIN/AGENT toggles -->
+        <label th:if="${!isDriver}" style="display:inline-flex;flex-direction:row;align-items:center;gap:0.35rem;margin-left:0.25rem;margin-bottom:0;white-space:nowrap;font-size:12px;color:#4b5563;">
             <input type="checkbox" id="showDoneToggle" th:checked="${showDone}" onchange="goTaskDateDanish(document.getElementById('taskDatePicker').value)"/>
             <span>Vis udførte</span>
         </label>
-        <label style="display:inline-flex;flex-direction:row;align-items:center;gap:0.35rem;margin-left:0.25rem;margin-bottom:0;white-space:nowrap;font-size:12px;color:#4b5563;">
+        <label th:if="${!isDriver}" style="display:inline-flex;flex-direction:row;align-items:center;gap:0.35rem;margin-left:0.25rem;margin-bottom:0;white-space:nowrap;font-size:12px;color:#4b5563;">
             <input type="checkbox" id="showCancelledToggle" th:checked="${showCancelled}" onchange="goTaskDateDanish(document.getElementById('taskDatePicker').value)"/>
             <span>Vis slettede</span>
         </label>
@@ -41,56 +60,64 @@
                 <th>Afdeling</th>
                 <th>Bil</th>
                 <th>Chauffør</th>
-                <th>Dispatcher</th>
+                <th th:if="${!isDriver}">Dispatcher</th>
                 <th>Beskrivelse</th>
                 <th>Status</th>
                 <th>Handlinger</th>
             </tr>
         </thead>
         <tbody>
-            <tr th:each="t : ${tasks}" th:classappend="'row-' + ${t.status.name().toLowerCase()} + (${t.vehicleId == null} ? ' row-no-vehicle' : '')">
-                <td class="col-time">
+            <tr th:each="t : ${tasks}"
+                th:classappend="'row-' + ${t.status.name().toLowerCase()} + (${t.vehicleId == null} ? ' row-no-vehicle' : '')"
+                th:attr="data-href=@{/tasks/{id}/edit(id=${t.taskId},returnTo='tasks')}">
+                <td class="col-time" data-label="Tid">
                     <span th:text="${#temporals.format(t.startTs, 'HH:mm')}"></span>
                     <span th:if="${t.endTs != null}"> – <span th:text="${#temporals.format(t.endTs, 'HH:mm')}"></span></span>
                     <span th:if="${t.status.name() == 'ORDERED' and t.startTs.isBefore(now)}"
                           class="overdue-badge" title="Kørslen er ikke startet og tidspunktet er overskredet">!</span>
                 </td>
-                <td class="col-booker">
+                <td class="col-booker" data-label="Bestiller">
                     <strong th:text="${t.bookerName}"></strong>
-                    <span th:if="${t.bookerPhone != null}" class="phone" th:text="${'📞 ' + t.bookerPhone}"></span>
-                    <span th:if="${t.contactName != null}" class="contact" th:text="${'Kontakt: ' + t.contactName}"></span>
+                    <a th:if="${t.bookerPhone != null}" class="phone" th:href="'tel:' + ${t.bookerPhone}" th:text="${'📞 ' + t.bookerPhone}"></a>
+                    <span th:if="${t.contactName != null}" class="contact mobile-hidden" th:text="${'Kontakt: ' + t.contactName}"></span>
                 </td>
-                <td class="col-route">
+                <td class="col-contact" data-label="Kontakt"
+                    th:classappend="${(t.contactName == null or #strings.isEmpty(t.contactName)) and (t.contactPhone == null or #strings.isEmpty(t.contactPhone))} ? ' col-contact-empty' : ''">
+                    <span th:if="${t.contactName != null and !#strings.isEmpty(t.contactName)}" th:text="${t.contactName}"></span>
+                    <a th:if="${t.contactPhone != null and !#strings.isEmpty(t.contactPhone)}"
+                       class="phone" th:href="'tel:' + ${t.contactPhone}" th:text="${'📞 ' + t.contactPhone}"></a>
+                </td>
+                <td class="col-route" data-label="Steder">
                     <span th:text="${t.startPoint}"></span>
                     <span th:if="${t.viaPoint != null and !#strings.isEmpty(t.viaPoint)}" class="via"> via <em th:text="${#strings.replace(t.viaPoint, '|', ' → ')}"></em></span>
                     <span class="arrow"> → </span>
                     <span th:text="${t.endPoint}"></span>
                     <a th:if="${t.directionsUrl() != null}" th:href="${t.directionsUrl()}" target="_blank" class="map-link" title="Hent rutevejledning">🗺</a>
                 </td>
-                <td class="col-affiliation">
+                <td class="col-affiliation" data-label="Division">
                     <span th:text="${t.division}"></span>
                     <span th:if="${t.team != null}" class="team">/ <span th:text="${t.team}"></span></span>
                 </td>
-                <td class="col-vehicle">
+                <td class="col-vehicle" data-label="Bil">
                     <span th:if="${t.vehicle != null}" th:text="${'Bil ' + t.vehicle.vehicleNo + (t.vehicle.model != null ? ' – ' + t.vehicle.model : '')}"></span>
                     <span th:if="${t.vehicleId == null}" class="vehicle-missing-badge">Ikke tildelt bil</span>
                 </td>
-                <td class="col-driver">
+                <td class="col-driver" data-label="Chauffør">
                     <span th:if="${t.driverName != null and !#strings.isEmpty(#strings.trim(t.driverName))}" th:text="${t.driverName}"></span>
                     <span th:if="${(t.driverName == null or #strings.isEmpty(#strings.trim(t.driverName))) and t.status.name() != 'CANCELLED'}" class="driver-missing-badge">Ingen chauffør</span>
                 </td>
-                <td class="col-dispatcher">
+                <td th:if="${!isDriver}" class="col-dispatcher" data-label="Dispatcher">
                     <span th:if="${t.receivedBy != null and !#strings.isEmpty(#strings.trim(t.receivedBy))}" th:text="${t.receivedBy}"></span>
                     <span th:if="${(t.receivedBy == null or #strings.isEmpty(#strings.trim(t.receivedBy))) and t.status.name() != 'CANCELLED'}" class="driver-missing-badge">Ingen dispatcher</span>
                 </td>
-                <td class="col-desc"><span class="desc-text" th:text="${t.description}"></span></td>
-                <td class="col-status">
+                <td class="col-desc" data-label="Beskrivelse"><span class="desc-text" th:text="${t.description}"></span></td>
+                <td class="col-status" data-label="Status">
                     <div><strong th:text="${t.status.danishLabel()}">Bestilt</strong></div>
-                    <div th:if="${t.status.name() == 'ORDERED' and (t.vehicleId == null or #strings.isEmpty(t.driverName))}"
+                    <div th:if="${!isDriver and t.status.name() == 'ORDERED' and (t.vehicleId == null or #strings.isEmpty(t.driverName))}"
                          class="status-note" style="margin-top:4px;">
                         Kan ikke startes uden bil og chauffør.
                     </div>
-                    <form th:if="${t.vehicleId != null and not #strings.isEmpty(t.driverName) and t.status.name() == 'ORDERED'}"
+                    <form th:if="${!isDriver and t.vehicleId != null and not #strings.isEmpty(t.driverName) and t.status.name() == 'ORDERED'}"
                           th:action="@{/tasks/{id}/status(id=${t.taskId})}" method="post" style="margin-top:4px;">
                         <input type="hidden" name="date" th:value="${#temporals.format(date,'yyyy-MM-dd')}"/>
                         <input type="hidden" name="returnTo" value="tasks"/>
@@ -98,7 +125,7 @@
                         <input type="hidden" name="showDone" th:value="${showDone}"/>
                         <button type="submit" class="btn-small" name="status" value="STARTED">Start</button>
                     </form>
-                    <form th:if="${t.vehicleId != null and t.status.name() == 'STARTED'}"
+                    <form th:if="${!isDriver and t.vehicleId != null and t.status.name() == 'STARTED'}"
                           th:action="@{/tasks/{id}/status(id=${t.taskId})}" method="post" style="margin-top:4px; display:flex; gap:6px;">
                         <input type="hidden" name="date" th:value="${#temporals.format(date,'yyyy-MM-dd')}"/>
                         <input type="hidden" name="returnTo" value="tasks"/>
@@ -107,7 +134,7 @@
                         <button type="submit" class="btn-small" name="status" value="ORDERED">Til Bestilt</button>
                         <button type="submit" class="btn-small" name="status" value="DONE">Udført</button>
                     </form>
-                    <form th:if="${t.vehicleId != null and t.status.name() == 'DONE'}"
+                    <form th:if="${!isDriver and t.vehicleId != null and t.status.name() == 'DONE'}"
                           th:action="@{/tasks/{id}/status(id=${t.taskId})}" method="post" style="margin-top:4px;">
                         <input type="hidden" name="date" th:value="${#temporals.format(date,'yyyy-MM-dd')}"/>
                         <input type="hidden" name="returnTo" value="tasks"/>
@@ -116,16 +143,19 @@
                         <button type="submit" class="btn-small" name="status" value="ORDERED">Til Bestilt</button>
                     </form>
                 </td>
-                <td class="col-actions">
-                    <a th:href="@{/tasks/{id}/edit(id=${t.taskId},returnTo='tasks')}" class="btn-small">Rediger</a>
-                    <form th:action="@{/tasks/{id}/duplicate(id=${t.taskId})}" method="post" style="display:inline"
+                <td class="col-actions" data-label="">
+                    <!-- DRIVER: read-only detail link only -->
+                    <a th:if="${isDriver}" th:href="@{/tasks/{id}/edit(id=${t.taskId},returnTo='tasks')}" class="btn-small btn-row-nav">Se detaljer</a>
+                    <!-- ADMIN/AGENT: full action set -->
+                    <a th:if="${!isDriver}" th:href="@{/tasks/{id}/edit(id=${t.taskId},returnTo='tasks')}" class="btn-small btn-row-nav">Rediger</a>
+                    <form th:if="${!isDriver}" th:action="@{/tasks/{id}/duplicate(id=${t.taskId})}" method="post" style="display:inline"
                           onsubmit="return confirm('Kopier denne kørsel?')">
                         <input type="hidden" name="date" th:value="${#temporals.format(date,'yyyy-MM-dd')}"/>
                         <input type="hidden" name="showCancelled" th:value="${showCancelled}"/>
                         <input type="hidden" name="showDone" th:value="${showDone}"/>
                         <button type="submit" class="btn-small btn-secondary">Kopiér</button>
                     </form>
-                    <form th:if="${t.status.name() != 'CANCELLED'}"
+                    <form th:if="${!isDriver and t.status.name() != 'CANCELLED'}"
                           th:action="@{/tasks/{id}/delete(id=${t.taskId})}" method="post" style="display:inline"
                           onsubmit="return confirm('Slet denne kørsel?')">
                         <input type="hidden" name="date" th:value="${#temporals.format(date,'yyyy-MM-dd')}"/>
@@ -134,7 +164,7 @@
                         <input type="hidden" name="showDone" th:value="${showDone}"/>
                         <button type="submit" class="btn-small btn-danger">Slet</button>
                     </form>
-                    <form th:if="${t.status.name() == 'CANCELLED'}"
+                    <form th:if="${!isDriver and t.status.name() == 'CANCELLED'}"
                           th:action="@{/tasks/{id}/delete(id=${t.taskId})}" method="post" style="display:inline"
                           onsubmit="return confirm('Genåbn denne kørsel?')">
                         <input type="hidden" name="date" th:value="${#temporals.format(date,'yyyy-MM-dd')}"/>
@@ -146,7 +176,7 @@
                 </td>
             </tr>
             <tr th:if="${#lists.isEmpty(tasks)}">
-                <td colspan="10" class="empty">Ingen kørsler registreret for denne dag.</td>
+                <td th:colspan="${isDriver ? 9 : 10}" class="empty">Ingen kørsler registreret for denne dag.</td>
             </tr>
         </tbody>
     </table>
@@ -176,11 +206,23 @@ function goTaskDateDanish(value) {
     var m = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
     if (m) goTaskDate(m[3] + '-' + m[2] + '-' + m[1]);
 }
+function goDriverFilter() {
+    var params = new URLSearchParams();
+    var showOrdered = document.getElementById('showOrderedToggle');
+    if (showOrdered && showOrdered.checked) params.set('showOrdered', 'true');
+    var showDone = document.getElementById('showDoneToggle');
+    if (showDone && showDone.checked) params.set('showDone', 'true');
+    window.location = '/tasks' + (params.toString() ? ('?' + params.toString()) : '');
+}
 document.addEventListener('DOMContentLoaded', function() {
-    flatpickr('#taskDatePicker', {
-        locale: 'da',
-        dateFormat: 'd/m/Y',
-        allowInput: true
+    var picker = document.getElementById('taskDatePicker');
+    if (picker) flatpickr(picker, { locale: 'da', dateFormat: 'd/m/Y', allowInput: true });
+
+    document.querySelectorAll('.task-table tr[data-href]').forEach(function(row) {
+        row.addEventListener('click', function(e) {
+            if (e.target.closest('button, a, input, select, form, label')) return;
+            window.location = row.dataset.href;
+        });
     });
 });
 </script>

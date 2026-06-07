@@ -8,6 +8,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
 @Configuration
 @EnableWebSecurity
@@ -19,13 +20,15 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/login", "/css/**", "/js/**", "/error").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/vehicles", "/vehicles/*/edit").authenticated()
                 .requestMatchers("/vehicles/**", "/opening-hours/**", "/admin/**").hasRole("ADMIN")
-                .anyRequest().authenticated()
+                .requestMatchers(HttpMethod.GET, "/vehicles", "/vehicles/*/edit").hasAnyRole("ADMIN", "AGENT")
+                // DRIVER may only read the task list and individual task details
+                .requestMatchers(HttpMethod.GET, "/tasks", "/tasks/*/edit").hasAnyRole("ADMIN", "AGENT", "DRIVER")
+                .anyRequest().hasAnyRole("ADMIN", "AGENT")
             )
             .formLogin(form -> form
                 .loginPage("/login")
-                .defaultSuccessUrl("/fleet", true)
+                .successHandler(roleBasedSuccessHandler())
                 .permitAll()
             )
             .logout(logout -> logout
@@ -39,6 +42,15 @@ public class SecurityConfig {
                 .frameOptions(frame -> frame.sameOrigin())
             );
         return http.build();
+    }
+
+    @Bean
+    public AuthenticationSuccessHandler roleBasedSuccessHandler() {
+        return (request, response, authentication) -> {
+            boolean isDriver = authentication.getAuthorities().stream()
+                    .anyMatch(a -> a.getAuthority().equals("ROLE_DRIVER"));
+            response.sendRedirect(request.getContextPath() + (isDriver ? "/tasks" : "/fleet"));
+        };
     }
 
     @Bean

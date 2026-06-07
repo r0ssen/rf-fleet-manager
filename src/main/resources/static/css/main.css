@@ -47,6 +47,7 @@ nav {
 /* Layout */
 main { max-width: 1400px; margin: 1.5rem auto; padding: 0 1rem; }
 .toolbar { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
+.driver-filters { display: flex; flex-direction: row; gap: 0.5rem; align-items: center; }
 h1 { font-size: 1.3rem; font-weight: 700; color: #111; }
 .date-nav { display: flex; align-items: center; gap: 0.5rem; }
 .date-label { font-weight: 600; color: #444; margin-left: 0.5rem; }
@@ -83,6 +84,11 @@ tr:hover td { background: #fafafa; }
 .col-actions { white-space: nowrap; width: 120px; }
 .desc-text { display: block; overflow: hidden; text-overflow: ellipsis; }
 .phone, .contact, .team, .via { display: block; font-size: 12px; color: #666; overflow: hidden; text-overflow: ellipsis; }
+/* On desktop: tel: links are inert — look and behave like plain text */
+a.phone { pointer-events: none; text-decoration: none; cursor: text; }
+.tel-link { display: none; }
+/* Contact column is mobile-only; contact span inside booker stays on desktop */
+.col-contact { display: none; }
 .arrow { color: #999; margin: 0 2px; }
 .map-link { font-size: 14px; text-decoration: none; }
 .overdue-badge {
@@ -191,14 +197,160 @@ textarea { resize: vertical; }
 .availability-grid { display: flex; flex-wrap: wrap; gap: 0.4rem 1.2rem; }
 
 /* Login */
-body.login-page { display: flex; align-items: center; justify-content: center; background: #f0f2f5; }
-.login-box { background: #fff; padding: 2.5rem; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,.1); width: 340px; text-align: center; }
+body.login-page { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #f0f2f5; padding: 1rem; box-sizing: border-box; }
+.login-box { background: #fff; padding: 2.5rem; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,.1); width: 100%; max-width: 340px; text-align: center; }
 .login-box h1 { font-size: 2rem; margin-bottom: 0.5rem; }
 .login-box h2 { font-size: 1rem; color: #666; margin-bottom: 1.5rem; }
 .login-box label { text-align: left; margin-bottom: 1rem; }
 .alert { padding: 0.6rem 1rem; border-radius: 5px; font-size: 13px; margin-bottom: 1rem; }
 .alert-error { background: #fce4ec; color: #c62828; }
 .alert-info  { background: #e3f2fd; color: #1565c0; }
+
+/* ─── Mobile ─────────────────────────────── */
+@media (max-width: 768px) {
+
+    /* Nav — horizontal scroll so links never wrap */
+    nav {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        gap: 1rem;
+        padding: 0 1rem;
+        scrollbar-width: none;
+    }
+    nav::-webkit-scrollbar { display: none; }
+    .nav-brand { font-size: 1rem; flex-shrink: 0; }
+    .nav-links { flex-shrink: 0; gap: 1rem; }
+    .nav-logout { flex-shrink: 0; }
+
+    /* Layout */
+    main { margin: 0.75rem auto; padding: 0 0.5rem; }
+    h1 { font-size: 1.1rem; }
+    .toolbar { gap: 0.5rem; }
+
+    /* ── Task table → card layout ── */
+    .task-table {
+        display: block;
+        background: transparent;
+        box-shadow: none;
+        border-radius: 0;
+    }
+    .task-table thead { display: none; }
+    .task-table tbody { display: flex; flex-direction: column; gap: 0.6rem; }
+
+    /* Each row becomes a card */
+    .task-table tr {
+        display: block;
+        background: #fff;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 1px 4px rgba(0,0,0,.07);
+        overflow: hidden;
+    }
+    .task-table tr.row-started  { background: #fffde7; border-color: #fcd34d; }
+    .task-table tr.row-done     { background: #f1f8e9; border-color: #bbf7d0; }
+    .task-table tr.row-cancelled { background: #fce4ec; border-color: #fca5a5; }
+    .task-table tr.row-no-vehicle { background: #e5e7eb; border-left: 4px solid #374151; }
+    .task-table tr.row-no-vehicle:hover td { background: transparent; }
+    .task-table tr:hover td { background: transparent; }
+
+    /* Each cell becomes a label+value row */
+    .task-table td {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        padding: 0.45rem 0.75rem;
+        border-bottom: 1px solid #f0f0f0;
+        white-space: normal !important;
+        overflow: visible;
+        max-width: none !important;
+        width: 100%;
+        background: transparent;
+    }
+    .task-table td:last-child { border-bottom: none; }
+
+    /* Label from data-label attribute */
+    .task-table td::before {
+        content: attr(data-label);
+        font-size: 11px;
+        font-weight: 700;
+        color: #9ca3af;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        min-width: 78px;
+        flex-shrink: 0;
+        padding-top: 2px;
+    }
+
+    /* Time cell: larger and bold */
+    .task-table .col-time {
+        font-size: 15px;
+        font-weight: 700;
+        padding-top: 0.6rem;
+        padding-bottom: 0.6rem;
+        width: auto;
+    }
+    /* Left-border accent on first-child no longer needed — handled by border-left on tr */
+    .task-table tr.row-no-vehicle td:first-child { box-shadow: none; }
+
+    /* Actions cell: no label, wrap buttons with touch-friendly spacing */
+    .task-table .col-actions { flex-wrap: wrap; gap: 0.4rem; padding-top: 0.6rem; padding-bottom: 0.6rem; width: auto; white-space: normal; }
+    .task-table .col-actions::before { display: none; }
+    .task-table .col-actions .btn-small { padding: 0.45rem 0.85rem; font-size: 13px; }
+    .task-table .col-status { width: auto; }
+
+    /* Tel: links active on mobile */
+    a.phone { pointer-events: auto; cursor: pointer; }
+    .tel-link { display: inline-block; margin-top: 0.3rem; font-size: 13px; font-weight: 600; color: #E87200; text-decoration: none; }
+    .tel-link:hover { text-decoration: underline; }
+
+    /* Contact: own card row on mobile; hide inline span inside bestiller */
+    .col-contact { display: flex; }
+    .col-contact.col-contact-empty { display: none; }
+    .mobile-hidden { display: none; }
+
+    /* Beskrivelse: én linje med ellipsis */
+    .col-desc .desc-text { white-space: nowrap; overflow: hidden; max-width: 220px; }
+
+    /* Clickable task cards — hide explicit nav button, show pointer on row */
+    .task-table tr[data-href] { cursor: pointer; }
+    .task-table .btn-row-nav { display: none; }
+
+    /* Summary bar */
+    .summary-bar { flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
+
+    /* ── Task / admin form ── */
+    .form-main { max-width: 100%; }
+    .form-grid { grid-template-columns: 1fr; }
+
+    /* Stacked grids inside form (overrides inline styles) */
+    .time-row    { grid-template-columns: 1fr !important; }
+    .booker-grid { grid-template-columns: 1fr !important; }
+    .input-phone { max-width: 100% !important; }
+
+    /* Form actions: stack full-width for easy tapping */
+    .form-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .form-actions > button,
+    .form-actions > a {
+        width: 100%;
+        text-align: center;
+        margin-left: 0 !important;
+        padding: 0.65rem 1rem;
+        font-size: 14px;
+    }
+
+    /* Driver filter toggles: stack vertically */
+    .driver-filters {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    /* Consistent row gap in form fieldsets */
+    .time-row { gap: 0.5rem !important; }
+}
 
 /* Print */
 @media print {

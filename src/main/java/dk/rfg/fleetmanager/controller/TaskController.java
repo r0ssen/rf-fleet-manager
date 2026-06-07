@@ -3,7 +3,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.rfg.fleetmanager.config.AppConfig;
 import dk.rfg.fleetmanager.entity.Task;
 import dk.rfg.fleetmanager.entity.TaskStatus;
+import dk.rfg.fleetmanager.entity.User;
 import dk.rfg.fleetmanager.repository.OpeningHoursRepository;
+import dk.rfg.fleetmanager.repository.UserRepository;
 import dk.rfg.fleetmanager.service.TaskService;
 import dk.rfg.fleetmanager.service.VehicleService;
 import dk.rfg.fleetmanager.util.DivisionTeamData;
@@ -35,41 +37,55 @@ public class TaskController {
     private final DivisionTeamData divisionTeamData;
     private final ObjectMapper objectMapper;
     private final OpeningHoursRepository openingHoursRepository;
+    private final UserRepository userRepository;
     private static final DateTimeFormatter HH_MM = DateTimeFormatter.ofPattern("HH:mm");
 
     public TaskController(TaskService taskService, VehicleService vehicleService,
                           AppConfig appConfig, DivisionTeamData divisionTeamData,
-                          ObjectMapper objectMapper, OpeningHoursRepository openingHoursRepository) {
+                          ObjectMapper objectMapper, OpeningHoursRepository openingHoursRepository,
+                          UserRepository userRepository) {
         this.taskService = taskService; this.vehicleService = vehicleService;
         this.appConfig = appConfig; this.divisionTeamData = divisionTeamData;
         this.objectMapper = objectMapper; this.openingHoursRepository = openingHoursRepository;
+        this.userRepository = userRepository;
     }
 
     @GetMapping
     public String list(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
                        @RequestParam(defaultValue = "false") boolean showCancelled,
                        @RequestParam(defaultValue = "false") boolean showDone,
-                       Model model) throws Exception {
-        if (date == null) date = LocalDate.now();
+                       @RequestParam(defaultValue = "false") boolean showOrdered,
+                       Authentication auth, Model model) throws Exception {
+        boolean isDriver = isDriver(auth);
         int year = appConfig.getFestivalYear();
-        List<Task> tasks = taskService.getTasksForDay(year, date);
-        if (!showCancelled) {
-            tasks = tasks.stream()
-                .filter(t -> t.getStatus() != TaskStatus.CANCELLED)
-                .toList();
+        List<Task> tasks;
+
+        if (isDriver) {
+            date = LocalDate.now();
+            User driver = userRepository.findByUsername(auth.getName()).orElseThrow();
+            Integer vehicleId = driver.getVehicleId();
+            tasks = taskService.getTasksForDay(year, date).stream()
+                    .filter(t -> vehicleId != null && vehicleId.equals(t.getVehicleId()))
+                    .filter(t -> t.getStatus() != TaskStatus.CANCELLED)
+                    .filter(t -> showOrdered || t.getStatus() != TaskStatus.ORDERED)
+                    .filter(t -> showDone    || t.getStatus() != TaskStatus.DONE)
+                    .toList();
+        } else {
+            if (date == null) date = LocalDate.now();
+            tasks = taskService.getTasksForDay(year, date);
+            if (!showCancelled) tasks = tasks.stream().filter(t -> t.getStatus() != TaskStatus.CANCELLED).toList();
+            if (!showDone)      tasks = tasks.stream().filter(t -> t.getStatus() != TaskStatus.DONE).toList();
         }
-        if (!showDone) {
-            tasks = tasks.stream()
-                .filter(t -> t.getStatus() != TaskStatus.DONE)
-                .toList();
-        }
+
         model.addAttribute("tasks", tasks);
         model.addAttribute("date", date);
+        model.addAttribute("isDriver", isDriver);
         model.addAttribute("statuses", editableStatuses());
         model.addAttribute("prevDay", date.minusDays(1));
         model.addAttribute("nextDay", date.plusDays(1));
         model.addAttribute("showCancelled", showCancelled);
         model.addAttribute("showDone", showDone);
+        model.addAttribute("showOrdered", showOrdered);
         model.addAttribute("danishLocale", java.util.Locale.forLanguageTag("da"));
         model.addAttribute("now", OffsetDateTime.now(ZoneId.systemDefault()));
         return "tasks/list";
@@ -80,11 +96,13 @@ public class TaskController {
                           @RequestParam(required = false) @DateTimeFormat(pattern = "HH:mm") LocalTime start,
                           @RequestParam(required = false) Integer vehicleId,
                           @RequestParam(required = false, defaultValue = "fleet") String returnTo,
-                          Model model) throws Exception {
+                          Authentication auth, Model model) throws Exception {
+        if (isDriver(auth)) return "redirect:/tasks";
         Task task = new Task();
         applyNewTaskPrefill(task, date, start, vehicleId);
         var driverPrefill = applySuggestedDriverName(task);
         populateForm(task, date, returnTo, model);
+        model.addAttribute("isDriver", false);
         model.addAttribute("driverPrefilled", driverPrefill.isPresent());
         model.addAttribute("dispatcherPrefilled", false);
         driverPrefill
@@ -97,10 +115,13 @@ public class TaskController {
     @GetMapping("/{id}/edit")
     public String editForm(@PathVariable int id,
                            @RequestParam(required = false, defaultValue = "fleet") String returnTo,
-                           Model model) throws Exception {
+                           Authentication auth, Model model) throws Exception {
+        boolean driver = isDriver(auth);
         Task task = taskService.getById(appConfig.getFestivalYear(), id)
                 .orElseThrow(() -> new IllegalArgumentException("Task not found: " + id));
+        if (driver) returnTo = "tasks";
         populateForm(task, null, returnTo, model);
+        model.addAttribute("isDriver", driver);
         return "tasks/form";
     }
 
@@ -514,5 +535,10 @@ public class TaskController {
         } catch (DateTimeException ex) {
             return null;
         }
+    }
+
+    private boolean isDriver(Authentication auth) {
+        return auth != null && auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_DRIVER"));
     }
 }
