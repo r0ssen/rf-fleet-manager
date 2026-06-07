@@ -192,8 +192,8 @@ textarea { resize: vertical; }
 .availability-grid { display: flex; flex-wrap: wrap; gap: 0.4rem 1.2rem; }
 
 /* Login */
-body.login-page { display: flex; align-items: center; justify-content: center; background: #f0f2f5; }
-.login-box { background: #fff; padding: 2.5rem; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,.1); width: 340px; text-align: center; }
+body.login-page { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #f0f2f5; padding: 1rem; box-sizing: border-box; }
+.login-box { background: #fff; padding: 2.5rem; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,.1); width: 100%; max-width: 340px; text-align: center; }
 .login-box h1 { font-size: 2rem; margin-bottom: 0.5rem; }
 .login-box h2 { font-size: 1rem; color: #666; margin-bottom: 1.5rem; }
 .login-box label { text-align: left; margin-bottom: 1rem; }
