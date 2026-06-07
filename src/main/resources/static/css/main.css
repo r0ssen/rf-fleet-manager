@@ -308,6 +308,9 @@ body.login-page { display: flex; align-items: center; justify-content: center; m
     .col-contact.col-contact-empty { display: none; }
     .mobile-hidden { display: none; }
 
+    /* Beskrivelse: én linje med ellipsis */
+    .col-desc .desc-text { white-space: nowrap; overflow: hidden; max-width: 220px; }
+
     /* Clickable task cards — hide explicit nav button, show pointer on row */
     .task-table tr[data-href] { cursor: pointer; }
     .task-table .btn-row-nav { display: none; }
