@@ -1,16 +1,16 @@
 package dk.rfg.fleetmanager.controller;
 
-import dk.rfg.fleetmanager.config.AppConfig;
 import dk.rfg.fleetmanager.entity.User;
 import dk.rfg.fleetmanager.repository.UserRepository;
-import dk.rfg.fleetmanager.service.VehicleService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Controller
 @RequestMapping("/admin/users")
@@ -18,33 +18,22 @@ public class UserAdminController {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final VehicleService vehicleService;
-    private final AppConfig appConfig;
 
-    public UserAdminController(UserRepository userRepository, PasswordEncoder passwordEncoder,
-                               VehicleService vehicleService, AppConfig appConfig) {
+    public UserAdminController(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
-        this.vehicleService = vehicleService;
-        this.appConfig = appConfig;
     }
 
     @GetMapping
     public String list(Model model) {
         model.addAttribute("users", userRepository.findAll());
-        var vehicleLabels = vehicleService.getAllVehicles(appConfig.getFestivalYear()).stream()
-                .collect(java.util.stream.Collectors.toMap(
-                        v -> v.getVehicleId(),
-                        v -> v.displayLabel()));
-        model.addAttribute("vehicleLabels", vehicleLabels);
         return "admin/users/list";
     }
 
     @GetMapping("/new")
     public String newForm(Model model) {
         model.addAttribute("userForm", new UserForm());
-        model.addAttribute("roles", User.Role.values());
-        model.addAttribute("vehicles", vehicleService.getAllVehicles(appConfig.getFestivalYear()));
+        model.addAttribute("allRoles", User.Role.values());
         return "admin/users/form";
     }
 
@@ -54,19 +43,16 @@ public class UserAdminController {
         if (!errors.isEmpty()) {
             model.addAttribute("errors", errors);
             model.addAttribute("userForm", form);
-            model.addAttribute("roles", User.Role.values());
-            model.addAttribute("vehicles", vehicleService.getAllVehicles(appConfig.getFestivalYear()));
+            model.addAttribute("allRoles", User.Role.values());
             return "admin/users/form";
         }
         if (userRepository.findByUsername(form.getUsername()).isPresent()) {
             model.addAttribute("errors", List.of("Brugernavnet '" + form.getUsername() + "' er allerede i brug."));
             model.addAttribute("userForm", form);
-            model.addAttribute("roles", User.Role.values());
-            model.addAttribute("vehicles", vehicleService.getAllVehicles(appConfig.getFestivalYear()));
+            model.addAttribute("allRoles", User.Role.values());
             return "admin/users/form";
         }
-        User user = new User(form.getUsername(), passwordEncoder.encode(form.getPassword()), form.getRole());
-        user.setVehicleId(form.getRole() == User.Role.DRIVER ? form.getVehicleId() : null);
+        User user = new User(form.getUsername(), passwordEncoder.encode(form.getPassword()), form.getRoles());
         userRepository.save(user);
         flash.addFlashAttribute("successMessage", "Brugeren '" + form.getUsername() + "' er oprettet.");
         return "redirect:/admin/users";
@@ -78,12 +64,10 @@ public class UserAdminController {
                 .orElseThrow(() -> new IllegalArgumentException("Bruger ikke fundet: " + id));
         UserForm form = new UserForm();
         form.setUsername(user.getUsername());
-        form.setRole(user.getRole());
-        form.setVehicleId(user.getVehicleId());
+        form.setRoles(new HashSet<>(user.getRoles()));
         model.addAttribute("userForm", form);
         model.addAttribute("userId", id);
-        model.addAttribute("roles", User.Role.values());
-        model.addAttribute("vehicles", vehicleService.getAllVehicles(appConfig.getFestivalYear()));
+        model.addAttribute("allRoles", User.Role.values());
         return "admin/users/form";
     }
 
@@ -97,8 +81,7 @@ public class UserAdminController {
             model.addAttribute("errors", errors);
             model.addAttribute("userForm", form);
             model.addAttribute("userId", id);
-            model.addAttribute("roles", User.Role.values());
-            model.addAttribute("vehicles", vehicleService.getAllVehicles(appConfig.getFestivalYear()));
+            model.addAttribute("allRoles", User.Role.values());
             return "admin/users/form";
         }
         userRepository.findByUsername(form.getUsername()).ifPresent(existing -> {
@@ -108,8 +91,7 @@ public class UserAdminController {
         });
 
         user.setUsername(form.getUsername());
-        user.setRole(form.getRole());
-        user.setVehicleId(form.getRole() == User.Role.DRIVER ? form.getVehicleId() : null);
+        user.setRoles(form.getRoles());
         if (form.getPassword() != null && !form.getPassword().isBlank()) {
             user.setPassword(passwordEncoder.encode(form.getPassword()));
         }
@@ -123,8 +105,8 @@ public class UserAdminController {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Bruger ikke fundet: " + id));
         long adminCount = userRepository.findAll().stream()
-                .filter(u -> u.getRole() == User.Role.ADMIN).count();
-        if (user.getRole() == User.Role.ADMIN && adminCount <= 1) {
+                .filter(u -> u.getRoles().contains(User.Role.ADMIN)).count();
+        if (user.getRoles().contains(User.Role.ADMIN) && adminCount <= 1) {
             flash.addFlashAttribute("errorMessage", "Den eneste admin-bruger kan ikke slettes.");
             return "redirect:/admin/users";
         }
@@ -145,10 +127,8 @@ public class UserAdminController {
             if (!form.getPassword().equals(form.getConfirmPassword()))
                 errors.add("Adgangskoderne er ikke ens.");
         }
-        if (form.getRole() == null)
-            errors.add("Rolle er påkrævet.");
-        if (form.getRole() == User.Role.DRIVER && form.getVehicleId() == null)
-            errors.add("Bil er påkrævet for chauffør-rollen.");
+        if (form.getRoles() == null || form.getRoles().isEmpty())
+            errors.add("Mindst én rolle er påkrævet.");
         return errors;
     }
 
@@ -156,8 +136,7 @@ public class UserAdminController {
         private String username;
         private String password;
         private String confirmPassword;
-        private User.Role role;
-        private Integer vehicleId;
+        private Set<User.Role> roles = new HashSet<>();
 
         public String getUsername() { return username; }
         public void setUsername(String username) { this.username = username; }
@@ -165,9 +144,7 @@ public class UserAdminController {
         public void setPassword(String password) { this.password = password; }
         public String getConfirmPassword() { return confirmPassword; }
         public void setConfirmPassword(String confirmPassword) { this.confirmPassword = confirmPassword; }
-        public User.Role getRole() { return role; }
-        public void setRole(User.Role role) { this.role = role; }
-        public Integer getVehicleId() { return vehicleId; }
-        public void setVehicleId(Integer vehicleId) { this.vehicleId = vehicleId; }
+        public Set<User.Role> getRoles() { return roles; }
+        public void setRoles(Set<User.Role> roles) { this.roles = roles != null ? roles : new HashSet<>(); }
     }
 }

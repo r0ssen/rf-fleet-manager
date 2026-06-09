@@ -2,6 +2,7 @@ package dk.rfg.fleetmanager.config;
 
 import dk.rfg.fleetmanager.entity.User;
 import dk.rfg.fleetmanager.repository.UserRepository;
+import java.util.Set;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,8 +23,8 @@ public class DataInitializer implements ApplicationRunner {
     public void run(ApplicationArguments args) {
         try {
             if (userRepository.count() == 0) {
-                userRepository.save(new User("admin", passwordEncoder.encode("admin"), User.Role.ADMIN));
-                userRepository.save(new User("agent", passwordEncoder.encode("agent"), User.Role.AGENT));
+                userRepository.save(new User("admin", passwordEncoder.encode("admin"), Set.of(User.Role.ADMIN)));
+                userRepository.save(new User("agent", passwordEncoder.encode("agent"), Set.of(User.Role.AGENT)));
             }
         } catch (Exception ignored) {
             // users table may not exist in isolated integration tests that manage their own schema

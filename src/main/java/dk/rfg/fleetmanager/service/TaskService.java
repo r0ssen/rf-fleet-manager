@@ -99,6 +99,7 @@ public class TaskService {
         copy.setVehicle(null);
         copy.setVehicleId(null);
         copy.setDriverName(null);
+        copy.setDriverUser(null);
         copy.setReceivedBy(null);
         copy.setStatus(TaskStatus.ORDERED);
 

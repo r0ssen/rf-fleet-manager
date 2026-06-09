@@ -32,25 +32,14 @@
                     <span th:text="${userId == null} ? 'Bekræft adgangskode *' : 'Bekræft ny adgangskode'">Bekræft adgangskode</span>
                     <input type="password" th:field="*{confirmPassword}" autocomplete="new-password" placeholder="••••••••"/>
                 </label>
-                <label>Rolle *
-                    <select th:field="*{role}" required id="roleSelect" onchange="toggleVehicleField()">
-                        <option value="">— Vælg rolle —</option>
-                        <option th:each="r : ${roles}"
-                                th:value="${r.name()}"
-                                th:text="${r.name() == 'ADMIN' ? 'Admin' : (r.name() == 'DRIVER' ? 'Chauffør' : 'Agent')}"
-                                th:selected="${userForm.role == r}"></option>
-                    </select>
-                </label>
-                <div id="vehicleField" style="display:none">
-                    <label>Bil *
-                        <select th:field="*{vehicleId}" id="vehicleSelect">
-                            <option value="">— Vælg bil —</option>
-                            <option th:each="v : ${vehicles}"
-                                    th:value="${v.vehicleId}"
-                                    th:text="${v.displayLabel()}"
-                                    th:selected="${userForm.vehicleId == v.vehicleId}"></option>
-                        </select>
-                    </label>
+                <div>
+                    <span style="display:block;margin-bottom:0.35rem;">Roller *</span>
+                    <div th:each="r : ${allRoles}" style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.4rem;">
+                        <input type="checkbox" name="roles" th:value="${r.name()}" th:id="${'role_' + r.name()}"
+                               th:checked="${userForm.roles != null and userForm.roles.contains(r)}"/>
+                        <label th:for="${'role_' + r.name()}" style="margin-bottom:0;font-weight:normal;"
+                               th:text="${r.name() == 'ADMIN' ? 'Admin' : (r.name() == 'DRIVER' ? 'Chauffør' : 'Agent')}"></label>
+                    </div>
                 </div>
             </fieldset>
         </div>
@@ -60,15 +49,5 @@
         </div>
     </form>
 </main>
-<script>
-function toggleVehicleField() {
-    var role = document.getElementById('roleSelect').value;
-    var field = document.getElementById('vehicleField');
-    var select = document.getElementById('vehicleSelect');
-    field.style.display = role === 'DRIVER' ? '' : 'none';
-    select.required = role === 'DRIVER';
-}
-document.addEventListener('DOMContentLoaded', toggleVehicleField);
-</script>
 </body>
 </html>
