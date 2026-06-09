@@ -66,7 +66,7 @@ public class UserAdminController {
             return "admin/users/form";
         }
         User user = new User(form.getUsername(), passwordEncoder.encode(form.getPassword()), form.getRole());
-        user.setVehicleId(form.getRole() == User.Role.DRIVER ? form.getVehicleId() : null);
+        user.setVehicleId(form.getVehicleId());
         userRepository.save(user);
         flash.addFlashAttribute("successMessage", "Brugeren '" + form.getUsername() + "' er oprettet.");
         return "redirect:/admin/users";
@@ -109,7 +109,7 @@ public class UserAdminController {
 
         user.setUsername(form.getUsername());
         user.setRole(form.getRole());
-        user.setVehicleId(form.getRole() == User.Role.DRIVER ? form.getVehicleId() : null);
+        user.setVehicleId(form.getVehicleId());
         if (form.getPassword() != null && !form.getPassword().isBlank()) {
             user.setPassword(passwordEncoder.encode(form.getPassword()));
         }
@@ -147,8 +147,6 @@ public class UserAdminController {
         }
         if (form.getRole() == null)
             errors.add("Rolle er påkrævet.");
-        if (form.getRole() == User.Role.DRIVER && form.getVehicleId() == null)
-            errors.add("Bil er påkrævet for chauffør-rollen.");
         return errors;
     }
 

@@ -147,7 +147,7 @@
                         <input type="text" th:value="${task.vehicle != null} ? ${task.vehicle.displayLabel()} : '(ingen bil tildelt)'" disabled/>
                     </label>
                     <label>Chauffør
-                        <input type="text" th:field="*{driverName}" disabled/>
+                        <input type="text" th:value="${task.driverUser != null} ? ${task.driverUser.username} : (${task.driverName} != null ? ${task.driverName} : '')" disabled/>
                     </label>
                 </div>
                 <!-- Editable UI for ADMIN/AGENT -->
@@ -172,11 +172,13 @@
                         <p id="vehicleWarning" class="field-warning" style="display:none">Ingen bil valgt.</p>
                     </label>
                     <label>Chauffør
-                        <input type="text" th:field="*{driverName}" id="driverNameInput" placeholder="Chaufførens navn"
-                               th:classappend="${driverPrefilled} ? ' input-prefilled' : ''"/>
-                        <p id="driverPrefillHint" class="prefill-hint" th:if="${task.taskId == 0}"
-                           th:classappend="${driverPrefilled} ? ' visible' : ''">Foreslået fra seneste kørsel.</p>
-                        <p id="driverWarning" class="field-warning" style="display:none">Ingen chauffør angivet.</p>
+                        <select name="driverId" id="driverSelect">
+                            <option value="">— Ingen chauffør —</option>
+                            <option th:each="d : ${drivers}" th:value="${d.id}"
+                                    th:text="${d.username}"
+                                    th:selected="${task.driverUser != null and task.driverUser.id == d.id}"></option>
+                        </select>
+                        <p id="driverWarning" class="field-warning" style="display:none">Ingen chauffør valgt.</p>
                     </label>
                 </div>
             </fieldset>
@@ -194,7 +196,7 @@
                 </p>
                 <div class="field-row" th:if="${!isDriver and task.taskId != 0 and task.vehicleId != null and task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).ORDERED}">
                     <button type="button" id="startButton" class="btn-small"
-                            th:disabled="${#strings.isEmpty(task.driverName)}"
+                            th:disabled="${task.driverUser == null}"
                             onclick="doStartTask()">Start</button>
                 </div>
                 <div class="field-row" th:if="${!isDriver and task.taskId != 0 and task.vehicleId != null and task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).STARTED}">
@@ -281,7 +283,7 @@
                 <th>Bil</th>
                 <td th:text="${task.vehicle != null} ? ${'Bil ' + task.vehicle.vehicleNo + (task.vehicle.model != null ? ' – ' + task.vehicle.model : '')} : '–'"></td>
                 <th>Chauffør</th>
-                <td th:text="${task.driverName}"></td>
+                <td th:text="${task.driverUser != null} ? ${task.driverUser.username} : ${task.driverName}"></td>
             </tr>
             <tr th:if="${task.description != null and !#strings.isEmpty(task.description)}">
                 <th>Beskrivelse</th>
@@ -428,52 +430,15 @@ updateMapLinks();
 <script th:if="${!isDriver}" th:inline="javascript">
 (function() {
     const formEl = document.getElementById('taskForm');
-    const isNewTask = formEl && formEl.dataset.isNew === 'true';
     const startDateInput = document.getElementById('startDate');
     const startTimeInput = document.getElementById('startTime');
     const endTimeInput = document.getElementById('endTime');
     const noHoursWarning = document.getElementById('noHoursWarning');
     const vehicleSelect  = document.getElementById('vehicleSelect');
-    const driverNameInput = document.getElementById('driverNameInput');
-    const driverPrefillHint = document.getElementById('driverPrefillHint');
+    const driverSelect   = document.getElementById('driverSelect');
     let allTimeOptions = Array.from(startTimeInput.options || [])
         .map(opt => opt.value)
         .filter(v => !!v);
-
-    function markDriverPrefilled(isPrefilled, sourceTime) {
-        if (!driverNameInput) return;
-        if (isPrefilled) {
-            driverNameInput.classList.add('input-prefilled');
-            if (driverPrefillHint) driverPrefillHint.classList.add('visible');
-        } else {
-            driverNameInput.classList.remove('input-prefilled');
-            if (driverPrefillHint) driverPrefillHint.classList.remove('visible');
-        }
-    }
-
-    function suggestDriverForVehicle() {
-        if (!isNewTask) return;
-        if (!vehicleSelect || !driverNameInput) return;
-        if (!vehicleSelect.value) return;
-        if ((driverNameInput.value || '').trim()) return;
-
-        const params = new URLSearchParams();
-        if (startDateInput && startDateInput.value) params.set('date', startDateInput.value);
-        if (startTimeInput && startTimeInput.value) params.set('start', startTimeInput.value);
-        const qs = params.toString();
-        const url = '/tasks/api/vehicles/' + encodeURIComponent(vehicleSelect.value) + '/last-driver'
-            + (qs ? ('?' + qs) : '');
-
-        fetch(url)
-            .then(r => r.json())
-            .then(data => {
-                if (data && data.driverName && !(driverNameInput.value || '').trim()) {
-                    driverNameInput.value = data.driverName;
-                    markDriverPrefilled(true, data.sourceStartTime || '');
-                }
-            })
-            .catch(err => console.error('Error fetching suggested driver:', err));
-    }
 
     function toMinutes(hhmm) {
         if (!hhmm || hhmm.indexOf(':') < 0) return null;
@@ -538,7 +503,6 @@ updateMapLinks();
                     if (String(v.vehicleId) === String(prev)) opt.selected = true;
                     vehicleSelect.appendChild(opt);
                 });
-                suggestDriverForVehicle();
             })
             .catch(err => console.error('Error fetching vehicles:', err));
     }
@@ -592,53 +556,31 @@ updateMapLinks();
     startDateInput.addEventListener('change', function() {
         updateTimeOptionsForDate(this.value);
         updateVehiclesForDate(this.value, null);
-        suggestDriverForVehicle();
     });
 
     startTimeInput.addEventListener('change', function() {
         rebuildEndOptions(null);
-        suggestDriverForVehicle();
     });
 
-    if (vehicleSelect) {
-        vehicleSelect.addEventListener('change', suggestDriverForVehicle);
-    }
-    if (isNewTask && driverNameInput) {
-        driverNameInput.addEventListener('input', function() {
-            markDriverPrefilled(false);
-        });
-    }
-
     // Field warnings
-    var vehicleWarning    = document.getElementById('vehicleWarning');
-    var driverWarning     = document.getElementById('driverWarning');
+    var vehicleWarning = document.getElementById('vehicleWarning');
+    var driverWarning  = document.getElementById('driverWarning');
     function updateVehicleWarning() {
         if (vehicleWarning) vehicleWarning.style.display = vehicleSelect && !vehicleSelect.value ? '' : 'none';
     }
     function updateDriverWarning() {
-        var v = driverNameInput ? driverNameInput.value.trim() : 'x';
-        if (driverWarning) driverWarning.style.display = v ? 'none' : '';
+        if (driverWarning) driverWarning.style.display = driverSelect && !driverSelect.value ? '' : 'none';
     }
     if (vehicleSelect) vehicleSelect.addEventListener('change', updateVehicleWarning);
-    if (driverNameInput) driverNameInput.addEventListener('input', updateDriverWarning);
+    if (driverSelect)  driverSelect.addEventListener('change', updateDriverWarning);
     updateVehicleWarning();
     updateDriverWarning();
 
-    // Dispatcher prefill hint — clear styling when user edits
-    var receivedByInput = document.getElementById('receivedByInput');
-    var dispatcherHint = document.getElementById('dispatcherPrefillHint');
-    if (receivedByInput) {
-        receivedByInput.addEventListener('input', function() {
-            receivedByInput.classList.remove('input-prefilled');
-            if (dispatcherHint) dispatcherHint.classList.remove('visible');
-        });
-    }
-
-    // Enable/disable Start button based on driver name
+    // Enable/disable Start button based on driver selection
     var startButton = document.getElementById('startButton');
-    if (startButton && driverNameInput) {
-        driverNameInput.addEventListener('input', function() {
-            startButton.disabled = !this.value.trim();
+    if (startButton && driverSelect) {
+        driverSelect.addEventListener('change', function() {
+            startButton.disabled = !this.value;
         });
     }
 
@@ -652,7 +594,6 @@ updateMapLinks();
         updateTimeOptionsForDate(startDateInput.value);
         updateVehiclesForDate(startDateInput.value, vehicleSelect ? vehicleSelect.value : null);
     }
-    suggestDriverForVehicle();
 })();
 </script>
 <style>

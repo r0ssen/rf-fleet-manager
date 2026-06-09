@@ -63,9 +63,9 @@ public class TaskController {
         if (isDriver) {
             date = LocalDate.now();
             User driver = userRepository.findByUsername(auth.getName()).orElseThrow();
-            Integer vehicleId = driver.getVehicleId();
+            Long driverId = driver.getId();
             tasks = taskService.getTasksForDay(year, date).stream()
-                    .filter(t -> vehicleId != null && vehicleId.equals(t.getVehicleId()))
+                    .filter(t -> t.getDriverUser() != null && driverId.equals(t.getDriverUser().getId()))
                     .filter(t -> t.getStatus() != TaskStatus.CANCELLED)
                     .filter(t -> showOrdered || t.getStatus() != TaskStatus.ORDERED)
                     .filter(t -> showDone    || t.getStatus() != TaskStatus.DONE)
@@ -100,15 +100,8 @@ public class TaskController {
         if (isDriver(auth)) return "redirect:/tasks";
         Task task = new Task();
         applyNewTaskPrefill(task, date, start, vehicleId);
-        var driverPrefill = applySuggestedDriverName(task);
         populateForm(task, date, returnTo, model);
         model.addAttribute("isDriver", false);
-        model.addAttribute("driverPrefilled", driverPrefill.isPresent());
-        model.addAttribute("dispatcherPrefilled", false);
-        driverPrefill
-            .map(TaskService.SuggestedDriver::sourceStartTs)
-            .map(v -> v.toLocalTime().format(HH_MM))
-            .ifPresent(v -> model.addAttribute("driverPrefilledFromTime", v));
         return "tasks/form";
     }
 
@@ -128,11 +121,15 @@ public class TaskController {
     @PostMapping
     public String create(@Valid @ModelAttribute Task task, BindingResult result,
                          @RequestParam(required = false, defaultValue = "fleet") String returnTo,
+                         @RequestParam(required = false) Long driverId,
                          Authentication auth, Model model) throws Exception {
         validateTimeRange(task, result);
         if (result.hasErrors()) { populateForm(task, null, returnTo, model); return "tasks/form"; }
         task.setFestivalYear(appConfig.getFestivalYear());
         task.setReceivedBy(auth.getName());
+        if (driverId != null) {
+            userRepository.findById(driverId).ifPresent(task::setDriverUser);
+        }
         taskService.save(task);
         LocalDate date = task.getStartTs() != null ? task.getStartTs().toLocalDate() : null;
         return "tasks".equals(returnTo) ? redirectToTaskDate(date) : redirectToFleetDate(date);
@@ -142,6 +139,7 @@ public class TaskController {
     public String update(@PathVariable int id, @Valid @ModelAttribute Task task, BindingResult result,
                          @RequestParam(required = false, defaultValue = "fleet") String returnTo,
                          @RequestParam(required = false, defaultValue = "false") boolean startAfterSave,
+                         @RequestParam(required = false) Long driverId,
                          Model model) throws Exception {
         task.setTaskId(id);
         task.setFestivalYear(appConfig.getFestivalYear());
@@ -155,7 +153,9 @@ public class TaskController {
         // Lock vehicle and driver when task is STARTED or DONE
         if (existing.getStatus() == TaskStatus.STARTED || existing.getStatus() == TaskStatus.DONE) {
             task.setVehicleId(existing.getVehicleId());
-            task.setDriverName(existing.getDriverName());
+            task.setDriverUser(existing.getDriverUser());
+        } else if (driverId != null) {
+            userRepository.findById(driverId).ifPresent(task::setDriverUser);
         }
         task.setStatus(existing.getStatus());
         task.setReceivedBy(existing.getReceivedBy());
@@ -163,7 +163,7 @@ public class TaskController {
         if (result.hasErrors()) { populateForm(task, null, returnTo, model); return "tasks/form"; }
         taskService.save(task);
         if (startAfterSave && task.getVehicleId() != null
-                && task.getDriverName() != null && !task.getDriverName().isBlank()
+                && task.getDriverUser() != null
                 && existing.getStatus() == TaskStatus.ORDERED) {
             taskService.updateStatus(appConfig.getFestivalYear(), id, TaskStatus.STARTED);
         }
@@ -425,6 +425,7 @@ public class TaskController {
         model.addAttribute("returnTo", returnTo != null ? returnTo : "fleet");
         model.addAttribute("timeOptions", timeOptions);
         model.addAttribute("vehicles", vehicleService.getAvailableVehiclesForDate(appConfig.getFestivalYear(), refDate));
+        model.addAttribute("drivers", userRepository.findByRoleOrderByUsernameAsc(User.Role.DRIVER));
         model.addAttribute("statuses", editableStatuses());
         model.addAttribute("divisions", divisionTeamData.getDivisions());
         model.addAttribute("divisionTeamsJson", objectMapper.writeValueAsString(divisionTeamData.getAllData()));
@@ -524,9 +525,7 @@ public class TaskController {
     }
 
     private boolean hasStartRequirements(Task task) {
-        return task.getVehicleId() != null
-            && task.getDriverName() != null
-            && !task.getDriverName().trim().isEmpty();
+        return task.getVehicleId() != null && task.getDriverUser() != null;
     }
 
     private java.time.OffsetDateTime toOffsetDateTime(LocalDate date, LocalTime time) {

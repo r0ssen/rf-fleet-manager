@@ -8,6 +8,7 @@ import java.time.OffsetDateTime;
 
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.dialect.type.PostgreSQLEnumJdbcType;
+import dk.rfg.fleetmanager.entity.User;
 
 @Entity
 @Table(name = "tasks")
@@ -66,6 +67,10 @@ public class Task {
     private Integer vehicleId;
     @Column(name = "driver_name")
     private String driverName;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "driver_id")
+    private User driverUser;
     @Column(name = "description")
     private String description;
 
@@ -256,6 +261,14 @@ public class Task {
 
     public void setDriverName(String v) {
         this.driverName = v;
+    }
+
+    public User getDriverUser() {
+        return driverUser;
+    }
+
+    public void setDriverUser(User v) {
+        this.driverUser = v;
     }
 
     public String getDescription() {
