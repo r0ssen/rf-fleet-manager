@@ -126,8 +126,10 @@
                        th:attr="draggable=${task.statusClass != 'started' and task.statusClass != 'done'},data-draggable=${task.statusClass != 'started' and task.statusClass != 'done'},data-task-id=${task.taskId},data-start=${task.startTime},data-end=${task.endTime},data-vehicle-id=${task.vehicleId},data-status=${task.statusClass}"
                        th:style="${task.style}"
                        th:title="${task.title}">
-                        <span class="task-time" th:text="${task.timeLabel}"></span>
-                        <span th:if="${task.overlapping}" class="task-overlap-flag">OVERLAP</span>
+                        <span class="task-time-row">
+                            <span th:if="${task.overlapping}" class="task-overlap-flag">OVERLAP</span>
+                            <span class="task-time" th:text="${task.timeLabel}"></span>
+                        </span>
                         <span class="task-booker" th:text="${task.bookerName}"></span>
                         <span th:if="${task.routeLabel != null and !#strings.isEmpty(task.routeLabel)}"
                               class="task-route"
@@ -379,11 +381,11 @@
     text-overflow: ellipsis;
     line-height: 1.3;
 }
+.task-time-row { display: flex; flex-direction: row; align-items: center; gap: 4px; }
 .task-time { font-size: 11px; opacity: 0.88; font-weight: 500; }
 .task-booker { font-weight: 700; font-size: 13px; }
 .task-route { font-size: 11px; opacity: 0.95; }
 .task-overlap-flag {
-    align-self: flex-start;
     font-size: 10px;
     font-weight: 800;
     letter-spacing: 0.04em;
