@@ -32,15 +32,15 @@
                     <span th:text="${userId == null} ? 'Bekræft adgangskode *' : 'Bekræft ny adgangskode'">Bekræft adgangskode</span>
                     <input type="password" th:field="*{confirmPassword}" autocomplete="new-password" placeholder="••••••••"/>
                 </label>
-                <label>Rolle *
-                    <select th:field="*{role}" required>
-                        <option value="">— Vælg rolle —</option>
-                        <option th:each="r : ${roles}"
-                                th:value="${r.name()}"
-                                th:text="${r.name() == 'ADMIN' ? 'Admin' : (r.name() == 'DRIVER' ? 'Chauffør' : 'Agent')}"
-                                th:selected="${userForm.role == r}"></option>
-                    </select>
-                </label>
+                <div>
+                    <span style="display:block;margin-bottom:0.35rem;">Roller *</span>
+                    <div th:each="r : ${allRoles}" style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.4rem;">
+                        <input type="checkbox" name="roles" th:value="${r.name()}" th:id="${'role_' + r.name()}"
+                               th:checked="${userForm.roles != null and userForm.roles.contains(r)}"/>
+                        <label th:for="${'role_' + r.name()}" style="margin-bottom:0;font-weight:normal;"
+                               th:text="${r.name() == 'ADMIN' ? 'Admin' : (r.name() == 'DRIVER' ? 'Chauffør' : 'Agent')}"></label>
+                    </div>
+                </div>
             </fieldset>
         </div>
         <div class="form-actions">

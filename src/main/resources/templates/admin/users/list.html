@@ -25,8 +25,10 @@
             <tr th:each="u : ${users}">
                 <td th:text="${u.username}"></td>
                 <td>
-                    <span th:text="${u.role.name() == 'ADMIN' ? 'Admin' : (u.role.name() == 'DRIVER' ? 'Chauffør' : 'Agent')}"
-                          th:classappend="${u.role.name() == 'ADMIN'} ? ' tag tag-admin' : (${u.role.name() == 'DRIVER'} ? ' tag tag-driver' : ' tag')"></span>
+                    <span th:each="r : ${u.roles}"
+                          th:text="${r.name() == 'ADMIN' ? 'Admin' : (r.name() == 'DRIVER' ? 'Chauffør' : 'Agent')}"
+                          th:classappend="${r.name() == 'ADMIN'} ? ' tag tag-admin' : (${r.name() == 'DRIVER'} ? ' tag tag-driver' : ' tag')"
+                          style="margin-right:0.25rem;"></span>
                 </td>
                 <td>
                     <a th:href="@{/admin/users/{id}/edit(id=${u.id})}" class="btn-small">Rediger</a>

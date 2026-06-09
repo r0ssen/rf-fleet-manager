@@ -1,6 +1,8 @@
 package dk.rfg.fleetmanager.entity;
 
 import jakarta.persistence.*;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -16,18 +18,20 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
+    @Column(name = "role")
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Role role;
+    private Set<Role> roles = new HashSet<>();
 
     public enum Role { ADMIN, AGENT, DRIVER }
 
     public User() {}
 
-    public User(String username, String password, Role role) {
+    public User(String username, String password, Set<Role> roles) {
         this.username = username;
         this.password = password;
-        this.role = role;
+        this.roles = new HashSet<>(roles);
     }
 
     public Long getId() { return id; }
@@ -35,6 +39,6 @@ public class User {
     public void setUsername(String username) { this.username = username; }
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
-    public Role getRole() { return role; }
-    public void setRole(Role role) { this.role = role; }
+    public Set<Role> getRoles() { return roles; }
+    public void setRoles(Set<Role> roles) { this.roles = roles; }
 }
