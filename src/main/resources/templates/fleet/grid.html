@@ -126,10 +126,10 @@
                        th:attr="draggable=${task.statusClass != 'started' and task.statusClass != 'done'},data-draggable=${task.statusClass != 'started' and task.statusClass != 'done'},data-task-id=${task.taskId},data-start=${task.startTime},data-end=${task.endTime},data-vehicle-id=${task.vehicleId},data-status=${task.statusClass}"
                        th:style="${task.style}"
                        th:title="${task.title}">
-                        <span class="task-time-row">
+                        <div class="task-time-row">
                             <span th:if="${task.overlapping}" class="task-overlap-flag">OVERLAP</span>
                             <span class="task-time" th:text="${task.timeLabel}"></span>
-                        </span>
+                        </div>
                         <span class="task-booker" th:text="${task.bookerName}"></span>
                         <span th:if="${task.routeLabel != null and !#strings.isEmpty(task.routeLabel)}"
                               class="task-route"
