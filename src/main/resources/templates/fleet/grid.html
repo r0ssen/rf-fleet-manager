@@ -806,6 +806,18 @@ function goFleetDate(isoDate) {
             var endMins = startMins + dur;
 
             var vehicleId = track.dataset.vehicleId || '';
+
+            var rowEl = track.closest('.fleet-row');
+            var vehicleLabel = rowEl ? (rowEl.querySelector('.row-title') || {}).textContent || '' : '';
+            var confirmMsg = 'Flyt kørsel til ' + toHHmm(startMins) + '–' + toHHmm(endMins)
+                + (vehicleLabel ? ' på ' + vehicleLabel.trim() : '') + '?';
+            if (!confirm(confirmMsg)) {
+                taskEl.classList.remove('dragging');
+                board.dataset.dragging = '0';
+                dragState = null;
+                return;
+            }
+
             var body = new URLSearchParams();
             body.set('date', date);
             body.set('start', toHHmm(startMins));
