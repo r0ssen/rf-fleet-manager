@@ -53,7 +53,7 @@
                 <th>Afdeling</th>
                 <th>Bil</th>
                 <th>Chauffør</th>
-                <th th:if="${!isDriver}">Dispatcher</th>
+                <th th:if="${!isDriver}">Modtaget af</th>
                 <th>Beskrivelse</th>
                 <th>Status</th>
                 <th>Handlinger</th>
@@ -100,9 +100,9 @@
                     <span th:if="${t.driverUser == null and t.driverName != null and !#strings.isEmpty(#strings.trim(t.driverName))}" th:text="${t.driverName}"></span>
                     <span th:if="${t.driverUser == null and (t.driverName == null or #strings.isEmpty(#strings.trim(t.driverName))) and t.status.name() != 'CANCELLED'}" class="driver-missing-badge">Ingen chauffør</span>
                 </td>
-                <td th:if="${!isDriver}" class="col-dispatcher" data-label="Dispatcher">
+                <td th:if="${!isDriver}" class="col-dispatcher" data-label="Modtaget af">
                     <span th:if="${t.receivedBy != null and !#strings.isEmpty(#strings.trim(t.receivedBy))}" th:text="${t.receivedBy}"></span>
-                    <span th:if="${(t.receivedBy == null or #strings.isEmpty(#strings.trim(t.receivedBy))) and t.status.name() != 'CANCELLED'}" class="driver-missing-badge">Ingen dispatcher</span>
+                    <span th:if="${(t.receivedBy == null or #strings.isEmpty(#strings.trim(t.receivedBy))) and t.status.name() != 'CANCELLED'}" class="driver-missing-badge">Ingen modtager</span>
                 </td>
                 <td class="col-desc" data-label="Beskrivelse"><span class="desc-text" th:text="${t.description}"></span></td>
                 <td class="col-status" data-label="Status">
