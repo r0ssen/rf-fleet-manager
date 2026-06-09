@@ -47,9 +47,10 @@ public class SecurityConfig {
     @Bean
     public AuthenticationSuccessHandler roleBasedSuccessHandler() {
         return (request, response, authentication) -> {
-            boolean isDriver = authentication.getAuthorities().stream()
-                    .anyMatch(a -> a.getAuthority().equals("ROLE_DRIVER"));
-            response.sendRedirect(request.getContextPath() + (isDriver ? "/tasks" : "/fleet"));
+            var auths = authentication.getAuthorities().stream()
+                    .map(a -> a.getAuthority()).toList();
+            boolean driverOnly = auths.contains("ROLE_DRIVER") && !auths.contains("ROLE_ADMIN");
+            response.sendRedirect(request.getContextPath() + (driverOnly ? "/tasks" : "/fleet"));
         };
     }
 

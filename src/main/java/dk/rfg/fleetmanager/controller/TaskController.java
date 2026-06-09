@@ -530,7 +530,8 @@ public class TaskController {
     }
 
     private boolean isDriver(Authentication auth) {
-        return auth != null && auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_DRIVER"));
+        if (auth == null) return false;
+        var auths = auth.getAuthorities().stream().map(a -> a.getAuthority()).toList();
+        return auths.contains("ROLE_DRIVER") && !auths.contains("ROLE_ADMIN");
     }
 }

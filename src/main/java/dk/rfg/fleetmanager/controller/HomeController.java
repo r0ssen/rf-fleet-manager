@@ -9,11 +9,16 @@ public class HomeController {
 
     @GetMapping("/")
     public String home(Authentication auth) {
-        if (auth != null && auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_DRIVER"))) {
+        if (auth != null && isDriverOnly(auth)) {
             return "redirect:/tasks";
         }
         return "redirect:/fleet";
+    }
+
+    private boolean isDriverOnly(Authentication auth) {
+        var authorities = auth.getAuthorities().stream()
+                .map(a -> a.getAuthority()).toList();
+        return authorities.contains("ROLE_DRIVER") && !authorities.contains("ROLE_ADMIN");
     }
 
     @GetMapping("/login")
