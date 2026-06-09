@@ -25,6 +25,11 @@
         <span class="date-label" th:if="${isDriver}"
               th:text="${#temporals.format(date, 'EEEE d. MMMM yyyy', danishLocale)}"></span>
 
+        <label th:if="${isDriver}" style="display:inline-flex;flex-direction:row;align-items:center;gap:0.35rem;margin-bottom:0;white-space:nowrap;font-size:12px;color:#4b5563;">
+            <input type="checkbox" id="showDoneToggle" th:checked="${showDone}" onchange="goDriverFilter()"/>
+            <span>Vis udførte</span>
+        </label>
+
         <a th:if="${!isDriver}" th:href="@{/tasks/new(date=${date},returnTo='tasks')}" class="btn-primary">+ Opret kørsel</a>
 
         <!-- Standard ADMIN/AGENT toggles -->
@@ -182,6 +187,12 @@
     </div>
 </main>
 <script>
+function goDriverFilter() {
+    var params = new URLSearchParams();
+    var showDone = document.getElementById('showDoneToggle');
+    if (showDone && showDone.checked) params.set('showDone', 'true');
+    window.location = '/tasks' + (params.toString() ? ('?' + params.toString()) : '');
+}
 function goTaskDate(isoDate) {
     var params = new URLSearchParams();
     if (isoDate) params.set('date', isoDate);
