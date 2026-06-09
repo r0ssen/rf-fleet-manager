@@ -807,10 +807,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     var nonDriverDirty = false;
     form.addEventListener('change', function(e) {
-        if (e.target.name !== 'driverId') nonDriverDirty = true;
+        if (e.isTrusted && e.target.name !== 'driverId') nonDriverDirty = true;
     });
     form.addEventListener('input', function(e) {
-        if (e.target.name !== 'driverId') nonDriverDirty = true;
+        if (e.isTrusted && e.target.name !== 'driverId') nonDriverDirty = true;
     });
 
     window.confirmIfNonDriverChanged = function() {
