@@ -67,8 +67,6 @@ public class TaskController {
             tasks = taskService.getTasksForDay(year, date).stream()
                     .filter(t -> t.getDriverUser() != null && driverId.equals(t.getDriverUser().getId()))
                     .filter(t -> t.getStatus() != TaskStatus.CANCELLED)
-                    .filter(t -> showOrdered || t.getStatus() != TaskStatus.ORDERED)
-                    .filter(t -> showDone    || t.getStatus() != TaskStatus.DONE)
                     .toList();
         } else {
             if (date == null) date = LocalDate.now();

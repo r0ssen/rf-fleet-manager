@@ -18,7 +18,6 @@
             <tr>
                 <th>Brugernavn</th>
                 <th>Rolle</th>
-                <th>Bil</th>
                 <th>Handlinger</th>
             </tr>
         </thead>
@@ -29,7 +28,6 @@
                     <span th:text="${u.role.name() == 'ADMIN' ? 'Admin' : (u.role.name() == 'DRIVER' ? 'Chauffør' : 'Agent')}"
                           th:classappend="${u.role.name() == 'ADMIN'} ? ' tag tag-admin' : (${u.role.name() == 'DRIVER'} ? ' tag tag-driver' : ' tag')"></span>
                 </td>
-                <td th:text="${u.role.name() == 'DRIVER' and u.vehicleId != null ? vehicleLabels[u.vehicleId] ?: ('Bil #' + u.vehicleId) : '–'}"></td>
                 <td>
                     <a th:href="@{/admin/users/{id}/edit(id=${u.id})}" class="btn-small">Rediger</a>
                     <form th:action="@{/admin/users/{id}/delete(id=${u.id})}" method="post"
@@ -39,7 +37,7 @@
                 </td>
             </tr>
             <tr th:if="${#lists.isEmpty(users)}">
-                <td colspan="4" class="empty">Ingen brugere oprettet.</td>
+                <td colspan="3" class="empty">Ingen brugere oprettet.</td>
             </tr>
         </tbody>
     </table>

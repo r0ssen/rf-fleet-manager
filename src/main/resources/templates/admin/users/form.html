@@ -33,7 +33,7 @@
                     <input type="password" th:field="*{confirmPassword}" autocomplete="new-password" placeholder="••••••••"/>
                 </label>
                 <label>Rolle *
-                    <select th:field="*{role}" required id="roleSelect" onchange="toggleVehicleField()">
+                    <select th:field="*{role}" required>
                         <option value="">— Vælg rolle —</option>
                         <option th:each="r : ${roles}"
                                 th:value="${r.name()}"
@@ -41,17 +41,6 @@
                                 th:selected="${userForm.role == r}"></option>
                     </select>
                 </label>
-                <div id="vehicleField" style="display:none">
-                    <label>Bil *
-                        <select th:field="*{vehicleId}" id="vehicleSelect">
-                            <option value="">— Vælg bil —</option>
-                            <option th:each="v : ${vehicles}"
-                                    th:value="${v.vehicleId}"
-                                    th:text="${v.displayLabel()}"
-                                    th:selected="${userForm.vehicleId == v.vehicleId}"></option>
-                        </select>
-                    </label>
-                </div>
             </fieldset>
         </div>
         <div class="form-actions">
@@ -60,15 +49,5 @@
         </div>
     </form>
 </main>
-<script>
-function toggleVehicleField() {
-    var role = document.getElementById('roleSelect').value;
-    var field = document.getElementById('vehicleField');
-    var select = document.getElementById('vehicleSelect');
-    field.style.display = role === 'DRIVER' ? '' : 'none';
-    select.required = role === 'DRIVER';
-}
-document.addEventListener('DOMContentLoaded', toggleVehicleField);
-</script>
 </body>
 </html>

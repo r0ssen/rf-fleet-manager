@@ -27,18 +27,6 @@
 
         <a th:if="${!isDriver}" th:href="@{/tasks/new(date=${date},returnTo='tasks')}" class="btn-primary">+ Opret kørsel</a>
 
-        <!-- DRIVER toggles: show STARTED by default; opt-in to ORDERED and DONE -->
-        <div th:if="${isDriver}" class="driver-filters">
-            <label style="display:inline-flex;flex-direction:row;align-items:center;gap:0.35rem;margin-bottom:0;white-space:nowrap;font-size:12px;color:#4b5563;">
-                <input type="checkbox" id="showOrderedToggle" th:checked="${showOrdered}" onchange="goDriverFilter()"/>
-                <span>Vis bestilte</span>
-            </label>
-            <label style="display:inline-flex;flex-direction:row;align-items:center;gap:0.35rem;margin-bottom:0;white-space:nowrap;font-size:12px;color:#4b5563;">
-                <input type="checkbox" id="showDoneToggle" th:checked="${showDone}" onchange="goDriverFilter()"/>
-                <span>Vis udførte</span>
-            </label>
-        </div>
-
         <!-- Standard ADMIN/AGENT toggles -->
         <label th:if="${!isDriver}" style="display:inline-flex;flex-direction:row;align-items:center;gap:0.35rem;margin-left:0.25rem;margin-bottom:0;white-space:nowrap;font-size:12px;color:#4b5563;">
             <input type="checkbox" id="showDoneToggle" th:checked="${showDone}" onchange="goTaskDateDanish(document.getElementById('taskDatePicker').value)"/>
@@ -207,14 +195,7 @@ function goTaskDateDanish(value) {
     var m = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
     if (m) goTaskDate(m[3] + '-' + m[2] + '-' + m[1]);
 }
-function goDriverFilter() {
-    var params = new URLSearchParams();
-    var showOrdered = document.getElementById('showOrderedToggle');
-    if (showOrdered && showOrdered.checked) params.set('showOrdered', 'true');
-    var showDone = document.getElementById('showDoneToggle');
-    if (showDone && showDone.checked) params.set('showDone', 'true');
-    window.location = '/tasks' + (params.toString() ? ('?' + params.toString()) : '');
-}
+
 document.addEventListener('DOMContentLoaded', function() {
     var picker = document.getElementById('taskDatePicker');
     if (picker) flatpickr(picker, { locale: 'da', dateFormat: 'd/m/Y', allowInput: true });

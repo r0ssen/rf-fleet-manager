@@ -1,9 +1,7 @@
 package dk.rfg.fleetmanager.controller;
 
-import dk.rfg.fleetmanager.config.AppConfig;
 import dk.rfg.fleetmanager.entity.User;
 import dk.rfg.fleetmanager.repository.UserRepository;
-import dk.rfg.fleetmanager.service.VehicleService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -18,25 +16,15 @@ public class UserAdminController {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final VehicleService vehicleService;
-    private final AppConfig appConfig;
 
-    public UserAdminController(UserRepository userRepository, PasswordEncoder passwordEncoder,
-                               VehicleService vehicleService, AppConfig appConfig) {
+    public UserAdminController(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
-        this.vehicleService = vehicleService;
-        this.appConfig = appConfig;
     }
 
     @GetMapping
     public String list(Model model) {
         model.addAttribute("users", userRepository.findAll());
-        var vehicleLabels = vehicleService.getAllVehicles(appConfig.getFestivalYear()).stream()
-                .collect(java.util.stream.Collectors.toMap(
-                        v -> v.getVehicleId(),
-                        v -> v.displayLabel()));
-        model.addAttribute("vehicleLabels", vehicleLabels);
         return "admin/users/list";
     }
 
@@ -44,7 +32,6 @@ public class UserAdminController {
     public String newForm(Model model) {
         model.addAttribute("userForm", new UserForm());
         model.addAttribute("roles", User.Role.values());
-        model.addAttribute("vehicles", vehicleService.getAllVehicles(appConfig.getFestivalYear()));
         return "admin/users/form";
     }
 
@@ -55,18 +42,15 @@ public class UserAdminController {
             model.addAttribute("errors", errors);
             model.addAttribute("userForm", form);
             model.addAttribute("roles", User.Role.values());
-            model.addAttribute("vehicles", vehicleService.getAllVehicles(appConfig.getFestivalYear()));
             return "admin/users/form";
         }
         if (userRepository.findByUsername(form.getUsername()).isPresent()) {
             model.addAttribute("errors", List.of("Brugernavnet '" + form.getUsername() + "' er allerede i brug."));
             model.addAttribute("userForm", form);
             model.addAttribute("roles", User.Role.values());
-            model.addAttribute("vehicles", vehicleService.getAllVehicles(appConfig.getFestivalYear()));
             return "admin/users/form";
         }
         User user = new User(form.getUsername(), passwordEncoder.encode(form.getPassword()), form.getRole());
-        user.setVehicleId(form.getVehicleId());
         userRepository.save(user);
         flash.addFlashAttribute("successMessage", "Brugeren '" + form.getUsername() + "' er oprettet.");
         return "redirect:/admin/users";
@@ -79,11 +63,9 @@ public class UserAdminController {
         UserForm form = new UserForm();
         form.setUsername(user.getUsername());
         form.setRole(user.getRole());
-        form.setVehicleId(user.getVehicleId());
         model.addAttribute("userForm", form);
         model.addAttribute("userId", id);
         model.addAttribute("roles", User.Role.values());
-        model.addAttribute("vehicles", vehicleService.getAllVehicles(appConfig.getFestivalYear()));
         return "admin/users/form";
     }
 
@@ -98,7 +80,6 @@ public class UserAdminController {
             model.addAttribute("userForm", form);
             model.addAttribute("userId", id);
             model.addAttribute("roles", User.Role.values());
-            model.addAttribute("vehicles", vehicleService.getAllVehicles(appConfig.getFestivalYear()));
             return "admin/users/form";
         }
         userRepository.findByUsername(form.getUsername()).ifPresent(existing -> {
@@ -109,7 +90,6 @@ public class UserAdminController {
 
         user.setUsername(form.getUsername());
         user.setRole(form.getRole());
-        user.setVehicleId(form.getVehicleId());
         if (form.getPassword() != null && !form.getPassword().isBlank()) {
             user.setPassword(passwordEncoder.encode(form.getPassword()));
         }
@@ -155,7 +135,6 @@ public class UserAdminController {
         private String password;
         private String confirmPassword;
         private User.Role role;
-        private Integer vehicleId;
 
         public String getUsername() { return username; }
         public void setUsername(String username) { this.username = username; }
@@ -165,7 +144,5 @@ public class UserAdminController {
         public void setConfirmPassword(String confirmPassword) { this.confirmPassword = confirmPassword; }
         public User.Role getRole() { return role; }
         public void setRole(User.Role role) { this.role = role; }
-        public Integer getVehicleId() { return vehicleId; }
-        public void setVehicleId(Integer vehicleId) { this.vehicleId = vehicleId; }
     }
 }
