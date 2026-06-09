@@ -196,6 +196,7 @@
                 </p>
                 <div class="field-row" th:if="${!isDriver and task.taskId != 0 and task.vehicleId != null and task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).ORDERED}">
                     <button type="button" id="startButton" class="btn-small"
+                            th:disabled="${task.driverUser == null}"
                             onclick="doStartTask()">Start</button>
                 </div>
                 <div class="field-row" th:if="${!isDriver and task.taskId != 0 and task.vehicleId != null and task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).STARTED}">
@@ -801,20 +802,19 @@ document.addEventListener('DOMContentLoaded', function() {
             .join('&');
     }
 
-    function snapNoDriver() {
-        return Array.from(form.querySelectorAll('input:not([type=hidden]), select, textarea'))
-            .filter(function(el) { return el.name !== 'driverId'; })
-            .map(function(el) { return (el.name || el.id) + '=' + el.value; })
-            .join('&');
-    }
-
-    var snapshotNoDriver = null;
-
     // Delay snapshot until async fetches (opening hours, vehicles) have settled
-    setTimeout(function() { snapshot = snap(); snapshotNoDriver = snapNoDriver(); }, 1000);
+    setTimeout(function() { snapshot = snap(); }, 1000);
+
+    var nonDriverDirty = false;
+    form.addEventListener('change', function(e) {
+        if (e.target.name !== 'driverId') nonDriverDirty = true;
+    });
+    form.addEventListener('input', function(e) {
+        if (e.target.name !== 'driverId') nonDriverDirty = true;
+    });
 
     window.confirmIfNonDriverChanged = function() {
-        if (snapshotNoDriver !== null && snapNoDriver() !== snapshotNoDriver) {
+        if (nonDriverDirty) {
             return confirm('Du er ved at gemme ændringer til kørslen. Er du sikker?');
         }
         return true;
