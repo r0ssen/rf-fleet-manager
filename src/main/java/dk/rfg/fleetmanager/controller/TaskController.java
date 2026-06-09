@@ -136,7 +136,6 @@ public class TaskController {
     @PostMapping("/{id}")
     public String update(@PathVariable int id, @Valid @ModelAttribute Task task, BindingResult result,
                          @RequestParam(required = false, defaultValue = "fleet") String returnTo,
-                         @RequestParam(required = false, defaultValue = "false") boolean startAfterSave,
                          @RequestParam(required = false) Long driverId,
                          Model model) throws Exception {
         task.setTaskId(id);
@@ -160,11 +159,6 @@ public class TaskController {
         validateTimeRange(task, result);
         if (result.hasErrors()) { populateForm(task, null, returnTo, model); return "tasks/form"; }
         taskService.save(task);
-        if (startAfterSave && task.getVehicleId() != null
-                && task.getDriverUser() != null
-                && existing.getStatus() == TaskStatus.ORDERED) {
-            taskService.updateStatus(appConfig.getFestivalYear(), id, TaskStatus.STARTED);
-        }
         LocalDate date = task.getStartTs() != null ? task.getStartTs().toLocalDate() : null;
         return "tasks".equals(returnTo) ? redirectToTaskDate(date) : redirectToFleetDate(date);
     }

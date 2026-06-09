@@ -14,7 +14,6 @@
           th:object="${task}" method="post" id="taskForm" th:attr="data-is-new=${task.taskId == 0}">
         <input type="hidden" th:field="*{version}"/>
         <input type="hidden" name="returnTo" th:value="${returnTo}"/>
-        <input type="hidden" name="startAfterSave" id="startAfterSaveInput" value="false"/>
         <div class="form-error" th:if="${#fields.hasAnyErrors()}">
             <p>Kunne ikke gemme. Ret felterne med fejl og prøv igen.</p>
         </div>
@@ -195,9 +194,10 @@
                     Vælg bil og chauffør for at kunne starte kørslen.
                 </p>
                 <div class="field-row" th:if="${!isDriver and task.taskId != 0 and task.vehicleId != null and task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).ORDERED}">
-                    <button type="button" id="startButton" class="btn-small"
+                    <button type="submit" class="btn-small"
+                            th:formaction="@{/tasks/{id}/status(id=${task.taskId})}" formmethod="post" formnovalidate
                             th:disabled="${task.driverUser == null}"
-                            onclick="doStartTask()">Start</button>
+                            name="status" value="STARTED">Start</button>
                 </div>
                 <div class="field-row" th:if="${!isDriver and task.taskId != 0 and task.vehicleId != null and task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).STARTED}">
                     <button type="submit" class="btn-small"
@@ -583,11 +583,6 @@ updateMapLinks();
             startButton.disabled = !this.value;
         });
     }
-
-    window.doStartTask = function() {
-        document.getElementById('startAfterSaveInput').value = 'true';
-        document.getElementById('taskForm').submit();
-    };
 
     // Initial load on form render
     if (startDateInput.value) {
