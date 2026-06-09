@@ -139,7 +139,7 @@ public class TaskController {
                          @RequestParam(required = false, defaultValue = "fleet") String returnTo,
                          @RequestParam(required = false, defaultValue = "false") boolean startAfterSave,
                          @RequestParam(required = false) Long driverId,
-                         Model model) throws Exception {
+                         Authentication auth, Model model) throws Exception {
         task.setTaskId(id);
         task.setFestivalYear(appConfig.getFestivalYear());
         Task existing = taskService.getById(appConfig.getFestivalYear(), id)
@@ -157,7 +157,9 @@ public class TaskController {
             userRepository.findById(driverId).ifPresent(task::setDriverUser);
         }
         task.setStatus(existing.getStatus());
-        task.setReceivedBy(existing.getReceivedBy());
+        String receivedBy = (existing.getReceivedBy() != null && !existing.getReceivedBy().isBlank())
+                ? existing.getReceivedBy() : auth.getName();
+        task.setReceivedBy(receivedBy);
         validateTimeRange(task, result);
         if (result.hasErrors()) { populateForm(task, null, returnTo, model); return "tasks/form"; }
         taskService.save(task);
