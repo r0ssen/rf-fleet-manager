@@ -24,6 +24,8 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -92,11 +94,14 @@ public class TaskController {
 
     @GetMapping("/search")
     public String search(@RequestParam(required = false, defaultValue = "") String q,
+                         @RequestParam(defaultValue = "false") boolean showCancelled,
                          Authentication auth, Model model) {
         if (isDriver(auth)) return "redirect:/tasks";
         List<Task> results = taskService.search(appConfig.getFestivalYear(), q);
+        if (!showCancelled) results = results.stream().filter(t -> t.getStatus() != TaskStatus.CANCELLED).toList();
         model.addAttribute("tasks", results);
         model.addAttribute("q", q);
+        model.addAttribute("showCancelled", showCancelled);
         model.addAttribute("danishLocale", java.util.Locale.forLanguageTag("da"));
         return "tasks/search";
     }
@@ -118,6 +123,7 @@ public class TaskController {
     @GetMapping("/{id}/edit")
     public String editForm(@PathVariable int id,
                            @RequestParam(required = false, defaultValue = "fleet") String returnTo,
+                           @RequestParam(required = false, defaultValue = "") String searchQuery,
                            Authentication auth, Model model) throws Exception {
         boolean driver = isDriver(auth);
         Task task = taskService.getById(appConfig.getFestivalYear(), id)
@@ -125,6 +131,7 @@ public class TaskController {
         if (driver) returnTo = "tasks";
         populateForm(task, null, returnTo, model);
         model.addAttribute("isDriver", driver);
+        model.addAttribute("searchQuery", searchQuery);
         return "tasks/form";
     }
 
@@ -132,9 +139,14 @@ public class TaskController {
     public String create(@Valid @ModelAttribute Task task, BindingResult result,
                          @RequestParam(required = false, defaultValue = "fleet") String returnTo,
                          @RequestParam(required = false) Long driverId,
+                         @RequestParam(required = false, defaultValue = "") String searchQuery,
                          Authentication auth, Model model) throws Exception {
         validateTimeRange(task, result);
-        if (result.hasErrors()) { populateForm(task, null, returnTo, model); return "tasks/form"; }
+        if (result.hasErrors()) {
+            populateForm(task, null, returnTo, model);
+            model.addAttribute("searchQuery", searchQuery);
+            return "tasks/form";
+        }
         task.setFestivalYear(appConfig.getFestivalYear());
         task.setReceivedBy(auth.getName());
         if (driverId != null) {
@@ -142,6 +154,7 @@ public class TaskController {
         }
         taskService.save(task);
         LocalDate date = task.getStartTs() != null ? task.getStartTs().toLocalDate() : null;
+        if ("search".equals(returnTo)) return redirectToSearch(searchQuery);
         return "tasks".equals(returnTo) ? redirectToTaskDate(date) : redirectToFleetDate(date);
     }
 
@@ -150,6 +163,7 @@ public class TaskController {
                          @RequestParam(required = false, defaultValue = "fleet") String returnTo,
                          @RequestParam(required = false, defaultValue = "false") boolean startAfterSave,
                          @RequestParam(required = false) Long driverId,
+                         @RequestParam(required = false, defaultValue = "") String searchQuery,
                          Authentication auth, Model model) throws Exception {
         task.setTaskId(id);
         task.setFestivalYear(appConfig.getFestivalYear());
@@ -158,6 +172,7 @@ public class TaskController {
         if (existing.getStatus() == TaskStatus.CANCELLED) {
             result.reject("task.cancelled.readonly", "Slettede kørsler kan ikke redigeres. Brug Genåbn først.");
             populateForm(existing, null, returnTo, model);
+            model.addAttribute("searchQuery", searchQuery);
             return "tasks/form";
         }
         // Lock vehicle and driver when task is STARTED or DONE
@@ -172,7 +187,11 @@ public class TaskController {
                 ? existing.getReceivedBy() : auth.getName();
         task.setReceivedBy(receivedBy);
         validateTimeRange(task, result);
-        if (result.hasErrors()) { populateForm(task, null, returnTo, model); return "tasks/form"; }
+        if (result.hasErrors()) {
+            populateForm(task, null, returnTo, model);
+            model.addAttribute("searchQuery", searchQuery);
+            return "tasks/form";
+        }
         taskService.save(task);
         if (startAfterSave && task.getVehicleId() != null
                 && task.getDriverUser() != null
@@ -180,6 +199,7 @@ public class TaskController {
             taskService.updateStatus(appConfig.getFestivalYear(), id, TaskStatus.STARTED);
         }
         LocalDate date = task.getStartTs() != null ? task.getStartTs().toLocalDate() : null;
+        if ("search".equals(returnTo)) return redirectToSearch(searchQuery);
         return "tasks".equals(returnTo) ? redirectToTaskDate(date) : redirectToFleetDate(date);
     }
 
@@ -483,6 +503,11 @@ public class TaskController {
 
     private String redirectToFleetDate(LocalDate date) {
         return "redirect:/fleet" + (date != null ? "?date=" + date : "");
+    }
+
+    private String redirectToSearch(String q) {
+        if (q == null || q.isBlank()) return "redirect:/tasks/search";
+        return "redirect:/tasks/search?q=" + URLEncoder.encode(q, StandardCharsets.UTF_8);
     }
 
     private LocalDate resolveRedirectDate(int taskId, LocalDate requestedDate) {

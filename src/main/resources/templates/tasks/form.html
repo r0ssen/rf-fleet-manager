@@ -5,8 +5,9 @@
 <nav th:replace="~{fragments/layout :: nav}"></nav>
 <main class="form-main">
     <div class="form-header">
-        <a th:href="${returnTo == 'tasks'} ? @{/tasks(date=${task.startTs != null} ? ${#temporals.format(task.startTs,'yyyy-MM-dd')} : ${#dates.format(#dates.createNow(),'yyyy-MM-dd')})} : @{/fleet(date=${task.startTs != null} ? ${#temporals.format(task.startTs,'yyyy-MM-dd')} : ${#dates.format(#dates.createNow(),'yyyy-MM-dd')})}"
-           class="back-link">← Tilbage til [[${returnTo == 'tasks'} ? 'kørsler' : 'flådeoversigt']]</a>
+        <a th:with="backDate=${task.startTs != null ? #temporals.format(task.startTs,'yyyy-MM-dd') : #dates.format(#dates.createNow(),'yyyy-MM-dd')}"
+           th:href="${returnTo == 'tasks' ? ('/tasks?date=' + backDate) : (returnTo == 'search' ? ('/tasks/search' + (!#strings.isEmpty(searchQuery) ? '?q=' + searchQuery : '')) : ('/fleet?date=' + backDate))}"
+           class="back-link">← Tilbage til [[${returnTo == 'tasks' ? 'kørsler' : (returnTo == 'search' ? 'søgeresultater' : 'flådeoversigt')}]]</a>
         <h1 th:text="${isDriver} ? 'Kørsel – Detaljer' : (${task.taskId == 0} ? 'Administrer kørsel – Ny' : 'Administrer kørsel – Rediger')">Administrer kørsel</h1>
     </div>
 
@@ -14,6 +15,7 @@
           th:object="${task}" method="post" id="taskForm" th:attr="data-is-new=${task.taskId == 0}">
         <input type="hidden" th:field="*{version}"/>
         <input type="hidden" name="returnTo" th:value="${returnTo}"/>
+        <input type="hidden" name="searchQuery" th:value="${searchQuery}"/>
         <input type="hidden" name="startAfterSave" id="startAfterSaveInput" value="false"/>
         <div class="form-error" th:if="${#fields.hasAnyErrors()}">
             <p>Kunne ikke gemme. Ret felterne med fejl og prøv igen.</p>
