@@ -23,6 +23,10 @@
         <a sec:authorize="hasRole('ADMIN')" th:href="@{/opening-hours}">Åbningstider</a>
         <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin/users}">Brugere</a>
     </div>
+    <form class="nav-search" sec:authorize="hasAnyRole('ADMIN','AGENT')" th:action="@{/tasks/search}" method="get" role="search">
+        <input type="search" name="q" placeholder="Søg bestiller / kontakt…" autocomplete="off"/>
+        <button type="submit">Søg</button>
+    </form>
     <div class="nav-logout">
         <span class="nav-user" sec:authentication="name"></span>
         <form th:action="@{/logout}" method="post" style="display:inline">

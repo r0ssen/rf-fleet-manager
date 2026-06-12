@@ -78,4 +78,15 @@ public interface TaskRepository extends JpaRepository<Task, TaskId> {
                                            Pageable pageable);
 
     List<Task> findByFestivalYearAndStatusOrderByStartTsAsc(int year, TaskStatus status);
+
+    @Query("""
+           SELECT t FROM Task t LEFT JOIN FETCH t.vehicle LEFT JOIN FETCH t.driverUser
+           WHERE t.festivalYear = :year
+             AND (LOWER(t.bookerName)   LIKE :q
+              OR  LOWER(t.bookerPhone)  LIKE :q
+              OR  LOWER(t.contactName)  LIKE :q
+              OR  LOWER(t.contactPhone) LIKE :q)
+           ORDER BY t.startTs DESC, t.taskId DESC
+           """)
+    List<Task> searchByTerm(@Param("year") int year, @Param("q") String q);
 }

@@ -22,6 +22,10 @@ public class TaskService {
     public TaskService(TaskRepository repo) { this.repo = repo; }
 
     public List<Task> getTasksForDay(int year, LocalDate date) { return repo.findByDay(year, date); }
+    public List<Task> search(int year, String term) {
+        if (term == null || term.isBlank()) return List.of();
+        return repo.searchByTerm(year, "%" + term.toLowerCase() + "%");
+    }
     public Optional<Task> getById(int year, int id) { return repo.findById(new TaskId(year, id)); }
     public Optional<SuggestedDriver> findSuggestedDriver(int year, Integer vehicleId, OffsetDateTime beforeTs) {
         if (vehicleId == null || beforeTs == null) {

@@ -90,6 +90,17 @@ public class TaskController {
         return "tasks/list";
     }
 
+    @GetMapping("/search")
+    public String search(@RequestParam(required = false, defaultValue = "") String q,
+                         Authentication auth, Model model) {
+        if (isDriver(auth)) return "redirect:/tasks";
+        List<Task> results = taskService.search(appConfig.getFestivalYear(), q);
+        model.addAttribute("tasks", results);
+        model.addAttribute("q", q);
+        model.addAttribute("danishLocale", java.util.Locale.forLanguageTag("da"));
+        return "tasks/search";
+    }
+
     @GetMapping("/new")
     public String newForm(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
                           @RequestParam(required = false) @DateTimeFormat(pattern = "HH:mm") LocalTime start,

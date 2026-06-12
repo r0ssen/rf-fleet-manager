@@ -39,7 +39,13 @@ nav {
 .nav-links { display: flex; gap: 1.5rem; flex: 1; }
 .nav-links a { color: rgba(255,255,255,.9); text-decoration: none; font-weight: 500; padding: 4px 0; border-bottom: 2px solid transparent; }
 .nav-links a:hover { color: #fff; border-bottom-color: rgba(255,255,255,.8); }
-.nav-logout { display: flex; align-items: center; gap: 0.75rem; margin-left: auto; }
+.nav-search { display: flex; align-items: center; gap: 0.35rem; margin-left: auto; }
+.nav-search input { background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3); border-radius: 4px; padding: 4px 10px; font-size: 13px; color: #fff; width: 200px; }
+.nav-search input::placeholder { color: rgba(255,255,255,.6); }
+.nav-search input:focus { outline: none; background: rgba(255,255,255,.25); }
+.nav-search button { background: rgba(255,255,255,.15); color: #fff; border: 1px solid rgba(255,255,255,.3); border-radius: 4px; padding: 4px 10px; font-size: 13px; cursor: pointer; white-space: nowrap; }
+.nav-search button:hover { background: rgba(255,255,255,.25); }
+.nav-logout { display: flex; align-items: center; gap: 0.75rem; }
 .nav-logout span { color: rgba(255,255,255,.8); font-size: 13px; }
 .btn-logout { background: rgba(255,255,255,.15); color: #fff; border: 1px solid rgba(255,255,255,.3); border-radius: 4px; padding: 4px 12px; font-size: 13px; cursor: pointer; }
 .btn-logout:hover { background: rgba(255,255,255,.25); opacity: 1; }
