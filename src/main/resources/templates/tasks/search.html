@@ -44,7 +44,7 @@
             <tr th:each="t : ${tasks}"
                 th:classappend="'row-' + ${t.status.name().toLowerCase()} + (${t.vehicleId == null} ? ' row-no-vehicle' : '')"
                 th:attr="data-href=@{/tasks/{id}/edit(id=${t.taskId},returnTo='search',searchQuery=${q})}">
-                <td data-label="Dato" style="white-space:nowrap;">
+                <td data-label="Dato" style="white-space:nowrap;width:1px;">
                     <span th:text="${#temporals.format(t.startTs, 'EEE d. MMM yyyy', danishLocale)}"></span>
                 </td>
                 <td class="col-time" data-label="Tid">
