@@ -12,6 +12,24 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/da.js"></script>
     <meta name="_csrf" th:content="${_csrf.token}"/>
     <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        function danishToIso(val) {
+            var m = val && val.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+            return m ? m[3] + '-' + m[2] + '-' + m[1] : null;
+        }
+        var picker = document.getElementById('fleetDatePicker') || document.getElementById('taskDatePicker');
+        if (picker) {
+            var iso = danishToIso(picker.value);
+            if (iso) sessionStorage.setItem('navDate', iso);
+        }
+        var navDate = sessionStorage.getItem('navDate');
+        if (navDate) {
+            [document.querySelector('a[href="/tasks"]'), document.querySelector('a[href="/fleet"]')]
+                .forEach(function(el) { if (el) el.href = el.getAttribute('href') + '?date=' + navDate; });
+        }
+    });
+    </script>
 </head>
 <body>
 <nav th:fragment="nav">
