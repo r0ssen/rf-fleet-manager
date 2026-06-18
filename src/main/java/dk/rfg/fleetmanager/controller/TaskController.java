@@ -99,7 +99,11 @@ public class TaskController {
         if (isDriver(auth)) return "redirect:/tasks";
         List<Task> results = taskService.search(appConfig.getFestivalYear(), q);
         if (!showCancelled) results = results.stream().filter(t -> t.getStatus() != TaskStatus.CANCELLED).toList();
+        LocalDate today = LocalDate.now();
         model.addAttribute("tasks", results);
+        model.addAttribute("pastTasks",   results.stream().filter(t -> t.getStartTs() != null && t.getStartTs().toLocalDate().isBefore(today)).toList());
+        model.addAttribute("todayTasks",  results.stream().filter(t -> t.getStartTs() != null && t.getStartTs().toLocalDate().isEqual(today)).toList());
+        model.addAttribute("futureTasks", results.stream().filter(t -> t.getStartTs() != null && t.getStartTs().toLocalDate().isAfter(today)).toList());
         model.addAttribute("q", q);
         model.addAttribute("showCancelled", showCancelled);
         model.addAttribute("danishLocale", java.util.Locale.forLanguageTag("da"));
