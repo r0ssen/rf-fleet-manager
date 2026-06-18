@@ -34,7 +34,6 @@
                 <th>Bestiller</th>
                 <th>Kontakt</th>
                 <th>Steder</th>
-                <th>Afdeling</th>
                 <th>Bil</th>
                 <th>Chauffør</th>
                 <th>Status</th>
@@ -66,10 +65,6 @@
                     <span class="arrow"> → </span>
                     <span th:text="${t.endPoint}"></span>
                 </td>
-                <td class="col-affiliation" data-label="Division">
-                    <span th:text="${t.division}"></span>
-                    <span th:if="${t.team != null}" class="team">/ <span th:text="${t.team}"></span></span>
-                </td>
                 <td class="col-vehicle" data-label="Bil">
                     <span th:if="${t.vehicle != null}" th:text="${'Bil ' + t.vehicle.vehicleNo + (t.vehicle.model != null ? ' – ' + t.vehicle.model : '')}"></span>
                     <span th:if="${t.vehicleId == null}" class="vehicle-missing-badge">Ikke tildelt bil</span>
@@ -90,6 +85,7 @@
 .search-table .col-vehicle,
 .search-table .col-driver { max-width: none; overflow: visible; }
 .search-table .col-status { width: auto; white-space: nowrap; }
+.search-table .col-route { width: 35%; }
 </style>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
