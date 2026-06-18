@@ -11,10 +11,12 @@
         <h1>Flådeoversigt</h1>
 
         <div class="date-nav">
+            <a th:href="@{/fleet(date=${prevDay},showCancelled=${showCancelled})}" class="btn-secondary">&#8249;</a>
             <input type="text" id="fleetDatePicker"
                    th:value="${#temporals.format(date, 'dd/MM/yyyy')}"
                    placeholder="dd/mm/yyyy" maxlength="10" size="10"
                    onchange="goFleetDateDanish(this.value)"/>
+            <a th:href="@{/fleet(date=${nextDay},showCancelled=${showCancelled})}" class="btn-secondary">&#8250;</a>
             <span class="date-label"
                   th:text="${#temporals.format(date, 'EEEE d. MMMM yyyy', danishLocale)}">
             </span>
