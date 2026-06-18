@@ -55,7 +55,7 @@
                     <strong th:text="${t.bookerName}"></strong>
                     <a th:if="${t.bookerPhone != null}" class="phone" th:href="'tel:' + ${t.bookerPhone}" th:text="${'📞 ' + t.bookerPhone}"></a>
                 </td>
-                <td data-label="Kontakt">
+                <td data-label="Kontakt" style="white-space:nowrap;overflow:hidden;max-width:0;">
                     <span th:if="${t.contactName != null and !#strings.isEmpty(t.contactName)}" th:text="${t.contactName}"></span>
                     <a th:if="${t.contactPhone != null and !#strings.isEmpty(t.contactPhone)}"
                        class="phone" th:href="'tel:' + ${t.contactPhone}" th:text="${'📞 ' + t.contactPhone}"></a>
