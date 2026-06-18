@@ -44,6 +44,7 @@ public class FleetGridController {
         model.addAttribute("date",        date);
         model.addAttribute("prevDay",     date.minusDays(1));
         model.addAttribute("nextDay",     date.plusDays(1));
+        model.addAttribute("isToday",    date.equals(LocalDate.now()));
         model.addAttribute("rows",        grid.rows());
         model.addAttribute("timeMarkers", grid.timeMarkers());
         model.addAttribute("openFrom",    grid.openFrom());

@@ -17,9 +17,10 @@
                    placeholder="dd/mm/yyyy" maxlength="10" size="10"
                    onchange="goFleetDateDanish(this.value)"/>
             <a th:href="@{/fleet(date=${nextDay},showCancelled=${showCancelled})}" class="btn-secondary">&#8250;</a>
-            <span class="date-label"
+            <span class="date-label" th:classappend="${!isToday} ? ' date-label-other' : ''"
                   th:text="${#temporals.format(date, 'EEEE d. MMMM yyyy', danishLocale)}">
             </span>
+            <a th:if="${!isToday}" th:href="@{/fleet(showCancelled=${showCancelled})}" class="btn-secondary today-btn">I dag</a>
             <span th:if="${hoursFromDb}" class="hours-label"
                   th:text="${#temporals.format(openFrom,'HH:mm') + ' – ' + #temporals.format(openUntil,'HH:mm')}">
             </span>
@@ -150,6 +151,8 @@
 .fleet-main .hours-warning {
     white-space: nowrap;
 }
+.date-label-other { color: #b45309; font-weight: 600; }
+.today-btn { font-size: 12px; padding: 2px 10px; }
 .hours-label {
     font-size: 12px; color: #888; background: #f0f0f0;
     padding: 2px 8px; border-radius: 10px; margin-left: 0.5rem;
