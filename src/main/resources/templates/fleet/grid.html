@@ -39,6 +39,12 @@
         </label>
     </div>
 
+    <div th:if="${!isToday}" class="not-today-banner">
+        Du ser ikke dagens flådeoversigt —
+        <strong th:text="${#temporals.format(date, 'EEEE d. MMMM yyyy', danishLocale)}"></strong>.
+        <a th:href="@{/fleet(showCancelled=${showCancelled})}">Gå til i dag</a>
+    </div>
+
     <div class="fleet-legend">
         <span class="legend-item"><span class="swatch ordered"></span> Bestilt</span>
         <span class="legend-item"><span class="swatch started"></span> Startet</span>
@@ -153,6 +159,12 @@
 }
 .date-label-other { color: #b45309; font-weight: 600; }
 .today-btn { font-size: 12px; padding: 2px 10px; }
+.not-today-banner {
+    background: #fef3c7; border: 1px solid #fcd34d; border-radius: 6px;
+    padding: 0.5rem 1rem; margin-bottom: 0.75rem;
+    font-size: 13px; color: #92400e;
+}
+.not-today-banner a { color: #b45309; font-weight: 600; }
 .hours-label {
     font-size: 12px; color: #888; background: #f0f0f0;
     padding: 2px 8px; border-radius: 10px; margin-left: 0.5rem;
