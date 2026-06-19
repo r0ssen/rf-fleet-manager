@@ -203,7 +203,9 @@
 .filter-toggle input {
     margin: 0;
 }
-.grid-scroll { overflow: auto; padding-bottom: 0.5rem; }
+.grid-scroll { overflow: auto; max-height: calc(100vh - 210px); padding-bottom: 0.5rem; }
+.fleet-header { position: sticky; top: 0; z-index: 10; background: #f0f2f5; }
+.fleet-label-cell { z-index: 11; }
 .fleet-board {
     min-width: 1180px;
     display: flex;
