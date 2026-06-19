@@ -202,7 +202,6 @@ public class FleetGridService {
             .sorted(Comparator.comparing(ScheduledTask::viewStart).thenComparing(scheduled -> scheduled.task().getTaskId()))
             .toList();
 
-        List<OffsetDateTime> laneEnds = new ArrayList<>();
         Set<Integer> overlappingTaskIds = unassigned
             ? Set.of()
             : findOverlappingTaskIds(
@@ -210,19 +209,32 @@ public class FleetGridService {
                     .filter(scheduled -> scheduled.task().getStatus() != TaskStatus.CANCELLED)
                     .toList()
             );
-        List<TaskBlock> taskBlocks = new ArrayList<>();
+
+        // First pass: assign lanes so we know the total lane count before computing heights.
+        List<OffsetDateTime> laneEnds = new ArrayList<>();
+        List<Integer> laneIndices = new ArrayList<>();
         for (ScheduledTask scheduledTask : scheduledTasks) {
-            int laneIndex = assignLane(laneEnds, scheduledTask.viewStart(), scheduledTask.viewEnd());
+            laneIndices.add(assignLane(laneEnds, scheduledTask.viewStart(), scheduledTask.viewEnd()));
+        }
+
+        int numLanes = laneEnds.size();
+        int rowHeightPx = Math.max(BLOCK_HEIGHT_PX + 12, numLanes * LANE_HEIGHT_PX + 8);
+
+        // Second pass: build task blocks with heights that account for the full row size.
+        List<TaskBlock> taskBlocks = new ArrayList<>();
+        for (int i = 0; i < scheduledTasks.size(); i++) {
+            ScheduledTask scheduledTask = scheduledTasks.get(i);
             taskBlocks.add(toTaskBlock(
                 scheduledTask,
                 openingStart,
                 totalMinutes,
-                laneIndex,
-                overlappingTaskIds.contains(scheduledTask.task().getTaskId())
+                laneIndices.get(i),
+                overlappingTaskIds.contains(scheduledTask.task().getTaskId()),
+                rowHeightPx,
+                numLanes
             ));
         }
 
-        int rowHeightPx = Math.max(BLOCK_HEIGHT_PX + 12, laneEnds.size() * LANE_HEIGHT_PX + 8);
         return new TimelineRow(label, subLabel, editUrl, vehicleId, taskBlocks, rowHeightPx, unassigned);
     }
 
@@ -259,16 +271,20 @@ public class FleetGridService {
                                   OffsetDateTime openingStart,
                                   long totalMinutes,
                                   int laneIndex,
-                                  boolean overlapping) {
+                                  boolean overlapping,
+                                  int rowHeightPx,
+                                  int numLanes) {
         Task task = scheduledTask.task();
         long offsetMinutes = Duration.between(openingStart, scheduledTask.viewStart()).toMinutes();
         long durationMinutes = Math.max(1, Duration.between(scheduledTask.viewStart(), scheduledTask.viewEnd()).toMinutes());
 
         double leftPercent = (offsetMinutes * 100.0) / totalMinutes;
         double widthPercent = (durationMinutes * 100.0) / totalMinutes;
+        int topPx = laneIndex * LANE_HEIGHT_PX + 4;
+        int heightPx = (!overlapping && numLanes > 1) ? rowHeightPx - 8 : BLOCK_HEIGHT_PX;
         String style = "left:" + pct(leftPercent)
             + ";width:" + pct(widthPercent)
-            + ";top:" + (laneIndex * LANE_HEIGHT_PX + 4) + "px;height:" + BLOCK_HEIGHT_PX + "px;";
+            + ";top:" + topPx + "px;height:" + heightPx + "px;";
         boolean compactText = widthPercent <= COMPACT_BLOCK_MAX_WIDTH_PERCENT;
 
         String bookerName = task.getBookerName() == null || task.getBookerName().isBlank()
