@@ -75,7 +75,8 @@ public class FleetGridService {
         String style,
         boolean darkText,
         boolean overlapping,
-        boolean compactText
+        boolean compactText,
+        String driverLabel
     ) {}
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
@@ -292,6 +293,8 @@ public class FleetGridService {
             : task.getBookerName().trim();
         String routeLabel = buildRouteLabel(task);
         String timeLabel = formatTime(task.getStartTs()) + " – " + formatTime(scheduledTask.actualEnd());
+        String driverLabel = task.getDriverUser() != null ? task.getDriverUser().getUsername()
+            : (task.getDriverName() != null && !task.getDriverName().isBlank() ? task.getDriverName().trim() : null);
         String title = bookerName + " | " + timeLabel + " | " + task.getStatus().danishLabel()
             + (routeLabel.isBlank() ? "" : " | " + routeLabel)
             + (task.getDescription() == null || task.getDescription().isBlank() ? "" : " | " + task.getDescription().trim())
@@ -311,7 +314,8 @@ public class FleetGridService {
             style,
             task.getStatus() == TaskStatus.STARTED,
             overlapping,
-            compactText
+            compactText,
+            driverLabel
         );
     }
 

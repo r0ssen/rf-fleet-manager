@@ -137,6 +137,7 @@
                         <div class="task-time-row">
                             <span th:if="${task.overlapping}" class="task-overlap-flag">OVERLAP</span>
                             <span class="task-time" th:text="${task.timeLabel}"></span>
+                            <span th:if="${task.driverLabel != null}" class="task-driver" th:text="${task.driverLabel}"></span>
                         </div>
                         <span class="task-booker" th:text="${task.bookerName}"></span>
                         <span th:if="${task.routeLabel != null and !#strings.isEmpty(task.routeLabel)}"
@@ -400,6 +401,7 @@
 }
 .task-time-row { display: flex; flex-direction: row; align-items: center; gap: 4px; }
 .task-time { font-size: 11px; opacity: 0.88; font-weight: 500; }
+.task-driver { font-size: 11px; opacity: 0.75; }
 .task-booker { font-weight: 700; font-size: 13px; }
 .task-route { font-size: 11px; opacity: 0.95; }
 .task-overlap-flag {
