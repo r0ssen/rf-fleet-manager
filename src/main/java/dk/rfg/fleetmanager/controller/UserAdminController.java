@@ -26,7 +26,9 @@ public class UserAdminController {
 
     @GetMapping
     public String list(Model model) {
-        model.addAttribute("users", userRepository.findAll());
+        model.addAttribute("users", userRepository.findAll().stream()
+                .sorted(java.util.Comparator.comparing(User::getUsername, String.CASE_INSENSITIVE_ORDER))
+                .toList());
         return "admin/users/list";
     }
 
