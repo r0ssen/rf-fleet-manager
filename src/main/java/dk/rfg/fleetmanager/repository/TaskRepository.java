@@ -2,6 +2,7 @@ package dk.rfg.fleetmanager.repository;
 import dk.rfg.fleetmanager.entity.Task;
 import dk.rfg.fleetmanager.entity.TaskId;
 import dk.rfg.fleetmanager.entity.TaskStatus;
+import dk.rfg.fleetmanager.entity.User;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -76,6 +77,18 @@ public interface TaskRepository extends JpaRepository<Task, TaskId> {
     List<String> findRecentDispatcherNames(@Param("year") int year,
                                            @Param("cancelled") TaskStatus cancelled,
                                            Pageable pageable);
+
+    @Query("""
+           SELECT DISTINCT t.driverUser FROM Task t
+           WHERE t.festivalYear = :year
+             AND CAST(t.startTs AS localdate) = :date
+             AND t.status <> :cancelled
+             AND t.driverUser IS NOT NULL
+           ORDER BY t.driverUser.username ASC
+           """)
+    List<User> findDistinctDriverUsersForDay(@Param("year") int year,
+                                             @Param("date") LocalDate date,
+                                             @Param("cancelled") TaskStatus cancelled);
 
     List<Task> findByFestivalYearAndStatusOrderByStartTsAsc(int year, TaskStatus status);
 

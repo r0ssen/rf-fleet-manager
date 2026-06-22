@@ -2,6 +2,7 @@ package dk.rfg.fleetmanager.service;
 import dk.rfg.fleetmanager.entity.Task;
 import dk.rfg.fleetmanager.entity.TaskId;
 import dk.rfg.fleetmanager.entity.TaskStatus;
+import dk.rfg.fleetmanager.entity.User;
 import dk.rfg.fleetmanager.repository.TaskRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,9 @@ public class TaskService {
     public TaskService(TaskRepository repo) { this.repo = repo; }
 
     public List<Task> getTasksForDay(int year, LocalDate date) { return repo.findByDay(year, date); }
+    public List<User> getDriverUsersForDay(int year, LocalDate date) {
+        return repo.findDistinctDriverUsersForDay(year, date, TaskStatus.CANCELLED);
+    }
     public List<Task> search(int year, String term) {
         if (term == null || term.isBlank()) return List.of();
         return repo.searchByTerm(year, "%" + term.toLowerCase() + "%");

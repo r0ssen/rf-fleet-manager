@@ -174,9 +174,23 @@
                     <label>Chauffør
                         <select name="driverId" id="driverSelect">
                             <option value="">— Ingen chauffør —</option>
-                            <option th:each="d : ${drivers}" th:value="${d.id}"
-                                    th:text="${d.username}"
-                                    th:selected="${task.driverUser != null and task.driverUser.id == d.id}"></option>
+                            <th:block th:if="${not #lists.isEmpty(todayDrivers)}">
+                                <optgroup label="I dag">
+                                    <option th:each="d : ${todayDrivers}" th:value="${d.id}"
+                                            th:text="${d.username}"
+                                            th:selected="${task.driverUser != null and task.driverUser.id == d.id}"></option>
+                                </optgroup>
+                                <optgroup th:if="${not #lists.isEmpty(otherDrivers)}" label="Øvrige chauffører">
+                                    <option th:each="d : ${otherDrivers}" th:value="${d.id}"
+                                            th:text="${d.username}"
+                                            th:selected="${task.driverUser != null and task.driverUser.id == d.id}"></option>
+                                </optgroup>
+                            </th:block>
+                            <th:block th:if="${#lists.isEmpty(todayDrivers)}">
+                                <option th:each="d : ${otherDrivers}" th:value="${d.id}"
+                                        th:text="${d.username}"
+                                        th:selected="${task.driverUser != null and task.driverUser.id == d.id}"></option>
+                            </th:block>
                         </select>
                         <p id="driverWarning" class="field-warning" style="display:none">Ingen chauffør valgt.</p>
                     </label>

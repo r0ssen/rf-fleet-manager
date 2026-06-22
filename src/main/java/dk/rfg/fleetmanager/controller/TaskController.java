@@ -457,11 +457,19 @@ public class TaskController {
             task.setStartTs(date.atTime(defaultTime).atZone(ZoneId.systemDefault()).toOffsetDateTime());
         }
 
+        List<User> allDrivers = userRepository.findByRoleOrderByUsernameAsc(User.Role.DRIVER);
+        List<User> todayDrivers = taskService.getDriverUsersForDay(appConfig.getFestivalYear(), LocalDate.now());
+        List<Long> todayDriverIds = todayDrivers.stream().map(User::getId).toList();
+        List<User> otherDrivers = allDrivers.stream()
+                .filter(d -> !todayDriverIds.contains(d.getId()))
+                .toList();
+
         model.addAttribute("task", task);
         model.addAttribute("returnTo", returnTo != null ? returnTo : "fleet");
         model.addAttribute("timeOptions", timeOptions);
         model.addAttribute("vehicles", vehicleService.getAvailableVehiclesForDate(appConfig.getFestivalYear(), refDate));
-        model.addAttribute("drivers", userRepository.findByRoleOrderByUsernameAsc(User.Role.DRIVER));
+        model.addAttribute("todayDrivers", todayDrivers);
+        model.addAttribute("otherDrivers", otherDrivers);
         model.addAttribute("statuses", editableStatuses());
         model.addAttribute("divisions", divisionTeamData.getDivisions());
         model.addAttribute("divisionTeamsJson", objectMapper.writeValueAsString(divisionTeamData.getAllData()));
