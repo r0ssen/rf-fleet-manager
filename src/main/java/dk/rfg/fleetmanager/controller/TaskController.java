@@ -165,7 +165,7 @@ public class TaskController {
     @PostMapping("/{id}")
     public String update(@PathVariable int id, @Valid @ModelAttribute Task task, BindingResult result,
                          @RequestParam(required = false, defaultValue = "fleet") String returnTo,
-                         @RequestParam(required = false, defaultValue = "false") boolean startAfterSave,
+                         @RequestParam(required = false, defaultValue = "") String statusAfterSave,
                          @RequestParam(required = false) Long driverId,
                          @RequestParam(required = false, defaultValue = "") String searchQuery,
                          Authentication auth, Model model) throws Exception {
@@ -197,10 +197,16 @@ public class TaskController {
             return "tasks/form";
         }
         taskService.save(task);
-        if (startAfterSave && task.getVehicleId() != null
-                && task.getDriverUser() != null
-                && existing.getStatus() == TaskStatus.ORDERED) {
-            taskService.updateStatus(appConfig.getFestivalYear(), id, TaskStatus.STARTED);
+        if (!statusAfterSave.isBlank()) {
+            try {
+                TaskStatus targetStatus = TaskStatus.valueOf(statusAfterSave);
+                if (isAllowedStatusTransition(existing.getStatus(), targetStatus)) {
+                    if (targetStatus != TaskStatus.STARTED
+                            || (task.getVehicleId() != null && task.getDriverUser() != null)) {
+                        taskService.updateStatus(appConfig.getFestivalYear(), id, targetStatus);
+                    }
+                }
+            } catch (IllegalArgumentException ignored) {}
         }
         LocalDate date = task.getStartTs() != null ? task.getStartTs().toLocalDate() : null;
         if ("search".equals(returnTo)) return redirectToSearch(searchQuery);

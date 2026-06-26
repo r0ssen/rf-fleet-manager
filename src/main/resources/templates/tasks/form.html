@@ -14,7 +14,7 @@
         <input type="hidden" th:field="*{version}"/>
         <input type="hidden" name="returnTo" th:value="${returnTo}"/>
         <input type="hidden" name="searchQuery" th:value="${searchQuery}"/>
-        <input type="hidden" name="startAfterSave" id="startAfterSaveInput" value="false"/>
+        <input type="hidden" name="statusAfterSave" id="statusAfterSaveInput" value=""/>
         <div class="form-error" th:if="${#fields.hasAnyErrors()}">
             <p>Kunne ikke gemme. Ret felterne med fejl og prøv igen.</p>
         </div>
@@ -214,17 +214,14 @@
                             onclick="doStartTask()">Start</button>
                 </div>
                 <div class="field-row" th:if="${!isDriver and task.taskId != 0 and task.vehicleId != null and task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).STARTED}">
-                    <button type="submit" class="btn-small"
-                            th:formaction="@{/tasks/{id}/status(id=${task.taskId})}" formmethod="post" formnovalidate
-                            name="status" value="ORDERED">Til Bestilt</button>
-                    <button type="submit" class="btn-small"
-                            th:formaction="@{/tasks/{id}/status(id=${task.taskId})}" formmethod="post" formnovalidate
-                            name="status" value="DONE">Udført</button>
+                    <button type="button" class="btn-small"
+                            onclick="doTransitionTask('ORDERED')">Til Bestilt</button>
+                    <button type="button" class="btn-small"
+                            onclick="doTransitionTask('DONE')">Udført</button>
                 </div>
                 <div class="field-row" th:if="${!isDriver and task.taskId != 0 and task.vehicleId != null and task.status == T(dk.rfg.fleetmanager.entity.TaskStatus).DONE}">
-                    <button type="submit" class="btn-small"
-                            th:formaction="@{/tasks/{id}/status(id=${task.taskId})}" formmethod="post" formnovalidate
-                            name="status" value="ORDERED">Til Bestilt</button>
+                    <button type="button" class="btn-small"
+                            onclick="doTransitionTask('ORDERED')">Til Bestilt</button>
                 </div>
             </fieldset>
 
@@ -600,7 +597,12 @@ updateMapLinks();
     }
 
     window.doStartTask = function() {
-        document.getElementById('startAfterSaveInput').value = 'true';
+        document.getElementById('statusAfterSaveInput').value = 'STARTED';
+        document.getElementById('taskForm').submit();
+    };
+
+    window.doTransitionTask = function(status) {
+        document.getElementById('statusAfterSaveInput').value = status;
         document.getElementById('taskForm').submit();
     };
 
