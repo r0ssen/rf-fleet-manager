@@ -50,6 +50,8 @@
         <span class="legend-item"><span class="swatch done"></span> Udført</span>
         <span class="legend-item"><span class="swatch cancelled"></span> Slettet</span>
         <span class="legend-item"><span class="swatch overlap"></span> Overlap / konflikt</span>
+        <span class="legend-item"><span class="swatch lunch"></span> Frokost (11:30–14:00)</span>
+        <span class="legend-item"><span class="swatch dinner"></span> Middag (17:30–20:00)</span>
     </div>
     <div id="fleetDragFeedback" class="drag-feedback" style="display:none"></div>
     <div id="fleetTaskMenu" class="task-context-menu" style="display:none">
@@ -431,6 +433,29 @@
     );
     pointer-events: none;
 }
+/* ── Meal-period bands ────────────────────────────── */
+.meal-band {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    pointer-events: none;
+}
+.meal-band.lunch  { background: rgba(251, 191, 36, 0.13); }
+.meal-band.dinner { background: rgba(251, 146, 60, 0.13); }
+.meal-band-label {
+    position: absolute;
+    bottom: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    font-weight: 700;
+    color: rgba(0,0,0,0.28);
+    white-space: nowrap;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+.swatch.lunch  { background: rgba(251, 191, 36, 0.5); border-color: #fbbf24; }
+.swatch.dinner { background: rgba(251, 146, 60, 0.5); border-color: #fb923c; }
 /* ── Current time vertical needle ─────────────────── */
 .current-time-line {
     position: absolute;
@@ -896,7 +921,48 @@ function goFleetDate(isoDate) {
         });
     });
 
+    function addMealBands() {
+        var openFrom  = board.dataset.openFrom;
+        var openUntil = board.dataset.openUntil;
+        if (!openFrom || !openUntil) return;
+        var fromMins  = toMins(openFrom);
+        var untilMins = toMins(openUntil);
+        var span = untilMins - fromMins;
+        if (span <= 0) return;
+        var meals = [
+            { start: '11:30', end: '14:00', label: 'Frokost', cls: 'lunch' },
+            { start: '17:30', end: '20:00', label: 'Middag', cls: 'dinner' }
+        ];
+        var header = board.querySelector('.fleet-timeline-header');
+        var tracks  = board.querySelectorAll('.fleet-row-track');
+        meals.forEach(function (meal) {
+            var clampedStart = Math.max(fromMins, toMins(meal.start));
+            var clampedEnd   = Math.min(untilMins, toMins(meal.end));
+            if (clampedStart >= clampedEnd) return;
+            var leftPct  = ((clampedStart - fromMins) / span * 100).toFixed(3);
+            var widthPct = ((clampedEnd - clampedStart) / span * 100).toFixed(3);
+            var styleStr = 'left:' + leftPct + '%;width:' + widthPct + '%;';
+            if (header) {
+                var hBand = document.createElement('div');
+                hBand.className = 'meal-band ' + meal.cls;
+                hBand.style.cssText = styleStr;
+                var lbl = document.createElement('span');
+                lbl.className = 'meal-band-label';
+                lbl.textContent = meal.label;
+                hBand.appendChild(lbl);
+                header.prepend(hBand);
+            }
+            tracks.forEach(function (track) {
+                var band = document.createElement('div');
+                band.className = 'meal-band ' + meal.cls;
+                band.style.cssText = styleStr;
+                track.prepend(band);
+            });
+        });
+    }
+
     updateNeedle();
+    addMealBands();
     board.querySelectorAll('.fleet-row-track').forEach(function (track) {
         bindCreateClick(track);
         bindDragDrop(track);
