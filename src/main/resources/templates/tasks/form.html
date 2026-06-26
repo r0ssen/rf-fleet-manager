@@ -597,11 +597,13 @@ updateMapLinks();
     }
 
     window.doStartTask = function() {
+        if (window.clearFormSnapshot) window.clearFormSnapshot();
         document.getElementById('statusAfterSaveInput').value = 'STARTED';
         document.getElementById('taskForm').submit();
     };
 
     window.doTransitionTask = function(status) {
+        if (window.clearFormSnapshot) window.clearFormSnapshot();
         document.getElementById('statusAfterSaveInput').value = status;
         document.getElementById('taskForm').submit();
     };
@@ -833,6 +835,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Clear on any form submission (save, delete, reopen, start)
     form.addEventListener('submit', function() { snapshot = null; });
+    // Also expose for programmatic submissions (form.submit() skips the submit event)
+    window.clearFormSnapshot = function() { snapshot = null; };
 })();
 </script>
 </body>
