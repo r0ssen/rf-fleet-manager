@@ -349,6 +349,29 @@ public class TaskController {
         return ResponseEntity.ok(result);
     }
 
+    @GetMapping("/api/driver-conflicts")
+    @ResponseBody
+    public ResponseEntity<?> getDriverConflicts(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam @DateTimeFormat(pattern = "HH:mm") LocalTime start,
+            @RequestParam @DateTimeFormat(pattern = "HH:mm") LocalTime end,
+            @RequestParam(required = false) Integer excludeTaskId) {
+        int year = appConfig.getFestivalYear();
+        OffsetDateTime reqStart = date.atTime(start).atZone(ZoneId.systemDefault()).toOffsetDateTime();
+        OffsetDateTime reqEnd   = date.atTime(end).atZone(ZoneId.systemDefault()).toOffsetDateTime();
+        java.util.Map<String, String> conflicts = new java.util.LinkedHashMap<>();
+        taskService.getTasksForDay(year, date).stream()
+            .filter(t -> t.getDriverUser() != null)
+            .filter(t -> t.getStatus() != TaskStatus.CANCELLED)
+            .filter(t -> excludeTaskId == null || t.getTaskId() != excludeTaskId)
+            .filter(t -> t.getStartTs() != null && t.getEndTs() != null)
+            .filter(t -> t.getStartTs().isBefore(reqEnd) && t.getEndTs().isAfter(reqStart))
+            .forEach(t -> conflicts.put(
+                String.valueOf(t.getDriverUser().getId()),
+                t.getStartTs().toLocalTime().format(HH_MM) + "–" + t.getEndTs().toLocalTime().format(HH_MM)));
+        return ResponseEntity.ok(conflicts);
+    }
+
     @GetMapping("/api/vehicles/{vehicleId}/last-driver")
     @ResponseBody
     public ResponseEntity<?> getLastDriverForVehicle(@PathVariable int vehicleId,

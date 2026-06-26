@@ -448,6 +448,12 @@ updateMapLinks();
     const noHoursWarning = document.getElementById('noHoursWarning');
     const vehicleSelect  = document.getElementById('vehicleSelect');
     const driverSelect   = document.getElementById('driverSelect');
+    const taskId = /*[[${task.taskId}]]*/ 0;
+    if (driverSelect) {
+        Array.from(driverSelect.options).forEach(function(opt) {
+            if (opt.value) opt.dataset.name = opt.textContent;
+        });
+    }
     let allTimeOptions = Array.from(startTimeInput.options || [])
         .map(opt => opt.value)
         .filter(v => !!v);
@@ -565,14 +571,41 @@ updateMapLinks();
             .catch(err => console.error('Error fetching opening hours:', err));
     }
 
+    function updateDriverConflicts() {
+        if (!driverSelect) return;
+        const date      = startDateInput.value;
+        const startTime = startTimeInput.value;
+        const endTime   = endTimeInput.value;
+        // Reset to original names first
+        Array.from(driverSelect.options).forEach(function(opt) {
+            if (opt.dataset.name) opt.textContent = opt.dataset.name;
+        });
+        if (!date || !startTime || !endTime) return;
+        let url = '/tasks/api/driver-conflicts?date=' + date + '&start=' + startTime + '&end=' + endTime;
+        if (taskId > 0) url += '&excludeTaskId=' + taskId;
+        fetch(url)
+            .then(function(r) { return r.json(); })
+            .then(function(conflicts) {
+                Array.from(driverSelect.options).forEach(function(opt) {
+                    if (!opt.value || !opt.dataset.name) return;
+                    var conflict = conflicts[opt.value];
+                    if (conflict) opt.textContent = opt.dataset.name + ' (optaget ' + conflict + ')';
+                });
+            })
+            .catch(function(err) { console.error('Error fetching driver conflicts:', err); });
+    }
+
     startDateInput.addEventListener('change', function() {
         updateTimeOptionsForDate(this.value);
         updateVehiclesForDate(this.value, null);
+        updateDriverConflicts();
     });
 
     startTimeInput.addEventListener('change', function() {
         rebuildEndOptions(null);
     });
+
+    endTimeInput.addEventListener('change', updateDriverConflicts);
 
     // Field warnings
     var vehicleWarning = document.getElementById('vehicleWarning');
